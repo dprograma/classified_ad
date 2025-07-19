@@ -1,10 +1,13 @@
-0s
 Run SamKirkland/FTP-Deploy-Action@4.3.3
   with:
-    protocol: ftp
+    server: ***
+    username: ***
+    password: ***
+  
+    protocol: sftp
     port: 22
-    local-dir: ./eunixmac_backend/
-    server-dir: /home/eunixmac/public_html/eunixmac_backend/
+    local-dir: ./***_backend/
+    server-dir: /home/***/public_html/***_backend/
     exclude: **/.git*
   **/.git*/**
   **/node_modules/**
@@ -16,4 +19,4 @@ Run SamKirkland/FTP-Deploy-Action@4.3.3
     COMPOSER_PROCESS_TIMEOUT: 0
     COMPOSER_NO_INTERACTION: 1
     COMPOSER_NO_AUDIT: 1
-Error: Error: Input required and not supplied: server
+Error: Error: protocol: invalid parameter - you provided "sftp". Try "ftp", "ftps", or "ftps-legacy" instead.
