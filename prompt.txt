@@ -1,0 +1,8 @@
+XHRPOST
+http://localhost:8000/api/register
+[HTTP/1.1 500 Internal Server Error 12639ms]
+
+	
+message	'Failed to send email via Resend: {"statusCode":403,"error":"The example.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"}'
+
+This is my domain: eunixma.com.ng
