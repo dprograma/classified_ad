@@ -1,8 +1,19 @@
-XHRPOST
-http://localhost:8000/api/register
-[HTTP/1.1 500 Internal Server Error 12639ms]
-
-	
-message	'Failed to send email via Resend: {"statusCode":403,"error":"The example.com domain is not verified. Please, add and verify your domain on https://resend.com/domains"}'
-
-This is my domain: eunixma.com.ng
+0s
+Run SamKirkland/FTP-Deploy-Action@4.3.3
+  with:
+    protocol: ftp
+    port: 22
+    local-dir: ./eunixmac_backend/
+    server-dir: /home/eunixmac/public_html/eunixmac_backend/
+    exclude: **/.git*
+  **/.git*/**
+  **/node_modules/**
+  .github/**
+  storage/logs/*
+  .env
+  
+  env:
+    COMPOSER_PROCESS_TIMEOUT: 0
+    COMPOSER_NO_INTERACTION: 1
+    COMPOSER_NO_AUDIT: 1
+Error: Error: Input required and not supplied: server
