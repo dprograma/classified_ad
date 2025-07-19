@@ -39,14 +39,14 @@ jobs:
 
     # --- Deploy Files via SFTP ---
     - name: Deploy Backend Files
-      uses: larytet/sftp-action@v1
+      uses: wangyucode/sftp-upload-action@v1.4.9
       with:
         host: ${{ secrets.SFTP_HOST }}
         username: ${{ secrets.SFTP_USERNAME }}
         password: ${{ secrets.SFTP_PASSWORD }}
         port: 22
-        localPath: ./eunixmac_backend/
-        remotePath: /home/eunixmac/public_html/eunixmac_backend/
+        local_path: ./eunixmac_backend/
+        remote_path: /home/eunixmac/public_html/eunixmac_backend/
         exclude: |
           **/.git*
           **/.git*/**
@@ -56,11 +56,11 @@ jobs:
           .env
 
     - name: Deploy Frontend Files
-      uses: larytet/sftp-action@v1
+      uses: wangyucode/sftp-upload-action@v1.4.9
       with:
         host: ${{ secrets.SFTP_HOST }}
         username: ${{ secrets.SFTP_USERNAME }}
         password: ${{ secrets.SFTP_PASSWORD }}
         port: 22
-        localPath: ./eunixmac_frontend/dist/
-        remotePath: /home/eunixmac/public_html/eunixmac_frontend/
+        local_path: ./eunixmac_frontend/dist/
+        remote_path: /home/eunixmac/public_html/eunixmac_frontend/
