@@ -1,22 +1,10 @@
-Run SamKirkland/FTP-Deploy-Action@4.3.3
-  with:
-    server: ***
-    username: ***
-    password: ***
-  
-    protocol: sftp
-    port: 22
-    local-dir: ./***_backend/
-    server-dir: /home/***/public_html/***_backend/
-    exclude: **/.git*
-  **/.git*/**
-  **/node_modules/**
-  .github/**
-  storage/logs/*
-  .env
-  
-  env:
-    COMPOSER_PROCESS_TIMEOUT: 0
-    COMPOSER_NO_INTERACTION: 1
-    COMPOSER_NO_AUDIT: 1
-Error: Error: protocol: invalid parameter - you provided "sftp". Try "ftp", "ftps", or "ftps-legacy" instead.
+Current runner version: '2.326.0'
+Runner Image Provisioner
+Operating System
+Runner Image
+GITHUB_TOKEN Permissions
+Secret source: Actions
+Prepare workflow directory
+Prepare all required actions
+Getting action download info
+Error: Unable to resolve action larytet/sftp-action@v1, action not found
