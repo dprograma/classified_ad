@@ -44,7 +44,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        protocol: ftp
+        protocol: sftp
         port: 22
         local-dir: ./eunixmac_backend/
         server-dir: /home/eunixmac/public_html/eunixmac_backend/ # IMPORTANT: Change this to your backend path
@@ -62,7 +62,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        protocol: ftp
+        protocol: sftp
         port: 22
         local-dir: ./eunixmac_frontend/dist/ # Deploy the build output
         server-dir: /home/eunixmac/public_html/eunixmac_frontend/ # IMPORTANT: Change this to your frontend path (e.g., public_html)
