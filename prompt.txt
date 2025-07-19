@@ -1,10 +1,11 @@
-Current runner version: '2.326.0'
-Runner Image Provisioner
-Operating System
-Runner Image
-GITHUB_TOKEN Permissions
-Secret source: Actions
-Prepare workflow directory
-Prepare all required actions
-Getting action download info
-Error: Unable to resolve action larytet/sftp-action@v1, action not found
+/home/runner/work/_actions/wangyucode/sftp-upload-action/v1.4.9/dist/index.js:8430
+    const newError = new Error(msg);
+                     ^
+Error: connect: getConnection: Timed out while waiting for handshake
+    at SftpClient.fmtError (/home/runner/work/_actions/wangyucode/sftp-upload-action/v1.4.9/dist/index.js:8430:22)
+    at SftpClient.connect (/home/runner/work/_actions/wangyucode/sftp-upload-action/v1.4.9/dist/index.js:8560:37)
+    at async Deployer.sync (/home/runner/work/_actions/wangyucode/sftp-upload-action/v1.4.9/dist/index.js:32:9) {
+  code: 'ERR_GENERIC_CLIENT',
+  custom: true
+}
+Node.js v20.19.3
