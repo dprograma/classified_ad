@@ -12,7 +12,7 @@ npm-debug.log
 yarn-error.log
 prompt.txt
 .github/*
-.ftpignore
+.ftp
 ARCHITECTURE_DESIGN.md
 DATABASE_DESIGN.md
 DEPLOYMENT.md
