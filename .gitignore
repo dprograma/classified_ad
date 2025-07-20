@@ -11,3 +11,10 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 prompt.txt
+.github
+ARCHITECTURE_DESIGN.md
+DATABASE_DESIGN.md
+DEPLOYMENT.md
+TODO.md
+UPDATED_PRD_Classified_Ads_Website.md
+USER_JOURNEY.md
