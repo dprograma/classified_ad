@@ -1,0 +1,42 @@
+# .cpanel.yml
+# This file automates the deployment process for a project with a Laravel backend and a React frontend.
+# IMPORTANT: Replace 'eunixmac' with your actual cPanel username.
+
+deployment:
+  tasks:
+    # Set the deployment path variable for easier reuse.
+    # This is the public-facing directory on your cPanel server.
+    - export DEPLOYPATH=/home/eunixmac/public_html/
+
+    # --- Frontend Deployment (React) ---
+    # The user will visit your domain and see the React app.
+    # 1. Navigate into the frontend's source directory within the cloned repository.
+    - echo "Starting frontend deployment..."
+    - cd eunixmac_frontend
+    # 2. Install npm dependencies.
+    - /bin/npm install
+    # 3. Run the build script to generate optimized static assets.
+    - /bin/npm run build
+    # 4. Copy the contents of the 'dist' folder (the built app) to the public_html directory.
+    # The -R flag copies recursively, and the '*' ensures we copy the contents, not the folder itself.
+    - /bin/cp -R dist/* $DEPLOYPATH
+    - echo "Frontend deployment complete."
+
+    # --- Backend Deployment (Laravel API) ---
+    # The API will be accessible at yourdomain.com/api/
+    # 1. Create a directory for the backend if it doesn't exist.
+    - /bin/mkdir -p $DEPLOYPATH/api
+    # 2. Copy all backend files into the 'api' subdirectory.
+    - echo "Starting backend deployment..."
+    - /bin/cp -R eunixmac_backend/* $DEPLOYPATH/api/
+    # 3. Navigate into the newly created backend directory.
+    - cd $DEPLOYPATH/api
+    # 4. Install Composer dependencies for production (no dev dependencies).
+    # You may need to find the correct path to composer on your server.
+    # Common paths are /usr/bin/composer or /usr/local/bin/composer.
+    - /usr/local/bin/composer install --no-dev
+    # 5. It's good practice to run Laravel optimizations in production.
+    - /usr/bin/php artisan config:cache
+    - /usr/bin/php artisan route:cache
+    - /usr/bin/php artisan view:cache
+    - echo "Backend deployment complete."
