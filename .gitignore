@@ -11,7 +11,7 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 prompt.txt
-.github
+.github/*
 ARCHITECTURE_DESIGN.md
 DATABASE_DESIGN.md
 DEPLOYMENT.md
