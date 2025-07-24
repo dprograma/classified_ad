@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Container, Paper, Stack, Divider } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { Google as GoogleIcon, Facebook as FacebookIcon, Twitter as TwitterIcon } from '@mui/icons-material';
+import SocialLoginButtons from '../components/SocialLoginButtons';
 import useApi from '../hooks/useApi';
 import { toast } from 'react-toastify';
 
@@ -24,7 +24,7 @@ function Register() {
     }
 
     try {
-      await callApi('post', '/register', {
+      await callApi('post', '/api/register', {
         name,
         email,
         phone_number: phoneNumber,
@@ -55,47 +55,7 @@ function Register() {
             Register
           </Typography>
           {/* Social Login Section */}
-          <Stack spacing={2} direction="column" sx={{ mb: 3 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<GoogleIcon />}
-              sx={{
-                color: '#4285F4',
-                borderColor: '#4285F4',
-                fontWeight: 700,
-                '&:hover': { background: 'rgba(66,133,244,0.08)', borderColor: '#4285F4' },
-              }}
-            >
-              Sign up with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<FacebookIcon />}
-              sx={{
-                color: '#1877F3',
-                borderColor: '#1877F3',
-                fontWeight: 700,
-                '&:hover': { background: 'rgba(24,119,243,0.08)', borderColor: '#1877F3' },
-              }}
-            >
-              Sign up with Facebook
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<TwitterIcon />}
-              sx={{
-                color: '#1DA1F2',
-                borderColor: '#1DA1F2',
-                fontWeight: 700,
-                '&:hover': { background: 'rgba(29,161,242,0.08)', borderColor: '#1DA1F2' },
-              }}
-            >
-              Sign up with Twitter
-            </Button>
-          </Stack>
+          <SocialLoginButtons />
           <Divider sx={{ my: 3 }}>or</Divider>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <Stack spacing={3}>

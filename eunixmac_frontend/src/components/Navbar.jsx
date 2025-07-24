@@ -54,7 +54,7 @@ function Navbar() {
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
-      await callApi('post', '/logout', null, {
+      await callApi('post', '/api/logout', null, {
         'Authorization': `Bearer ${token}`,
       });
       logout();

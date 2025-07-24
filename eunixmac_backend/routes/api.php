@@ -20,6 +20,8 @@ use App\Http\Controllers\AdController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\EducationalMaterialController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SocialLoginController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
@@ -27,6 +29,9 @@ Route::post('/email/resend', [AuthController::class, 'resendVerificationEmail'])
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+Route::get('/auth/{provider}/redirect', [SocialLoginController::class, 'redirect']);
+Route::get('/auth/{provider}/callback', [SocialLoginController::class, 'callback']);
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
@@ -43,8 +48,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/become-agent', [AuthController::class, 'becomeAgent']);
     Route::post('/user/become-affiliate', [AuthController::class, 'becomeAffiliate']);
-    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/user/profile', [AuthController::class, 'updateProfile']);
     Route::delete('/user', [AuthController::class, 'deleteAccount']);
+
+    Route::get('/dashboard', [DashboardController::class, 'index']);
 
     Route::post('/ads', [AdController::class, 'store']);
     Route::put('/ads/{ad}', [AdController::class, 'update']);

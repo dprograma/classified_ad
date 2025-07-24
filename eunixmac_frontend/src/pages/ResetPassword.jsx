@@ -1,16 +1,25 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Button, TextField, Typography, Container, Paper, Stack } from '@mui/material';
 import useApi from '../hooks/useApi';
 import { toast } from 'react-toastify';
 
 const ResetPassword = () => {
     const { token } = useParams();
+    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [password_confirmation, setPasswordConfirmation] = useState('');
     const { loading, callApi } = useApi();
+
+    useEffect(() => {
+        // Get email from the URL query parameter and set it
+        const emailFromQuery = searchParams.get('email');
+        if (emailFromQuery) {
+            setEmail(emailFromQuery);
+        }
+    }, [searchParams]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,7 +30,7 @@ const ResetPassword = () => {
                 password_confirmation,
                 token,
             });
-            toast.success(response.message);
+            toast.success(response.message || 'Password has been reset successfully.');
             navigate('/login');
         } catch (error) {
             // Error is already handled by the useApi hook
@@ -44,11 +53,13 @@ const ResetPassword = () => {
                                 label="Email Address"
                                 name="email"
                                 autoComplete="email"
-                                autoFocus
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 variant="outlined"
                                 sx={{ borderRadius: 2 }}
+                                InputProps={{
+                                    readOnly: true, // Make the field read-only for better UX
+                                }}
                             />
                             <TextField
                                 required
@@ -58,6 +69,7 @@ const ResetPassword = () => {
                                 type="password"
                                 id="password"
                                 autoComplete="new-password"
+                                autoFocus
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 variant="outlined"

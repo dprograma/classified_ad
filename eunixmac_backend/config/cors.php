@@ -15,11 +15,14 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['*'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'http://localhost:5173', // Your Vite frontend
+        'http://localhost:3000', // A common alternative React port
+    ],
 
     'allowed_origins_patterns' => [],
 
