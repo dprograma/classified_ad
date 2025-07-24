@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, Typography, Container, Paper, Stack, Divider } from '@mui/material';
 import { useAuth } from '../AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Google as GoogleIcon, Facebook as FacebookIcon, Twitter as TwitterIcon } from '@mui/icons-material';
+import SocialLoginButtons from '../components/SocialLoginButtons';
 import useApi from '../hooks/useApi';
 
 function Login() {
@@ -14,10 +14,22 @@ function Login() {
   const from = location.state?.from || '/';
   const { loading, callApi } = useApi();
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const token = params.get('token');
+    if (token) {
+      // Assuming the token is a JWT, we can decode it to get user info
+      // In a real app, you'd probably want to make another API call to get user details
+      const user = JSON.parse(atob(token.split('.')[1]));
+      login(user, token);
+      navigate(from, { replace: true });
+    }
+  }, [location, login, navigate, from]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      const response = await callApi('post', '/login', {
+      const response = await callApi('post', '/api/login', {
         email,
         password,
       });
@@ -36,47 +48,7 @@ function Login() {
             Login
           </Typography>
           {/* Social Login Section */}
-          <Stack spacing={2} direction="column" sx={{ mb: 3 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<GoogleIcon />}
-              sx={{
-                color: '#4285F4',
-                borderColor: '#4285F4',
-                fontWeight: 700,
-                '&:hover': { background: 'rgba(66,133,244,0.08)', borderColor: '#4285F4' },
-              }}
-            >
-              Sign in with Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<FacebookIcon />}
-              sx={{
-                color: '#1877F3',
-                borderColor: '#1877F3',
-                fontWeight: 700,
-                '&:hover': { background: 'rgba(24,119,243,0.08)', borderColor: '#1877F3' },
-              }}
-            >
-              Sign in with Facebook
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<TwitterIcon />}
-              sx={{
-                color: '#1DA1F2',
-                borderColor: '#1DA1F2',
-                fontWeight: 700,
-                '&:hover': { background: 'rgba(29,161,242,0.08)', borderColor: '#1DA1F2' },
-              }}
-            >
-              Sign in with Twitter
-            </Button>
-          </Stack>
+          <SocialLoginButtons />
           <Divider sx={{ my: 3 }}>or</Divider>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <Stack spacing={3}>

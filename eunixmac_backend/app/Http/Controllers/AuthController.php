@@ -7,12 +7,15 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use App\Models\PasswordReset;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Auth\Access\AuthorizationException;
 use App\Exceptions\Custom\PermissionDeniedException;
+
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -101,27 +104,19 @@ class AuthController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
             'phone_number' => 'sometimes|string|max:50|unique:users,phone_number,' . $user->id,
-            'password' => 'sometimes|string|min:8|confirmed',
+            'password' => 'sometimes|nullable|string|min:8|confirmed',
             'profile_picture' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
-        if ($request->has('name')) {
-            $user->name = $request->name;
-        }
-        if ($request->has('email')) {
-            $user->email = $request->email;
-        }
-        if ($request->has('phone_number')) {
+        if ($request->filled('phone_number')) {
             $user->phone_number = $request->phone_number;
         }
-        if ($request->has('password')) {
+        if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
         if ($request->hasFile('profile_picture')) {
-            // Delete old profile picture if exists
+            // Delete old profile picture if it exists
             if ($user->profile_picture) {
                 Storage::disk('public')->delete($user->profile_picture);
             }
@@ -161,21 +156,20 @@ class AuthController extends Controller
 
     public function forgotPassword(Request $request)
     {
-        $request->validate(['email' => 'required|email|exists:users,email']);
+        $request->validate(['email' => 'required|email']);
 
-        $token = Str::random(60);
+        $user = User::where('email', $request->email)->first();
 
-        PasswordReset::create([
-            'email' => $request->email,
-            'token' => $token,
-            'created_at' => now(),
-        ]);
+        if (!$user) {
+            // To prevent user enumeration, we can return a success message even if the user doesn't exist.
+            return response()->json(['message' => 'If your email address exists in our system, you will receive a password reset link.']);
+        }
 
-        // Send password reset email
-        Mail::send('emails.password_reset', ['token' => $token], function ($message) use ($request) {
-            $message->to($request->email);
-            $message->subject('Reset your password');
-        });
+        // Create a new token
+        $token = Password::broker()->createToken($user);
+
+        // Send the custom notification
+        $user->notify(new \App\Notifications\CustomResetPassword($token));
 
         return response()->json(['message' => 'Password reset email sent.']);
     }
@@ -183,26 +177,30 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'password' => 'required|string|min:8|confirmed',
-            'token' => 'required|string',
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
         ]);
 
-        $passwordReset = PasswordReset::where('email', $request->email)
-            ->where('token', $request->token)
-            ->first();
+        // Here we will attempt to reset the user's password. This function will
+        // validate the token and the user's email address. It will also
+        // catch any errors that occur during this process.
+        $status = Password::broker()->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->save();
+            }
+        );
 
-        if (!$passwordReset || now()->subMinutes(60)->isAfter($passwordReset->created_at)) {
-            throw new PermissionDeniedException('Invalid or expired token.');
+        // If the password was successfully reset, we will redirect the user back to
+        // the application's home page. Otherwise, we will return an error message.
+        if ($status == Password::PASSWORD_RESET) {
+            return response()->json(['message' => __($status)]);
         }
 
-        $user = User::where('email', $request->email)->firstOrFail();
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        $passwordReset->delete();
-
-        return response()->json(['message' => 'Password has been reset.']);
+        throw new PermissionDeniedException(__($status));
     }
 
     public function verifyEmail(Request $request)

@@ -35,7 +35,9 @@ deployment:
     # You may need to find the correct path to composer on your server.
     # Common paths are /usr/bin/composer or /usr/local/bin/composer.
     - /usr/local/bin/composer install --no-dev
-    # 5. It's good practice to run Laravel optimizations in production.
+    # 5. Run database migrations to apply any new changes.
+    - /usr/bin/php artisan migrate --force
+    # 6. It's good practice to run Laravel optimizations in production.
     - /usr/bin/php artisan config:cache
     - /usr/bin/php artisan route:cache
     - /usr/bin/php artisan view:cache

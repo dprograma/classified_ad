@@ -16,7 +16,7 @@ import PostAd from './pages/PostAd';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import LandingPage from './pages/LandingPage';
-import EmailVerification from './pages/EmailVerification';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
@@ -66,7 +66,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-          <Route path="/email/verify/:id/:hash" element={<EmailVerification />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/" element={<LandingPage />} />
           <Route
             path="/dashboard"
