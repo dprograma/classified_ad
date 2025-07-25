@@ -1,12 +1,5 @@
-Develop a robust and secure social login system integrating Facebook, Google, and Twitter. The frontend will manage the user interface and initiate the OAuth flow. The backend must handle the complete authentication and authorization process, including:
-1.  **User Registration & Login:** Seamlessly create new user accounts upon first social login and authenticate existing users.
-2.  **Account Linking:** Allow existing users to link multiple social accounts to their primary profile.
-3.  **Data Retrieval:** Securely fetch essential user data (e.g., email, full name, profile picture URL) from each provider, with clear consent handling.
-4.  **Token Management:** Implement secure storage and refresh mechanisms for access tokens and refresh tokens.
-5.  **Session Management:** Establish and maintain secure user sessions post-authentication.
-6.  **Error Handling:** Provide clear and actionable error messages for various scenarios (e.g., failed authentication, API errors, user cancellation).
-7.  **Security:** Adhere to OAuth 2.0 best practices, including state parameter validation, secure redirect URIs, and protection against common vulnerabilities.
-8.  **API Endpoints:** Expose well-documented RESTful API endpoints for the frontend to initiate authentication, receive callbacks, and retrieve user data.
-9.  **User Profile Management:** Store and update user profiles in the backend database, ensuring data consistency across linked accounts.
-10. **Scalability:** Design the system to easily integrate additional social login providers in the future.
-11. **Logout:** Implement a secure logout mechanism that invalidates sessions and tokens.
+Service Unavailable
+
+The server is temporarily unable to service your request due to maintenance downtime or capacity problems. Please try again later.
+
+Additionally, a 503 Service Unavailable error was encountered while trying to use an ErrorDocument to handle the request.

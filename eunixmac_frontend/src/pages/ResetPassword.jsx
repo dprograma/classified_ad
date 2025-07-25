@@ -38,14 +38,14 @@ const ResetPassword = () => {
     };
 
     return (
-        <Box sx={{ minHeight: '100vh', background: 'linear-gradient(120deg, #f7f8fa 60%, #e6f0ff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ minHeight: '100vh', background: 'linear-gradient(120deg, #f7f8fa 60%, #e6f0ff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', py: { xs: 4, md: 0 } }}>
             <Container maxWidth="sm">
-                <Paper elevation={4} sx={{ p: 5, borderRadius: 4, boxShadow: '0 4px 32px rgba(108,71,255,0.10)' }}>
-                    <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: 'primary.main', fontWeight: 800, mb: 2 }}>
+                <Paper elevation={4} sx={{ p: { xs: 3, md: 5 }, borderRadius: 4, boxShadow: '0 4px 32px rgba(108,71,255,0.10)' }}>
+                    <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: 'primary.main', fontWeight: 800, mb: { xs: 1, md: 2 }, fontSize: { xs: '2rem', md: '2.5rem' } }}>
                         Reset Password
                     </Typography>
                     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-                        <Stack spacing={3}>
+                        <Stack spacing={{ xs: 2, md: 3 }}>
                             <TextField
                                 required
                                 fullWidth
@@ -59,7 +59,9 @@ const ResetPassword = () => {
                                 sx={{ borderRadius: 2 }}
                                 InputProps={{
                                     readOnly: true, // Make the field read-only for better UX
+                                    style: { fontSize: '0.9rem' }
                                 }}
+                                InputLabelProps={{ style: { fontSize: '0.9rem' } }}
                             />
                             <TextField
                                 required
@@ -74,6 +76,8 @@ const ResetPassword = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 variant="outlined"
                                 sx={{ borderRadius: 2 }}
+                                InputProps={{ style: { fontSize: '0.9rem' } }}
+                                InputLabelProps={{ style: { fontSize: '0.9rem' } }}
                             />
                             <TextField
                                 required
@@ -87,6 +91,8 @@ const ResetPassword = () => {
                                 onChange={(e) => setPasswordConfirmation(e.target.value)}
                                 variant="outlined"
                                 sx={{ borderRadius: 2 }}
+                                InputProps={{ style: { fontSize: '0.9rem' } }}
+                                InputLabelProps={{ style: { fontSize: '0.9rem' } }}
                             />
                             <Button
                                 type="submit"
@@ -94,7 +100,7 @@ const ResetPassword = () => {
                                 variant="contained"
                                 color="primary"
                                 disabled={loading}
-                                sx={{ py: 1.5, fontWeight: 700, fontSize: '1.1rem', borderRadius: 2, boxShadow: 2 }}
+                                sx={{ py: { xs: 1, md: 1.5 }, fontWeight: 700, fontSize: { xs: '1rem', md: '1.1rem' }, borderRadius: 2, boxShadow: 2 }}
                             >
                                 {loading ? 'Resetting...' : 'Reset Password'}
                             </Button>

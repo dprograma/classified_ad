@@ -1,10 +1,10 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem, IconButton, InputBase, Paper, useScrollTrigger } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem, IconButton, InputBase, Paper, useScrollTrigger, Drawer, List, ListItem, ListItemText } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import useApi from '../hooks/useApi';
 import { toast } from 'react-toastify';
-import { Search as SearchIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { styled } from '@mui/system';
 
 const GlassAppBar = styled(AppBar)(({ theme }) => ({
@@ -41,6 +41,7 @@ function Navbar() {
   const navigate = useNavigate();
   const { callApi } = useApi();
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [mobileOpen, setMobileOpen] = React.useState(false);
   const open = Boolean(anchorEl);
 
   const handleMenu = (event) => {
@@ -74,9 +75,40 @@ function Navbar() {
     }
   };
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
+  const navItems = isAuthenticated ? (
+    <>
+      <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>Dashboard</MenuItem>
+      <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>Profile</MenuItem>
+      <MenuItem onClick={() => { navigate('/settings'); handleClose(); }}>Settings</MenuItem>
+      <MenuItem onClick={handleLogout}>Logout</MenuItem>
+    </>
+  ) : (
+    <>
+      <Button color="inherit" component={Link} to="/login">
+        Login
+      </Button>
+      <Button color="inherit" component={Link} to="/register">
+        Sign Up
+      </Button>
+    </>
+  );
+
   return (
     <GlassAppBar position="sticky" elevation={0} sx={{ zIndex: 1201 }}>
       <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', minHeight: 72 }}>
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{ mr: 2, display: { md: 'none' } }}
+        >
+          <MenuIcon />
+        </IconButton>
         <LogoBox component={Link} to="/" sx={{ mr: 2 }}>
           {/* Modern logo with icon and text */}
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
@@ -112,58 +144,108 @@ function Navbar() {
             </IconButton>
           </SearchBar>
         </Box>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={handlePostAdClick}
-          sx={{
-            mr: 2,
-            px: 3,
-            py: 1.2,
-            borderRadius: 8,
-            fontWeight: 700,
-            fontSize: '1rem',
-            boxShadow: 2,
-            transition: 'transform 0.15s, box-shadow 0.15s',
-            '&:hover': {
-              transform: 'scale(1.06)',
-              boxShadow: 4,
-            },
-          }}
-        >
-          Post Ad
-        </Button>
-        {isAuthenticated ? (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton onClick={handleMenu} sx={{ p: 0 }}>
-              <Avatar alt={user?.name} src={user?.profile_picture ? `http://localhost:8000/storage/${user.profile_picture}` : user?.picture} />
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-              keepMounted
-              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-              open={open}
-              onClose={handleClose}
-            >
-              <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>Dashboard</MenuItem>
-              <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>Profile</MenuItem>
-              <MenuItem onClick={() => { navigate('/settings'); handleClose(); }}>Settings</MenuItem>
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
-            </Menu>
-          </Box>
-        ) : (
-          <Box>
-            <Button color="inherit" component={Link} to="/login">
-              Login
-            </Button>
-            <Button color="inherit" component={Link} to="/register">
-              Sign Up
-            </Button>
-          </Box>
-        )}
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handlePostAdClick}
+            sx={{
+              mr: 2,
+              px: 3,
+              py: 1.2,
+              borderRadius: 8,
+              fontWeight: 700,
+              fontSize: '1rem',
+              boxShadow: 2,
+              transition: 'transform 0.15s, box-shadow 0.15s',
+              '&:hover': {
+                transform: 'scale(1.06)',
+                boxShadow: 4,
+              },
+            }}
+          >
+            Post Ad
+          </Button>
+          {isAuthenticated ? (
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton onClick={handleMenu} sx={{ p: 0 }}>
+                <Avatar alt={user?.name} src={user?.profile_picture ? `http://localhost:8000/storage/${user.profile_picture}` : user?.picture} />
+              </IconButton>
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                keepMounted
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                open={open}
+                onClose={handleClose}
+              >
+                <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>Dashboard</MenuItem>
+                <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>Profile</MenuItem>
+                <MenuItem onClick={() => { navigate('/settings'); handleClose(); }}>Settings</MenuItem>
+                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              </Menu>
+            </Box>
+          ) : (
+            <Box>
+              <Button color="inherit" component={Link} to="/login">
+                Login
+              </Button>
+              <Button color="inherit" component={Link} to="/register">
+                Sign Up
+              </Button>
+            </Box>
+          )}
+        </Box>
       </Toolbar>
+      <Drawer
+        anchor="left"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
+        }}
+      >
+        <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
+          <Typography variant="h6" sx={{ my: 2 }}>
+            Classified Ads
+          </Typography>
+          <List>
+            <ListItem component={Link} to="/" onClick={handleDrawerToggle}>
+              <ListItemText primary="Home" />
+            </ListItem>
+            <ListItem component={Link} to="/post-ad" onClick={handleDrawerToggle}>
+              <ListItemText primary="Post Ad" />
+            </ListItem>
+            {isAuthenticated ? (
+              <>
+                <ListItem component={Link} to="/dashboard" onClick={handleDrawerToggle}>
+                  <ListItemText primary="Dashboard" />
+                </ListItem>
+                <ListItem component={Link} to="/profile" onClick={handleDrawerToggle}>
+                  <ListItemText primary="Profile" />
+                </ListItem>
+                <ListItem component={Link} to="/settings" onClick={handleDrawerToggle}>
+                  <ListItemText primary="Settings" />
+                </ListItem>
+                <ListItem onClick={handleLogout}>
+                  <ListItemText primary="Logout" />
+                </ListItem>
+              </>
+            ) : (
+              <>
+                <ListItem component={Link} to="/login" onClick={handleDrawerToggle}>
+                  <ListItemText primary="Login" />
+                </ListItem>
+                <ListItem component={Link} to="/register" onClick={handleDrawerToggle}>
+                  <ListItemText primary="Sign Up" />
+                </ListItem>
+              </>
+            )}
+          </List>
+        </Box>
+      </Drawer>
     </GlassAppBar>
   );
 }

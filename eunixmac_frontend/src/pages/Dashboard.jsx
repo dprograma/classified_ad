@@ -77,12 +77,12 @@ const Dashboard = () => {
   }));
 
   return (
-    <Box sx={{ p: 3, bgcolor: 'background.default', color: 'text.primary', minHeight: '100vh' }}>
-      <Typography variant="h4" component="h1" sx={{ color: 'text.primary', fontWeight: 'bold', mb: 4 }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'background.default', color: 'text.primary', minHeight: '100vh' }}>
+      <Typography variant="h4" component="h1" sx={{ color: 'text.primary', fontWeight: 'bold', mb: { xs: 3, md: 4 }, fontSize: { xs: '2rem', md: '2.5rem' } }}>
         Welcome, {user.name}!
       </Typography>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 2, md: 4 } }}>
         <Grid item xs={12} sm={6} md={4} lg={3}>
           <KpiCard
             title="Total Ads"
@@ -148,43 +148,45 @@ const Dashboard = () => {
           />
         </Grid>
         <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: 2, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2 }}>Ad Performance</Typography>
-            <BarChart width={500} height={300} data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="divider" />
-              <XAxis dataKey="name" stroke="text.secondary" />
-              <YAxis stroke="text.secondary" />
-              <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ backgroundColor: 'background.paper', border: '1px solid #e0e0e0', color: 'text.primary' }} />
-              <Legend />
-              <Bar dataKey="views" fill="#42a5f5" />
-              <Bar dataKey="clicks" fill="#66bb6a" />
-            </BarChart>
+          <Paper sx={{ p: { xs: 1.5, md: 2 }, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2, fontSize: { xs: '1rem', md: '1.1rem' } }}>Ad Performance</Typography>
+            <Box sx={{ width: '100%', height: { xs: 200, md: 300 } }}>
+              <BarChart width={isMobile ? 280 : 500} height={isMobile ? 180 : 300} data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="divider" />
+                <XAxis dataKey="name" stroke="text.secondary" style={{ fontSize: '0.75rem' }} />
+                <YAxis stroke="text.secondary" style={{ fontSize: '0.75rem' }} />
+                <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ backgroundColor: 'background.paper', border: '1px solid #e0e0e0', color: 'text.primary', fontSize: '0.8rem' }} />
+                <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
+                <Bar dataKey="views" fill="#42a5f5" />
+                <Bar dataKey="clicks" fill="#66bb6a" />
+              </BarChart>
+            </Box>
           </Paper>
         </Grid>
         <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: 2, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2 }}>Recent Ads</Typography>
+          <Paper sx={{ p: { xs: 1.5, md: 2 }, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2, fontSize: { xs: '1rem', md: '1.1rem' } }}>Recent Ads</Typography>
             <TableContainer sx={{ bgcolor: 'background.default', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-              <Table>
+              <Table size={isMobile ? "small" : "medium"}>
                 <TableHead>
                   <TableRow sx={{ bgcolor: 'grey.100' }}>
-                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>Title</TableCell>
-                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>Category</TableCell>
-                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>Price</TableCell>
-                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold' }}>Actions</TableCell>
+                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Title</TableCell>
+                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Category</TableCell>
+                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Price</TableCell>
+                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {ads.map(ad => (
                     <TableRow key={ad.id} sx={{ '&:hover': { bgcolor: 'grey.50' }, transition: 'background-color 0.2s' }}>
-                      <TableCell sx={{ color: 'text.secondary' }}>{ad.title}</TableCell>
-                      <TableCell sx={{ color: 'text.secondary' }}>{ad.category.name}</TableCell>
-                      <TableCell sx={{ color: 'text.secondary' }}>${ad.price}</TableCell>
+                      <TableCell sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>{ad.title}</TableCell>
+                      <TableCell sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>{ad.category.name}</TableCell>
+                      <TableCell sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>${ad.price}</TableCell>
                       <TableCell>
-                        <Button variant="contained" color="primary" size="small" sx={{ mr: 1, bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, color: 'white', px: 1.5, py: 0.5, borderRadius: '6px' }}>
+                        <Button variant="contained" color="primary" size="small" sx={{ mr: { xs: 0.5, md: 1 }, bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, color: 'white', px: { xs: 1, md: 1.5 }, py: { xs: 0.3, md: 0.5 }, borderRadius: '6px', fontSize: { xs: '0.7rem', md: '0.8rem' } }}>
                           Edit
                         </Button>
-                        <Button variant="contained" color="secondary" size="small" sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, color: 'white', px: 1.5, py: 0.5, borderRadius: '6px' }}>
+                        <Button variant="contained" color="secondary" size="small" sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, color: 'white', px: { xs: 1, md: 1.5 }, py: { xs: 0.3, md: 0.5 }, borderRadius: '6px', fontSize: { xs: '0.7rem', md: '0.8rem' } }}>
                           Delete
                         </Button>
                       </TableCell>
@@ -196,18 +198,18 @@ const Dashboard = () => {
           </Paper>
         </Grid>
         <Grid item xs={12}>
-          <Paper sx={{ p: 2, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2 }}>Recent Activity</Typography>
+          <Paper sx={{ p: { xs: 1.5, md: 2 }, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2, fontSize: { xs: '1rem', md: '1.1rem' } }}>Recent Activity</Typography>
             {ads.length > 0 ? (
               <ul style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
                 {ads.slice(0, 5).map(ad => (
-                  <li key={ad.id} style={{ marginBottom: '8px', color: 'text.secondary' }}>
+                  <li key={ad.id} style={{ marginBottom: '8px', color: 'text.secondary', fontSize: { xs: '0.85rem', md: '0.9rem' } }}>
                     You posted a new ad: <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{ad.title}</span> in <span style={{ fontWeight: 'bold', color: '#388e3c' }}>{ad.category.name}</span> on {new Date(ad.created_at).toLocaleDateString()}.
                   </li>
                 ))}
               </ul>
             ) : (
-              <Typography sx={{ color: 'text.secondary' }}>No recent ad activity to display.</Typography>
+              <Typography sx={{ color: 'text.secondary', fontSize: { xs: '0.85rem', md: '0.9rem' } }}>No recent ad activity to display.</Typography>
             )}
           </Paper>
         </Grid>

@@ -41,17 +41,17 @@ function Login() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', background: 'linear-gradient(120deg, #f7f8fa 60%, #e6f0ff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <Box sx={{ minHeight: '100vh', background: 'linear-gradient(120deg, #f7f8fa 60%, #e6f0ff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', py: { xs: 4, md: 0 } }}>
       <Container maxWidth="sm">
-        <Paper elevation={4} sx={{ p: 5, borderRadius: 4, boxShadow: '0 4px 32px rgba(108,71,255,0.10)' }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: 'primary.main', fontWeight: 800, mb: 2 }}>
+        <Paper elevation={4} sx={{ p: { xs: 3, md: 5 }, borderRadius: 4, boxShadow: '0 4px 32px rgba(108,71,255,0.10)' }}>
+          <Typography variant="h4" component="h1" gutterBottom align="center" sx={{ color: 'primary.main', fontWeight: 800, mb: { xs: 1, md: 2 }, fontSize: { xs: '2rem', md: '2.5rem' } }}>
             Login
           </Typography>
           {/* Social Login Section */}
           <SocialLoginButtons />
-          <Divider sx={{ my: 3 }}>or</Divider>
+          <Divider sx={{ my: { xs: 2, md: 3 } }}>or</Divider>
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-            <Stack spacing={3}>
+            <Stack spacing={{ xs: 2, md: 3 }}>
               <TextField
                 required
                 fullWidth
@@ -64,6 +64,8 @@ function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 variant="outlined"
                 sx={{ borderRadius: 2 }}
+                InputProps={{ style: { fontSize: '0.9rem' } }}
+                InputLabelProps={{ style: { fontSize: '0.9rem' } }}
               />
               <TextField
                 required
@@ -77,6 +79,8 @@ function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 variant="outlined"
                 sx={{ borderRadius: 2 }}
+                InputProps={{ style: { fontSize: '0.9rem' } }}
+                InputLabelProps={{ style: { fontSize: '0.9rem' } }}
               />
               <Button
                 type="submit"
@@ -84,16 +88,16 @@ function Login() {
                 variant="contained"
                 color="primary"
                 disabled={loading}
-                sx={{ py: 1.5, fontWeight: 700, fontSize: '1.1rem', borderRadius: 2, boxShadow: 2 }}
+                sx={{ py: { xs: 1, md: 1.5 }, fontWeight: 700, fontSize: { xs: '1rem', md: '1.1rem' }, borderRadius: 2, boxShadow: 2 }}
               >
                 {loading ? 'Signing In...' : 'Sign In'}
               </Button>
             </Stack>
-            <Stack direction="row" justifyContent="space-between" sx={{ mt: 3 }}>
-              <Typography variant="body2">
+            <Stack direction="row" justifyContent="space-between" sx={{ mt: { xs: 2, md: 3 } }}>
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                 <Link to="/forgot-password">Forgot password?</Link>
               </Typography>
-              <Typography variant="body2">
+              <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                 <Link to="/register">Create an account</Link>
               </Typography>
             </Stack>

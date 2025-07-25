@@ -106,9 +106,9 @@ const Profile = () => {
     }
 
     return (
-        <Container maxWidth="sm" sx={{ mt: 6, mb: 6 }}>
-            <Paper elevation={6} sx={{ p: isMobile ? 2 : 5, borderRadius: 5, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.15)' }}>
-                <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', mb: 4 }}>
+        <Container maxWidth="md" sx={{ mt: { xs: 4, md: 6 }, mb: { xs: 4, md: 6 } }}>
+            <Paper elevation={6} sx={{ p: { xs: 3, md: 5 }, borderRadius: 5, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.15)' }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', mb: { xs: 3, md: 4 }, textAlign: { xs: 'center', sm: 'left' } }}>
                     <Badge
                         overlap="circular"
                         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
@@ -125,25 +125,25 @@ const Profile = () => {
                     >
                         <Avatar
                             src={preview}
-                            sx={{ width: 120, height: 120, border: '3px solid #e0e0e0', boxShadow: 2 }}
+                            sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, border: '3px solid #e0e0e0', boxShadow: 2 }}
                         />
                     </Badge>
-                    <Box sx={{ ml: isMobile ? 0 : 4, mt: isMobile ? 2 : 0, width: '100%' }}>
-                        <Typography variant="h5" fontWeight={700} gutterBottom>
+                    <Box sx={{ ml: { xs: 0, sm: 4 }, mt: { xs: 2, sm: 0 }, width: '100%' }}>
+                        <Typography variant="h5" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.5rem', md: '1.75rem' } }}>
                             {user.name}
                         </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1 }}>
+                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
                             {user.is_verified && <StatusChip label="Verified" icon={<VerifiedUserIcon />} color="success" />}
                             {user.is_admin && <StatusChip label="Admin" icon={<AdminPanelSettingsIcon />} color="warning" />}
                             {user.is_agent && <StatusChip label="Agent" icon={<PersonAddAltIcon />} color="info" />}
                             {user.is_affiliate && <StatusChip label="Affiliate" icon={<GroupAddIcon />} color="secondary" />}
                         </Stack>
                         {user.referral_code && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
+                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: { xs: '0.85rem', md: '0.9rem' } }}>
                                     Referral Code:
                                 </Typography>
-                                <Typography variant="body2" sx={{ ml: 1, fontWeight: 700, letterSpacing: 1 }}>
+                                <Typography variant="body2" sx={{ ml: 1, fontWeight: 700, letterSpacing: 1, fontSize: { xs: '0.9rem', md: '1rem' } }}>
                                     {user.referral_code}
                                 </Typography>
                                 <Tooltip title={copySuccess ? 'Copied!' : 'Copy'}>
@@ -155,26 +155,28 @@ const Profile = () => {
                         )}
                     </Box>
                 </Box>
-                <Divider sx={{ my: 3 }} />
+                <Divider sx={{ my: { xs: 2, md: 3 } }} />
                 <Box component="form" onSubmit={handleSubmit} autoComplete="off">
-                    <Stack spacing={3}>
+                    <Stack spacing={{ xs: 2, md: 3 }}>
                         <GrayTextField
                             label="Name"
                             value={user.name}
-                            InputProps={{ readOnly: true, disableUnderline: true }}
+                            InputProps={{ readOnly: true, disableUnderline: true, style: { fontSize: '0.9rem' } }}
                             variant="filled"
                             helperText="To change your name, please contact support."
                             disabled
                             sx={{ borderRadius: 2 }}
+                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
                         />
                         <GrayTextField
                             label="Email Address"
                             value={user.email}
-                            InputProps={{ readOnly: true, disableUnderline: true }}
+                            InputProps={{ readOnly: true, disableUnderline: true, style: { fontSize: '0.9rem' } }}
                             variant="filled"
                             helperText="To change your email, please contact support."
                             disabled
                             sx={{ borderRadius: 2 }}
+                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
                         />
                         <TextField
                             label="Phone Number"
@@ -184,9 +186,11 @@ const Profile = () => {
                             variant="outlined"
                             disabled={loading}
                             sx={{ borderRadius: 2 }}
+                            InputProps={{ style: { fontSize: '0.9rem' } }}
+                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
                         />
-                        <Divider sx={{ my: 2 }} />
-                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.secondary', mb: 1 }}>
+                        <Divider sx={{ my: { xs: 1, md: 2 } }} />
+                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.secondary', mb: 1, fontSize: { xs: '1rem', md: '1.1rem' } }}>
                             Change Password
                         </Typography>
                         <TextField
@@ -199,6 +203,8 @@ const Profile = () => {
                             disabled={loading}
                             helperText="Leave blank to keep your current password."
                             sx={{ borderRadius: 2 }}
+                            InputProps={{ style: { fontSize: '0.9rem' } }}
+                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
                         />
                         <TextField
                             label="Confirm New Password"
@@ -209,14 +215,16 @@ const Profile = () => {
                             variant="outlined"
                             disabled={loading || !formData.password}
                             sx={{ borderRadius: 2 }}
+                            InputProps={{ style: { fontSize: '0.9rem' } }}
+                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
                         />
-                        <Box sx={{ textAlign: 'right', mt: 2 }}>
+                        <Box sx={{ textAlign: 'right', mt: { xs: 1, md: 2 } }}>
                             <Button
                                 type="submit"
                                 variant="contained"
                                 color="primary"
                                 disabled={loading}
-                                sx={{ py: 1.5, px: 4, fontWeight: 700, borderRadius: 2 }}
+                                sx={{ py: { xs: 1, md: 1.5 }, px: { xs: 3, md: 4 }, fontWeight: 700, borderRadius: 2, fontSize: { xs: '0.9rem', md: '1rem' } }}
                             >
                                 {loading ? 'Saving...' : 'Save Changes'}
                             </Button>
