@@ -4,8 +4,6 @@ import {
   Typography,
   Paper,
   Grid,
-  Card,
-  CardContent,
   CircularProgress,
   Table,
   TableBody,
@@ -14,15 +12,30 @@ import {
   TableHead,
   TableRow,
   Button,
+  useTheme,
+  useMediaQuery,
+  Card,
 } from '@mui/material';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
 import KpiCard from '../components/admin/KpiCard';
+import {
+  FaAd,
+  FaEnvelope,
+  FaStar,
+  FaEye,
+  FaMousePointer,
+  FaCheckCircle,
+  FaHourglassHalf,
+  FaTimesCircle,
+} from 'react-icons/fa';
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,147 +84,117 @@ const Dashboard = () => {
   const { user, ads, stats } = dashboardData;
 
   const chartData = ads.map(ad => ({
-    name: ad.title,
-    views: ad.views || Math.floor(Math.random() * 1000), // Use actual views if available, otherwise mock
-    clicks: ad.clicks || Math.floor(Math.random() * 500), // Use actual clicks if available, otherwise mock
+    name: ad.title.substring(0, 15) + '...',
+    views: ad.views || Math.floor(Math.random() * 1000),
+    clicks: ad.clicks || Math.floor(Math.random() * 500),
   }));
 
-  return (
-    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: 'background.default', color: 'text.primary', minHeight: '100vh' }}>
-      <Typography variant="h4" component="h1" sx={{ color: 'text.primary', fontWeight: 'bold', mb: { xs: 3, md: 4 }, fontSize: { xs: '2rem', md: '2.5rem' } }}>
-        Welcome, {user.name}!
-      </Typography>
+  const kpiData = [
+    { title: 'Total Ads', value: stats.ad_count, change: 'Overall', icon: FaAd },
+    { title: 'Total Messages', value: stats.message_count, change: 'Overall', icon: FaEnvelope },
+    { title: 'Total Reviews', value: stats.review_count, change: 'Overall', icon: FaStar },
+    { title: 'Total Views', value: stats.total_views || 0, change: 'Across all your ads', icon: FaEye },
+    { title: 'Total Clicks', value: stats.total_clicks || 0, change: 'Across all your ads', icon: FaMousePointer },
+    { title: 'Active Ads', value: stats.active_ads || 0, change: 'Currently live', icon: FaCheckCircle },
+    { title: 'Pending Ads', value: stats.pending_ads || 0, change: 'Awaiting approval', icon: FaHourglassHalf },
+    { title: 'Expired Ads', value: stats.expired_ads || 0, change: 'Need renewal', icon: FaTimesCircle },
+  ];
 
-      <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mb: { xs: 2, md: 4 } }}>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <KpiCard
-            title="Total Ads"
-            value={stats.ad_count}
-            change="Overall"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <KpiCard
-            title="Total Messages"
-            value={stats.message_count}
-            change="Overall"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <KpiCard
-            title="Total Reviews"
-            value={stats.review_count}
-            change="Overall"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <KpiCard
-            title="Total Views"
-            value={stats.total_views || 0}
-            change="Across all your ads"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <KpiCard
-            title="Total Clicks"
-            value={stats.total_clicks || 0}
-            change="Across all your ads"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <KpiCard
-            title="Active Ads"
-            value={stats.active_ads || 0}
-            change="Currently live"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <KpiCard
-            title="Pending Ads"
-            value={stats.pending_ads || 0}
-            change="Awaiting approval"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={4} lg={3}>
-          <KpiCard
-            title="Expired Ads"
-            value={stats.expired_ads || 0}
-            change="Need renewal"
-            loading={loading}
-          />
-        </Grid>
-        <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: { xs: 1.5, md: 2 }, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2, fontSize: { xs: '1rem', md: '1.1rem' } }}>Ad Performance</Typography>
-            <Box sx={{ width: '100%', height: { xs: 200, md: 300 } }}>
-              <BarChart width={isMobile ? 280 : 500} height={isMobile ? 180 : 300} data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="divider" />
-                <XAxis dataKey="name" stroke="text.secondary" style={{ fontSize: '0.75rem' }} />
-                <YAxis stroke="text.secondary" style={{ fontSize: '0.75rem' }} />
-                <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ backgroundColor: 'background.paper', border: '1px solid #e0e0e0', color: 'text.primary', fontSize: '0.8rem' }} />
-                <Legend wrapperStyle={{ fontSize: '0.8rem' }} />
-                <Bar dataKey="views" fill="#42a5f5" />
-                <Bar dataKey="clicks" fill="#66bb6a" />
-              </BarChart>
+  return (
+    <Box sx={{ p: { xs: 2, md: 3 }, bgcolor: '#f4f6f8', color: 'text.primary', minHeight: '100vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexDirection: isMobile ? 'column' : 'row' }}>
+        <Typography variant={isMobile ? 'h5' : 'h4'} component="h1" sx={{ fontWeight: 'bold', mb: isMobile ? 2 : 0 }}>
+          Welcome, {user.name}!
+        </Typography>
+        <Button variant="contained" color="primary" sx={{ borderRadius: '20px', px: 3, width: isMobile ? '100%' : 'auto' }}>
+          Create New Ad
+        </Button>
+      </Box>
+
+      <Grid container spacing={isMobile ? 2 : 3}>
+        {kpiData.map((kpi, index) => (
+          <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+            <KpiCard
+              title={kpi.title}
+              value={kpi.value}
+              change={kpi.change}
+              icon={kpi.icon}
+              loading={loading}
+            />
+          </Grid>
+        ))}
+
+        <Grid item xs={12} lg={7}>
+          <Card sx={{ p: { xs: 2, md: 3 }, borderRadius: '16px', boxShadow: '0 8px 16px 0 rgba(0,0,0,0.1)' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>Ad Performance</Typography>
+            <Box sx={{ height: 350 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: isMobile ? 0 : 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: isMobile ? 10 : 12 }} />
+                  <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', boxShadow: '0 4px 8px 0 rgba(0,0,0,0.1)' }}
+                  />
+                  <Legend iconSize={14} wrapperStyle={{ fontSize: isMobile ? '12px' : '14px' }} />
+                  <Bar dataKey="views" fill="#8884d8" name="Views" barSize={isMobile ? 15 : 20} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="clicks" fill="#82ca9d" name="Clicks" barSize={isMobile ? 15 : 20} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </Box>
-          </Paper>
+          </Card>
         </Grid>
-        <Grid item xs={12} lg={6}>
-          <Paper sx={{ p: { xs: 1.5, md: 2 }, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2, fontSize: { xs: '1rem', md: '1.1rem' } }}>Recent Ads</Typography>
-            <TableContainer sx={{ bgcolor: 'background.default', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-              <Table size={isMobile ? "small" : "medium"}>
+
+        <Grid item xs={12} lg={5}>
+          <Card sx={{ p: { xs: 2, md: 3 }, borderRadius: '16px', boxShadow: '0 8px 16px 0 rgba(0,0,0,0.1)', height: '100%' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>Recent Ads</Typography>
+            <TableContainer>
+              <Table size={isMobile ? 'small' : 'medium'}>
                 <TableHead>
-                  <TableRow sx={{ bgcolor: 'grey.100' }}>
-                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Title</TableCell>
-                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Category</TableCell>
-                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Price</TableCell>
-                    <TableCell sx={{ color: 'text.primary', fontWeight: 'bold', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>Actions</TableCell>
+                  <TableRow>
+                    <TableCell>Title</TableCell>
+                    <TableCell>Price</TableCell>
+                    <TableCell>Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {ads.map(ad => (
-                    <TableRow key={ad.id} sx={{ '&:hover': { bgcolor: 'grey.50' }, transition: 'background-color 0.2s' }}>
-                      <TableCell sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>{ad.title}</TableCell>
-                      <TableCell sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>{ad.category.name}</TableCell>
-                      <TableCell sx={{ color: 'text.secondary', fontSize: { xs: '0.8rem', md: '0.9rem' } }}>${ad.price}</TableCell>
+                  {ads.slice(0, 4).map(ad => (
+                    <TableRow key={ad.id}>
+                      <TableCell sx={{ fontSize: isMobile ? '0.8rem' : 'inherit' }}>{ad.title}</TableCell>
+                      <TableCell sx={{ fontSize: isMobile ? '0.8rem' : 'inherit' }}>${ad.price}</TableCell>
                       <TableCell>
-                        <Button variant="contained" color="primary" size="small" sx={{ mr: { xs: 0.5, md: 1 }, bgcolor: 'primary.main', '&:hover': { bgcolor: 'primary.dark' }, color: 'white', px: { xs: 1, md: 1.5 }, py: { xs: 0.3, md: 0.5 }, borderRadius: '6px', fontSize: { xs: '0.7rem', md: '0.8rem' } }}>
-                          Edit
-                        </Button>
-                        <Button variant="contained" color="secondary" size="small" sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' }, color: 'white', px: { xs: 1, md: 1.5 }, py: { xs: 0.3, md: 0.5 }, borderRadius: '6px', fontSize: { xs: '0.7rem', md: '0.8rem' } }}>
-                          Delete
-                        </Button>
+                        <Button size="small" sx={{ mr: 1, fontSize: isMobile ? '0.7rem' : 'inherit' }}>Edit</Button>
+                        <Button size="small" color="error" sx={{ fontSize: isMobile ? '0.7rem' : 'inherit' }}>Delete</Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
-          </Paper>
+          </Card>
         </Grid>
+
         <Grid item xs={12}>
-          <Paper sx={{ p: { xs: 1.5, md: 2 }, bgcolor: 'background.paper', color: 'text.primary', borderRadius: '12px', boxShadow: 6 }}>
-            <Typography variant="h6" gutterBottom sx={{ color: 'text.primary', borderBottom: '1px solid', borderColor: 'divider', pb: 1, mb: 2, fontSize: { xs: '1rem', md: '1.1rem' } }}>Recent Activity</Typography>
-            {ads.length > 0 ? (
-              <ul style={{ listStyleType: 'disc', paddingLeft: '20px' }}>
-                {ads.slice(0, 5).map(ad => (
-                  <li key={ad.id} style={{ marginBottom: '8px', color: 'text.secondary', fontSize: { xs: '0.85rem', md: '0.9rem' } }}>
-                    You posted a new ad: <span style={{ fontWeight: 'bold', color: '#1976d2' }}>{ad.title}</span> in <span style={{ fontWeight: 'bold', color: '#388e3c' }}>{ad.category.name}</span> on {new Date(ad.created_at).toLocaleDateString()}.
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <Typography sx={{ color: 'text.secondary', fontSize: { xs: '0.85rem', md: '0.9rem' } }}>No recent ad activity to display.</Typography>
-            )}
-          </Paper>
+          <Card sx={{ p: { xs: 2, md: 3 }, borderRadius: '16px', boxShadow: '0 8px 16px 0 rgba(0,0,0,0.1)' }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>Recent Activity</Typography>
+            <ul style={{ listStyleType: 'none', padding: 0 }}>
+              {ads.slice(0, 5).map(ad => (
+                <li key={ad.id} style={{ marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ width: '40px', height: '40px', borderRadius: '50%', bgcolor: '#e3f2fd', display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 2, flexShrink: 0 }}>
+                    <FaAd color="#1e88e5" />
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontSize: isMobile ? '0.9rem' : 'inherit' }}>
+                      You posted a new ad: <strong>{ad.title}</strong> in <strong>{ad.category.name}</strong>
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(ad.created_at).toLocaleDateString()}
+                    </Typography>
+                  </Box>
+                </li>
+              ))}
+            </ul>
+          </Card>
         </Grid>
       </Grid>
     </Box>

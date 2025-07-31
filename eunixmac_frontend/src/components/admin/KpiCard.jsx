@@ -1,8 +1,8 @@
 import React from 'react';
-import { Card, Typography } from '@mui/material';
+import { Card, Typography, Box } from '@mui/material';
 import Skeleton from '../ui/Skeleton';
 
-const KpiCard = ({ title, value, change, loading }) => {
+const KpiCard = ({ title, value, change, loading, icon: Icon }) => {
   if (loading) {
     return (
       <Card sx={{ display: 'flex', flexDirection: 'column', height: 144, p: 2, borderRadius: '12px', boxShadow: 3, bgcolor: 'background.paper', color: 'text.primary' }}>
@@ -31,7 +31,10 @@ const KpiCard = ({ title, value, change, loading }) => {
         },
       }}
     >
-      <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>{title}</Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+        {Icon && <Icon size={20} style={{ marginRight: '8px', color: '#42a5f5' }} />}
+        <Typography variant="subtitle2" sx={{ color: 'text.secondary' }}>{title}</Typography>
+      </Box>
       <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 1 }}>{value}</Typography>
       <Typography variant="caption" sx={{ color: 'text.secondary', mt: 'auto' }}>{change}</Typography>
     </Card>
