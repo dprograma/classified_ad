@@ -1,145 +1,570 @@
-import React, { useState, useEffect } from 'react';
-import { TextField, Button, Container, Typography, Box, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  TextField,
+  Button,
+  Container,
+  Typography,
+  Box,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Grid,
+  Paper,
+  Chip,
+  Alert,
+  CircularProgress,
+  FormHelperText
+} from '@mui/material';
+import { CloudUpload, Delete, PhotoCamera } from '@mui/icons-material';
+import useApi from '../hooks/useApi';
 
 function PostAd() {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [location, setLocation] = useState('');
-  const [categoryId, setCategoryId] = useState('');
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    location: '',
+    category_id: ''
+  });
+  const [customFields, setCustomFields] = useState({});
   const [images, setImages] = useState([]);
+  const [imagePreview, setImagePreview] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [categoryFields, setCategoryFields] = useState([]);
+  const { callApi, loading } = useApi();
+  const [errors, setErrors] = useState({});
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const data = await callApi('GET', '/categories');
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  }, [callApi]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get('http://localhost:8000/api/categories');
-        setCategories(response.data);
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    };
     fetchCategories();
   }, []);
 
+  const fetchCategoryFields = useCallback(async () => {
+    if (formData.category_id) {
+      try {
+        const data = await callApi('GET', `/categories/${formData.category_id}/fields`);
+        setCategoryFields(data.fields || []);
+        setCustomFields({}); // Reset custom fields when category changes
+      } catch (error) {
+        console.error('Error fetching category fields:', error);
+        setCategoryFields([]);
+      }
+    } else {
+      setCategoryFields([]);
+      setCustomFields({});
+    }
+  }, [formData.category_id, callApi]);
+
+  useEffect(() => {
+    fetchCategoryFields();
+  }, [formData.category_id]);
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleCustomFieldChange = (fieldName, value) => {
+    setCustomFields(prev => ({ ...prev, [fieldName]: value }));
+  };
+
   const handleImageChange = (event) => {
-    setImages(Array.from(event.target.files));
+    const files = Array.from(event.target.files);
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const validFiles = [];
+    const previews = [];
+
+    files.forEach(file => {
+      if (file.size > maxSize) {
+        setErrors(prev => ({ ...prev, images: `File ${file.name} is too large. Max size is 5MB.` }));
+        return;
+      }
+      
+      if (!file.type.startsWith('image/')) {
+        setErrors(prev => ({ ...prev, images: `File ${file.name} is not an image.` }));
+        return;
+      }
+
+      validFiles.push(file);
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previews.push({ file, preview: e.target.result });
+        if (previews.length === validFiles.length) {
+          setImagePreview(previews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    setImages(validFiles);
+    if (validFiles.length > 0 && errors.images) {
+      setErrors(prev => ({ ...prev, images: '' }));
+    }
+  };
+
+  const removeImage = (index) => {
+    const newImages = images.filter((_, i) => i !== index);
+    const newPreviews = imagePreview.filter((_, i) => i !== index);
+    setImages(newImages);
+    setImagePreview(newPreviews);
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.title.trim()) newErrors.title = 'Title is required';
+    if (!formData.description.trim() || formData.description.trim().length < 10) {
+      newErrors.description = 'Description must be at least 10 characters';
+    }
+    if (!formData.price || formData.price <= 0) newErrors.price = 'Price must be greater than 0';
+    if (!formData.location.trim()) newErrors.location = 'Location is required';
+    if (!formData.category_id) newErrors.category_id = 'Category is required';
+    
+    // Validate required custom fields
+    categoryFields.forEach(field => {
+      if (field.required && !customFields[field.name]) {
+        newErrors[`custom_${field.name}`] = `${field.label} is required`;
+      }
+    });
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('price', price);
-    formData.append('location', location);
-    formData.append('category_id', categoryId);
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setErrors({});
+    
+    const submitData = new FormData();
+    
+    // Add basic form data
+    Object.keys(formData).forEach(key => {
+      if (formData[key]) {
+        submitData.append(key, formData[key]);
+      }
+    });
+    
+    // Add custom fields
+    const customFieldsArray = Object.keys(customFields).map(key => ({
+      field_name: key,
+      field_value: customFields[key]
+    }));
+    
+    if (customFieldsArray.length > 0) {
+      customFieldsArray.forEach((field, index) => {
+        submitData.append(`custom_fields[${index}][field_name]`, field.field_name);
+        submitData.append(`custom_fields[${index}][field_value]`, field.field_value);
+      });
+    }
+    
+    // Add images
     images.forEach((image, index) => {
-      formData.append(`images[${index}]`, image);
+      submitData.append(`images`, image);
     });
 
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please log in to post an ad.');
-        return;
-      }
-      await axios.post('http://localhost:8000/api/ads', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await callApi('POST', '/ads', submitData, {
+        'Content-Type': 'multipart/form-data',
       });
-      alert('Ad posted successfully!');
-      // Clear form
-      setTitle('');
-      setDescription('');
-      setPrice('');
-      setLocation('');
-      setCategoryId('');
+      
+      setSubmitSuccess(true);
+      
+      // Clear form after successful submission
+      setFormData({
+        title: '',
+        description: '',
+        price: '',
+        location: '',
+        category_id: ''
+      });
+      setCustomFields({});
       setImages([]);
+      setImagePreview([]);
+      setCategoryFields([]);
+      
     } catch (error) {
       console.error('Error posting ad:', error);
-      alert('Failed to post ad.');
+      console.log('Error response data:', error.response?.data);
+      console.log('Error status:', error.response?.status);
+      
+      if (error.response?.data?.errors) {
+        setErrors(error.response.data.errors);
+      } else {
+        setErrors({ submit: error.response?.data?.message || 'Failed to post ad. Please try again.' });
+      }
     }
   };
 
-  return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Typography component="h1" variant="h5">
-          Post a New Ad
-        </Typography>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Ad Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Description"
-            multiline
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Price"
-            type="number"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            label="Location"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-          <FormControl fullWidth margin="normal" required>
-            <InputLabel id="category-label">Category</InputLabel>
+  const renderCustomField = (field) => {
+    const value = customFields[field.name] || '';
+    const error = errors[`custom_${field.name}`];
+    
+    switch (field.type) {
+      case 'select':
+        return (
+          <FormControl 
+            fullWidth 
+            margin="normal" 
+            required={field.required} 
+            error={!!error}
+            sx={{ 
+              width: '100%',
+              minWidth: '250px'
+            }}
+          >
+            <InputLabel>{field.label}</InputLabel>
             <Select
-              labelId="category-label"
-              id="category-select"
-              value={categoryId}
-              label="Category"
-              onChange={(e) => setCategoryId(e.target.value)}
+              value={value}
+              label={field.label}
+              onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+              sx={{
+                width: '100%',
+                minWidth: '250px',
+                '& .MuiInputBase-root': {
+                  width: '100%'
+                },
+                '& .MuiSelect-select': {
+                  padding: '16.5px 14px',
+                  width: 'auto',
+                  minWidth: 'calc(100% - 28px)'
+                }
+              }}
             >
-              {categories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
-                  {category.name}
+              <MenuItem value="">Select {field.label}</MenuItem>
+              {field.options.map((option, index) => (
+                <MenuItem key={index} value={option}>
+                  {option}
                 </MenuItem>
               ))}
             </Select>
+            {error && <FormHelperText>{error}</FormHelperText>}
           </FormControl>
-          <Typography variant="body1" sx={{ mt: 2 }}>Upload Images</Typography>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageChange}
-            style={{ marginBottom: '16px' }}
-          />
-          <Button
-            type="submit"
+        );
+      case 'number':
+        return (
+          <TextField
+            key={field.name}
+            margin="normal"
             fullWidth
-            variant="contained"
-            sx={{ mt: 3, mb: 2 }}
-          >
-            Post Ad
+            label={field.label}
+            type="number"
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+            required={field.required}
+            error={!!error}
+            helperText={error}
+          />
+        );
+      default:
+        return (
+          <TextField
+            key={field.name}
+            margin="normal"
+            fullWidth
+            label={field.label}
+            value={value}
+            onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
+            required={field.required}
+            error={!!error}
+            helperText={error}
+          />
+        );
+    }
+  };
+
+  if (submitSuccess) {
+    return (
+      <Container maxWidth="md">
+        <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <Alert severity="success" sx={{ width: '100%', mb: 3 }}>
+            <Typography variant="h6">Ad Posted Successfully!</Typography>
+            <Typography>Your ad has been posted and is now live on the platform.</Typography>
+          </Alert>
+          <Button variant="contained" onClick={() => setSubmitSuccess(false)}>
+            Post Another Ad
           </Button>
         </Box>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="md">
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Typography component="h1" variant="h4" gutterBottom align="center">
+          Post a New Ad
+        </Typography>
+        
+        {errors.submit && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {errors.submit}
+          </Alert>
+        )}
+        
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <Grid container spacing={3}>
+              {/* Basic Information */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom>
+                  Basic Information
+                </Typography>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Ad Title"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  error={!!errors.title}
+                  helperText={errors.title}
+                  placeholder="Enter a descriptive title for your ad"
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <FormControl 
+                  fullWidth 
+                  required 
+                  error={!!errors.category_id}
+                  sx={{ 
+                    width: '100%',
+                    minWidth: '250px'
+                  }}
+                >
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={formData.category_id}
+                    label="Category"
+                    onChange={(e) => handleInputChange('category_id', e.target.value)}
+                    MenuProps={{
+                      PaperProps: {
+                        style: {
+                          maxHeight: '300px',
+                          width: 'auto',
+                          marginTop: '8px'
+                        },
+                      },
+                    }}
+                    sx={{
+                      width: '100%',
+                      minWidth: '250px',
+                      '& .MuiInputBase-root': {
+                        width: '100%'
+                      },
+                      '& .MuiSelect-select': {
+                        padding: '16.5px 14px',
+                        width: 'auto',
+                        minWidth: 'calc(100% - 28px)'
+                      }
+                    }}
+                  >
+                    {categories.map((category) => (
+                      <MenuItem 
+                        key={category.id} 
+                        value={category.id}
+                        sx={{
+                          whiteSpace: 'normal', // Allow text to wrap in menu items
+                          padding: '12px 16px', // Add more padding for better touch targets
+                          '&:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.04)' // Subtle hover effect
+                          }
+                        }}
+                      >
+                        {category.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.category_id && <FormHelperText>{errors.category_id}</FormHelperText>}
+                </FormControl>
+              </Grid>
+              
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Description"
+                  multiline
+                  rows={4}
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  error={!!errors.description}
+                  helperText={errors.description || 'Provide a detailed description (minimum 10 characters)'}
+                  placeholder="Describe your item in detail..."
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Price (₦)"
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange('price', e.target.value)}
+                  error={!!errors.price}
+                  helperText={errors.price}
+                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                />
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Location"
+                  value={formData.location}
+                  onChange={(e) => handleInputChange('location', e.target.value)}
+                  error={!!errors.location}
+                  helperText={errors.location}
+                  placeholder="City, State"
+                />
+              </Grid>
+              
+              {/* Category-specific fields */}
+              {categoryFields.length > 0 && (
+                <>
+                  <Grid item xs={12}>
+                    <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                      Additional Details
+                    </Typography>
+                  </Grid>
+                  
+                  {categoryFields.map((field, index) => (
+                    <Grid item xs={12} md={6} key={field.name}>
+                      {renderCustomField(field)}
+                    </Grid>
+                  ))}
+                </>
+              )}
+              
+              {/* Image Upload */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                  Images
+                </Typography>
+                <Box sx={{ border: '2px dashed #ccc', borderRadius: 2, p: 3, textAlign: 'center' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    style={{ display: 'none' }}
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      startIcon={<CloudUpload />}
+                      sx={{ mb: 2 }}
+                    >
+                      Choose Images
+                    </Button>
+                  </label>
+                  <Typography variant="body2" color="text.secondary">
+                    Upload up to 10 images (Max 5MB each)
+                  </Typography>
+                  {errors.images && (
+                    <Typography variant="body2" color="error" sx={{ mt: 1 }}>
+                      {errors.images}
+                    </Typography>
+                  )}
+                </Box>
+                
+                {/* Image Preview */}
+                {imagePreview.length > 0 && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      Selected Images:
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {imagePreview.map((item, index) => (
+                        <Grid item xs={6} sm={4} md={3} key={index}>
+                          <Box sx={{ position: 'relative' }}>
+                            <img
+                              src={item.preview}
+                              alt={`Preview ${index + 1}`}
+                              style={{
+                                width: '100%',
+                                height: '120px',
+                                objectFit: 'cover',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Button
+                              size="small"
+                              onClick={() => removeImage(index)}
+                              sx={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 4,
+                                minWidth: 'auto',
+                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.9)' }
+                              }}
+                            >
+                              <Delete fontSize="small" />
+                            </Button>
+                            {index === 0 && (
+                              <Chip
+                                label="Main"
+                                size="small"
+                                color="primary"
+                                sx={{ position: 'absolute', bottom: 4, left: 4 }}
+                              />
+                            )}
+                          </Box>
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Box>
+                )}
+              </Grid>
+              
+              <Grid item xs={12}>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  size="large"
+                  disabled={loading}
+                  sx={{ mt: 3, py: 1.5 }}
+                >
+                  {loading ? (
+                    <>
+                      <CircularProgress size={24} sx={{ mr: 1 }} />
+                      Posting Ad...
+                    </>
+                  ) : (
+                    'Post Ad'
+                  )}
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+        </Paper>
       </Box>
     </Container>
   );

@@ -1,27 +1,19 @@
 import React, { useState } from 'react';
 import { Button, Typography, Box, TextField } from '@mui/material';
-import axios from 'axios';
+import useApi from '../hooks/useApi';
 
 function BecomeAffiliate() {
   const [referralLink, setReferralLink] = useState('');
+  const { callApi, loading } = useApi();
 
   const handleBecomeAffiliate = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please log in to become an affiliate.');
-        return;
-      }
-      const response = await axios.post('http://localhost:8000/api/user/become-affiliate', {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setReferralLink(response.data.referral_link);
+      const response = await callApi('POST', '/user/become-affiliate');
+      setReferralLink(response.referral_link);
       alert('You are now an affiliate!');
     } catch (error) {
       console.error('Error becoming affiliate:', error);
-      alert('Failed to become an affiliate.');
+      // Error message is already handled by useApi hook
     }
   };
 
@@ -31,7 +23,9 @@ function BecomeAffiliate() {
       <Typography variant="body1" paragraph>
         Earn commission by promoting our platform. Click the button below to become an affiliate.
       </Typography>
-      <Button variant="contained" onClick={handleBecomeAffiliate}>Become Affiliate</Button>
+      <Button variant="contained" onClick={handleBecomeAffiliate} disabled={loading}>
+        {loading ? 'Processing...' : 'Become Affiliate'}
+      </Button>
       {referralLink && (
         <Box sx={{ mt: 2 }}>
           <Typography variant="body2">Your Referral Link:</Typography>

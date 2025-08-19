@@ -6,6 +6,7 @@ import useApi from '../hooks/useApi';
 import { toast } from 'react-toastify';
 import { Search as SearchIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { styled } from '@mui/system';
+import { getStorageUrl } from '../config/api';
 
 const GlassAppBar = styled(AppBar)(({ theme }) => ({
   background: 'rgba(255,255,255,0.75)',
@@ -55,7 +56,7 @@ function Navbar() {
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem('token');
-      await callApi('post', '/api/logout', null, {
+      await callApi('post', '/logout', null, {
         'Authorization': `Bearer ${token}`,
       });
       logout();
@@ -169,7 +170,7 @@ function Navbar() {
           {isAuthenticated ? (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
               <IconButton onClick={handleMenu} sx={{ p: 0 }}>
-                <Avatar alt={user?.name} src={user?.profile_picture ? `http://localhost:8000/storage/${user.profile_picture}` : user?.picture} />
+                <Avatar alt={user?.name} src={user?.profile_picture ? getStorageUrl(user.profile_picture) : user?.picture} />
               </IconButton>
               <Menu
                 id="menu-appbar"

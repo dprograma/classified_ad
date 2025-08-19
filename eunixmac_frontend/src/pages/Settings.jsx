@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Typography, Button, Paper, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField, CircularProgress } from '@mui/material';
 import { useAuth } from '../AuthContext';
-import axios from 'axios';
+import useApi from '../hooks/useApi';
 import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
@@ -9,7 +9,7 @@ const Settings = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { callApi, loading } = useApi();
   const [error, setError] = useState('');
 
   const handleClickOpen = () => {
@@ -23,23 +23,16 @@ const Settings = () => {
   };
 
   const handleDeleteAccount = async () => {
-    setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete('http://localhost:8000/api/user', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        // data: { current_password: password } // Uncomment if backend requires password for deletion
+      await callApi('DELETE', '/user', {
+        // current_password: password // Uncomment if backend requires password for deletion
       });
       logout();
       navigate('/');
     } catch (err) {
       console.error('Account deletion error:', err);
       setError(err.response?.data?.message || 'Failed to delete account.');
-    } finally {
-      setLoading(false);
     }
   };
 

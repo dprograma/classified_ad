@@ -1,38 +1,145 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Button, TextField, Typography, Container, Paper, Stack, Avatar, Grid, Divider, Chip, Tooltip, Badge, useTheme, useMediaQuery, IconButton
+    Box, Button, TextField, Typography, Container, Paper, Stack, Avatar, Grid, Divider, Chip, Tooltip, Badge, useTheme, useMediaQuery, IconButton, Card, CardContent, Fade, InputAdornment
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, keyframes } from '@mui/material/styles';
 import useApi from '../hooks/useApi';
 import { useAuth } from '../AuthContext';
 import { toast } from 'react-toastify';
-import EditIcon from '@mui/icons-material/Edit';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
-import GroupAddIcon from '@mui/icons-material/GroupAdd';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { 
+    Edit, 
+    VerifiedUser, 
+    AdminPanelSettings, 
+    PersonAddAlt, 
+    GroupAdd, 
+    ContentCopy,
+    Phone,
+    Lock,
+    Save,
+    Upload
+} from '@mui/icons-material';
+
+const fadeInUp = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
 
 const Input = styled('input')({
     display: 'none',
 });
 
-const GrayTextField = styled(TextField)(({ theme }) => ({
-    backgroundColor: '#f5f5f5',
-    '& .MuiInputBase-input.Mui-disabled': {
-        color: theme.palette.text.disabled,
+const ProfileContainer = styled(Box)(({ theme }) => ({
+    minHeight: '100vh',
+    background: `
+        linear-gradient(135deg, 
+            rgba(59, 130, 246, 0.02) 0%, 
+            rgba(139, 92, 246, 0.02) 35%,
+            rgba(16, 185, 129, 0.02) 70%,
+            rgba(59, 130, 246, 0.02) 100%
+        )
+    `,
+    paddingTop: theme.spacing(4),
+    paddingBottom: theme.spacing(4),
+}));
+
+const ProfileCard = styled(Card)(({ theme }) => ({
+    borderRadius: 24,
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.2)',
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    overflow: 'visible',
+    position: 'relative',
+    animation: `${fadeInUp} 0.6s ease-out`,
+}));
+
+const StyledAvatar = styled(Avatar)(({ theme }) => ({
+    width: 120,
+    height: 120,
+    border: '4px solid white',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        transform: 'scale(1.05)',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+    },
+    [theme.breakpoints.down('sm')]: {
+        width: 100,
+        height: 100,
     },
 }));
 
-const StatusChip = ({ label, icon, color }) => (
-    <Chip
-        icon={icon}
-        label={label}
-        color={color}
-        size="small"
-        sx={{ mr: 1, mb: 1, fontWeight: 500 }}
-    />
-);
+const StatusChip = styled(Chip)(({ theme, color }) => ({
+    fontWeight: 600,
+    borderRadius: 12,
+    height: 32,
+    background: color === 'success' 
+        ? 'linear-gradient(135deg, #10B981 0%, #34D399 100%)'
+        : color === 'warning'
+        ? 'linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%)'
+        : color === 'info'
+        ? 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)'
+        : 'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
+    color: 'white',
+    '& .MuiChip-icon': {
+        color: 'white',
+    },
+    margin: theme.spacing(0.5),
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+}));
+
+const ModernTextField = styled(TextField)(({ theme }) => ({
+    '& .MuiOutlinedInput-root': {
+        borderRadius: 16,
+        backgroundColor: 'rgba(248, 250, 252, 0.8)',
+        transition: 'all 0.3s ease',
+        border: '1px solid transparent',
+        '&:hover': {
+            backgroundColor: 'rgba(248, 250, 252, 1)',
+            transform: 'translateY(-1px)',
+        },
+        '&.Mui-focused': {
+            backgroundColor: 'rgba(248, 250, 252, 1)',
+            transform: 'translateY(-1px)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+        },
+    },
+    '& .MuiInputLabel-root': {
+        fontWeight: 500,
+    },
+    '& .MuiInputBase-input.Mui-disabled': {
+        WebkitTextFillColor: theme.palette.text.disabled,
+        backgroundColor: 'rgba(241, 245, 249, 0.8)',
+    },
+}));
+
+const GradientButton = styled(Button)(({ theme }) => ({
+    borderRadius: 16,
+    padding: '12px 32px',
+    fontWeight: 600,
+    textTransform: 'none',
+    background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+    color: 'white',
+    boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)',
+    transition: 'all 0.3s ease',
+    '&:hover': {
+        background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
+        boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
+        transform: 'translateY(-2px)',
+    },
+    '&:disabled': {
+        background: 'rgba(0,0,0,0.12)',
+        color: 'rgba(0,0,0,0.26)',
+        transform: 'none',
+        boxShadow: 'none',
+    },
+}));
 
 const Profile = () => {
     const { user, setUser } = useAuth();
@@ -48,8 +155,10 @@ const Profile = () => {
     });
     const [preview, setPreview] = useState(null);
     const [copySuccess, setCopySuccess] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         if (user) {
             setFormData(prev => ({ ...prev, phone_number: user.phone_number || '' }));
             setPreview(user.profile_picture ? `${import.meta.env.VITE_API_URL}/storage/${user.profile_picture}` : null);
@@ -90,7 +199,7 @@ const Profile = () => {
             data.append('profile_picture', formData.profile_picture);
         }
         try {
-            const updatedUser = await callApi('post', '/api/user/profile', data, {
+            const updatedUser = await callApi('post', '/user/profile', data, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
             setUser(updatedUser.user);
@@ -106,133 +215,229 @@ const Profile = () => {
     }
 
     return (
-        <Container maxWidth="md" sx={{ mt: { xs: 4, md: 6 }, mb: { xs: 4, md: 6 } }}>
-            <Paper elevation={6} sx={{ p: { xs: 3, md: 5 }, borderRadius: 5, boxShadow: '0 8px 32px 0 rgba(31,38,135,0.15)' }}>
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: 'center', mb: { xs: 3, md: 4 }, textAlign: { xs: 'center', sm: 'left' } }}>
-                    <Badge
-                        overlap="circular"
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                        badgeContent={
-                            <label htmlFor="profile-picture-upload">
-                                <Input accept="image/*" id="profile-picture-upload" type="file" onChange={handleFileChange} />
-                                <Tooltip title="Change profile picture">
-                                    <IconButton component="span" sx={{ bgcolor: 'white', boxShadow: 1, p: 0.5 }}>
-                                        <EditIcon fontSize="small" color="primary" />
-                                    </IconButton>
-                                </Tooltip>
-                            </label>
-                        }
-                    >
-                        <Avatar
-                            src={preview}
-                            sx={{ width: { xs: 100, sm: 120 }, height: { xs: 100, sm: 120 }, border: '3px solid #e0e0e0', boxShadow: 2 }}
-                        />
-                    </Badge>
-                    <Box sx={{ ml: { xs: 0, sm: 4 }, mt: { xs: 2, sm: 0 }, width: '100%' }}>
-                        <Typography variant="h5" fontWeight={700} gutterBottom sx={{ fontSize: { xs: '1.5rem', md: '1.75rem' } }}>
-                            {user.name}
-                        </Typography>
-                        <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ mb: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
-                            {user.is_verified && <StatusChip label="Verified" icon={<VerifiedUserIcon />} color="success" />}
-                            {user.is_admin && <StatusChip label="Admin" icon={<AdminPanelSettingsIcon />} color="warning" />}
-                            {user.is_agent && <StatusChip label="Agent" icon={<PersonAddAltIcon />} color="info" />}
-                            {user.is_affiliate && <StatusChip label="Affiliate" icon={<GroupAddIcon />} color="secondary" />}
-                        </Stack>
-                        {user.referral_code && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', mt: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}>
-                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: { xs: '0.85rem', md: '0.9rem' } }}>
-                                    Referral Code:
-                                </Typography>
-                                <Typography variant="body2" sx={{ ml: 1, fontWeight: 700, letterSpacing: 1, fontSize: { xs: '0.9rem', md: '1rem' } }}>
-                                    {user.referral_code}
-                                </Typography>
-                                <Tooltip title={copySuccess ? 'Copied!' : 'Copy'}>
-                                    <IconButton size="small" onClick={handleCopyReferral} sx={{ ml: 1 }}>
-                                        <ContentCopyIcon fontSize="small" color={copySuccess ? 'success' : 'action'} />
-                                    </IconButton>
-                                </Tooltip>
-                            </Box>
-                        )}
-                    </Box>
-                </Box>
-                <Divider sx={{ my: { xs: 2, md: 3 } }} />
-                <Box component="form" onSubmit={handleSubmit} autoComplete="off">
-                    <Stack spacing={{ xs: 2, md: 3 }}>
-                        <GrayTextField
-                            label="Name"
-                            value={user.name}
-                            InputProps={{ readOnly: true, disableUnderline: true, style: { fontSize: '0.9rem' } }}
-                            variant="filled"
-                            helperText="To change your name, please contact support."
-                            disabled
-                            sx={{ borderRadius: 2 }}
-                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
-                        />
-                        <GrayTextField
-                            label="Email Address"
-                            value={user.email}
-                            InputProps={{ readOnly: true, disableUnderline: true, style: { fontSize: '0.9rem' } }}
-                            variant="filled"
-                            helperText="To change your email, please contact support."
-                            disabled
-                            sx={{ borderRadius: 2 }}
-                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
-                        />
-                        <TextField
-                            label="Phone Number"
-                            name="phone_number"
-                            value={formData.phone_number}
-                            onChange={handleInputChange}
-                            variant="outlined"
-                            disabled={loading}
-                            sx={{ borderRadius: 2 }}
-                            InputProps={{ style: { fontSize: '0.9rem' } }}
-                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
-                        />
-                        <Divider sx={{ my: { xs: 1, md: 2 } }} />
-                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.secondary', mb: 1, fontSize: { xs: '1rem', md: '1.1rem' } }}>
-                            Change Password
-                        </Typography>
-                        <TextField
-                            label="New Password"
-                            name="password"
-                            type="password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            variant="outlined"
-                            disabled={loading}
-                            helperText="Leave blank to keep your current password."
-                            sx={{ borderRadius: 2 }}
-                            InputProps={{ style: { fontSize: '0.9rem' } }}
-                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
-                        />
-                        <TextField
-                            label="Confirm New Password"
-                            name="password_confirmation"
-                            type="password"
-                            value={formData.password_confirmation}
-                            onChange={handleInputChange}
-                            variant="outlined"
-                            disabled={loading || !formData.password}
-                            sx={{ borderRadius: 2 }}
-                            InputProps={{ style: { fontSize: '0.9rem' } }}
-                            InputLabelProps={{ style: { fontSize: '0.9rem' } }}
-                        />
-                        <Box sx={{ textAlign: 'right', mt: { xs: 1, md: 2 } }}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                                disabled={loading}
-                                sx={{ py: { xs: 1, md: 1.5 }, px: { xs: 3, md: 4 }, fontWeight: 700, borderRadius: 2, fontSize: { xs: '0.9rem', md: '1rem' } }}
-                            >
-                                {loading ? 'Saving...' : 'Save Changes'}
-                            </Button>
-                        </Box>
-                    </Stack>
-                </Box>
-            </Paper>
-        </Container>
+        <ProfileContainer>
+            <Container maxWidth="lg">
+                <Fade in={mounted} timeout={800}>
+                    <Grid container spacing={4}>
+                        {/* Profile Header Card */}
+                        <Grid item xs={12}>
+                            <ProfileCard>
+                                <CardContent sx={{ p: 4 }}>
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        flexDirection: { xs: 'column', md: 'row' }, 
+                                        alignItems: { xs: 'center', md: 'flex-start' },
+                                        gap: 4,
+                                        textAlign: { xs: 'center', md: 'left' }
+                                    }}>
+                                        <Box sx={{ position: 'relative' }}>
+                                            <Badge
+                                                overlap="circular"
+                                                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                                badgeContent={
+                                                    <label htmlFor="profile-picture-upload">
+                                                        <Input accept="image/*" id="profile-picture-upload" type="file" onChange={handleFileChange} />
+                                                        <Tooltip title="Change profile picture">
+                                                            <IconButton 
+                                                                component="span" 
+                                                                sx={{ 
+                                                                    bgcolor: 'primary.main', 
+                                                                    color: 'white',
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                                                                    '&:hover': {
+                                                                        bgcolor: 'primary.dark',
+                                                                        transform: 'scale(1.1)',
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Upload fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </label>
+                                                }
+                                            >
+                                                <StyledAvatar src={preview} />
+                                            </Badge>
+                                        </Box>
+                                        
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="h4" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+                                                {user.name}
+                                            </Typography>
+                                            
+                                            <Stack 
+                                                direction="row" 
+                                                spacing={1} 
+                                                flexWrap="wrap" 
+                                                sx={{ 
+                                                    mb: 3, 
+                                                    justifyContent: { xs: 'center', md: 'flex-start' }
+                                                }}
+                                            >
+                                                {user.is_verified && <StatusChip label="Verified" icon={<VerifiedUser />} color="success" />}
+                                                {user.is_admin && <StatusChip label="Admin" icon={<AdminPanelSettings />} color="warning" />}
+                                                {user.is_agent && <StatusChip label="Agent" icon={<PersonAddAlt />} color="info" />}
+                                                {user.is_affiliate && <StatusChip label="Affiliate" icon={<GroupAdd />} color="secondary" />}
+                                            </Stack>
+                                            
+                                            {user.referral_code && (
+                                                <Box sx={{ 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    gap: 2,
+                                                    justifyContent: { xs: 'center', md: 'flex-start' },
+                                                    p: 2,
+                                                    borderRadius: 2,
+                                                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                                                    border: '1px solid rgba(59, 130, 246, 0.1)'
+                                                }}>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                                        Referral Code:
+                                                    </Typography>
+                                                    <Typography variant="body1" sx={{ fontWeight: 700, letterSpacing: 1, color: 'primary.main' }}>
+                                                        {user.referral_code}
+                                                    </Typography>
+                                                    <Tooltip title={copySuccess ? 'Copied!' : 'Copy referral code'}>
+                                                        <IconButton 
+                                                            size="small" 
+                                                            onClick={handleCopyReferral}
+                                                            sx={{
+                                                                color: copySuccess ? 'success.main' : 'primary.main',
+                                                                '&:hover': {
+                                                                    backgroundColor: 'primary.light',
+                                                                    transform: 'scale(1.1)',
+                                                                }
+                                                            }}
+                                                        >
+                                                            <ContentCopy fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </Box>
+                                </CardContent>
+                            </ProfileCard>
+                        </Grid>
+
+                        {/* Profile Settings Card */}
+                        <Grid item xs={12}>
+                            <ProfileCard>
+                                <CardContent sx={{ p: 4 }}>
+                                    <Typography variant="h5" sx={{ fontWeight: 600, mb: 4, color: 'text.primary' }}>
+                                        Profile Settings
+                                    </Typography>
+                                    
+                                    <Box component="form" onSubmit={handleSubmit}>
+                                        <Grid container spacing={3}>
+                                            <Grid item xs={12} md={6}>
+                                                <ModernTextField
+                                                    fullWidth
+                                                    label="Full Name"
+                                                    value={user.name}
+                                                    disabled
+                                                    helperText="Contact support to change your name"
+                                                />
+                                            </Grid>
+                                            
+                                            <Grid item xs={12} md={6}>
+                                                <ModernTextField
+                                                    fullWidth
+                                                    label="Email Address"
+                                                    value={user.email}
+                                                    disabled
+                                                    helperText="Contact support to change your email"
+                                                />
+                                            </Grid>
+                                            
+                                            <Grid item xs={12} md={6}>
+                                                <ModernTextField
+                                                    fullWidth
+                                                    label="Phone Number"
+                                                    name="phone_number"
+                                                    value={formData.phone_number}
+                                                    onChange={handleInputChange}
+                                                    disabled={loading}
+                                                    InputProps={{
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <Phone color="action" />
+                                                            </InputAdornment>
+                                                        ),
+                                                    }}
+                                                />
+                                            </Grid>
+                                            
+                                            <Grid item xs={12}>
+                                                <Divider sx={{ my: 2 }}>
+                                                    <Typography variant="h6" color="text.secondary" sx={{ px: 2, fontWeight: 600 }}>
+                                                        Security Settings
+                                                    </Typography>
+                                                </Divider>
+                                            </Grid>
+                                            
+                                            <Grid item xs={12} md={6}>
+                                                <ModernTextField
+                                                    fullWidth
+                                                    label="New Password"
+                                                    name="password"
+                                                    type="password"
+                                                    value={formData.password}
+                                                    onChange={handleInputChange}
+                                                    disabled={loading}
+                                                    helperText="Leave blank to keep current password"
+                                                    InputProps={{
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <Lock color="action" />
+                                                            </InputAdornment>
+                                                        ),
+                                                    }}
+                                                />
+                                            </Grid>
+                                            
+                                            <Grid item xs={12} md={6}>
+                                                <ModernTextField
+                                                    fullWidth
+                                                    label="Confirm New Password"
+                                                    name="password_confirmation"
+                                                    type="password"
+                                                    value={formData.password_confirmation}
+                                                    onChange={handleInputChange}
+                                                    disabled={loading || !formData.password}
+                                                    InputProps={{
+                                                        startAdornment: (
+                                                            <InputAdornment position="start">
+                                                                <Lock color="action" />
+                                                            </InputAdornment>
+                                                        ),
+                                                    }}
+                                                />
+                                            </Grid>
+                                            
+                                            <Grid item xs={12}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                                                    <GradientButton
+                                                        type="submit"
+                                                        size="large"
+                                                        disabled={loading}
+                                                        startIcon={<Save />}
+                                                    >
+                                                        {loading ? 'Saving Changes...' : 'Save Changes'}
+                                                    </GradientButton>
+                                                </Box>
+                                            </Grid>
+                                        </Grid>
+                                    </Box>
+                                </CardContent>
+                            </ProfileCard>
+                        </Grid>
+                    </Grid>
+                </Fade>
+            </Container>
+        </ProfileContainer>
     );
 };
 

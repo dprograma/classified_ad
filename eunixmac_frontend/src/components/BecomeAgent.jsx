@@ -1,26 +1,18 @@
 import React from 'react';
 import { Button, Typography, Box } from '@mui/material';
-import axios from 'axios';
+import useApi from '../hooks/useApi';
 
 function BecomeAgent() {
+  const { callApi, loading } = useApi();
+  
   const handleBecomeAgent = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        alert('Please log in to become an agent.');
-        return;
-      }
-      // Assuming an API endpoint to update user role
-      await axios.post('http://localhost:8000/api/user/become-agent', {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await callApi('POST', '/user/become-agent');
       alert('You are now an agent!');
       // Optionally, refresh user data or redirect
     } catch (error) {
       console.error('Error becoming agent:', error);
-      alert('Failed to become an agent.');
+      // Error message is already handled by useApi hook
     }
   };
 
@@ -30,7 +22,9 @@ function BecomeAgent() {
       <Typography variant="body1" paragraph>
         Sell educational materials on our platform. Click the button below to become an agent.
       </Typography>
-      <Button variant="contained" onClick={handleBecomeAgent}>Become Agent</Button>
+      <Button variant="contained" onClick={handleBecomeAgent} disabled={loading}>
+        {loading ? 'Processing...' : 'Become Agent'}
+      </Button>
     </Box>
   );
 }

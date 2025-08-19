@@ -1,9 +1,10 @@
 import React from 'react';
 import { FacebookLoginButton, GoogleLoginButton, TwitterLoginButton } from 'react-social-login-buttons';
+import { API_CONFIG } from '../config/api';
 
 const SocialLogin = () => {
     const handleSocialLogin = (provider) => {
-        window.location.href = `http://localhost:8000/api/auth/${provider}/redirect`;
+        window.location.href = `${API_CONFIG.BASE_URL}/auth/${provider}/redirect`;
     };
 
     return (

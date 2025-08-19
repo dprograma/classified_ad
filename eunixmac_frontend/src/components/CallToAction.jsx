@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, Button, Container, Grid, IconButton } from '@mui/material';
-import { Link } from 'react-router-dom';
-import { ArrowForward, TrendingUp, Security, Speed } from '@mui/icons-material';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowForward, TrendingUp, Security, Speed, Add } from '@mui/icons-material';
+import { useAuth } from '../AuthContext';
 
 const features = [
   {
@@ -43,6 +44,8 @@ const FloatingElement = ({ children, delay = 0, duration = 6 }) => (
 const CallToAction = () => {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleResize = () => {
@@ -52,6 +55,14 @@ const CallToAction = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const handlePostAdClick = () => {
+    if (isAuthenticated) {
+      navigate('/post-ad');
+    } else {
+      navigate('/login?redirect=/post-ad');
+    }
+  };
 
   const getResponsivePadding = (width) => {
     if (width < 480) return { x: '16px', y: '40px' };
@@ -299,9 +310,8 @@ const CallToAction = () => {
                 <Button
                   variant="contained"
                   size="large"
-                  component={Link}
-                  to="/register"
-                  endIcon={<ArrowForward />}
+                  onClick={handlePostAdClick}
+                  startIcon={<Add />}
                   sx={{
                     padding: {
                       xs: '14px 28px',
@@ -362,31 +372,57 @@ const CallToAction = () => {
                     }
                   }}
                 >
-                  Create Free Account
+                  Post Your Ad Now
                 </Button>
 
                 <Button
-                  variant="text"
+                  variant="outlined"
                   size="large"
+                  component={Link}
+                  to="/register"
+                  endIcon={<ArrowForward />}
                   sx={{
-                    color: 'rgba(255,255,255,0.9)',
+                    padding: {
+                      xs: '12px 24px',
+                      sm: '14px 28px',
+                      md: '16px 32px',
+                      lg: '18px 36px'
+                    },
                     fontSize: {
                       xs: '0.9rem',
                       sm: '1rem',
-                      md: '1.1rem'
+                      md: '1.1rem',
+                      lg: '1.15rem'
                     },
                     fontWeight: 600,
-                    textDecoration: 'underline',
-                    textUnderlineOffset: '4px',
-                    textDecorationThickness: '2px',
+                    borderRadius: {
+                      xs: '12px',
+                      sm: '14px',
+                      md: '16px'
+                    },
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    color: 'rgba(255,255,255,0.95)',
                     textTransform: 'none',
+                    letterSpacing: '0.02em',
+                    minWidth: {
+                      xs: '180px',
+                      sm: '200px',
+                      md: '220px'
+                    },
                     '&:hover': {
+                      borderColor: 'rgba(255,255,255,0.5)',
                       backgroundColor: 'rgba(255,255,255,0.1)',
-                      textDecorationThickness: '3px',
+                      transform: 'translateY(-2px)',
+                      '& .MuiSvgIcon-root': {
+                        transform: 'translateX(4px)',
+                      }
+                    },
+                    '& .MuiSvgIcon-root': {
+                      transition: 'transform 0.3s ease',
                     }
                   }}
                 >
-                  Learn More
+                  Create Account
                 </Button>
               </Box>
             </Box>

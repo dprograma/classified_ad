@@ -69,7 +69,7 @@ class EducationalMaterialController extends Controller
         ])->post('https://api.paystack.co/transaction/initialize', [
             'email' => $user->email,
             'amount' => $amount * 100,
-            'callback_url' => env('APP_URL') . '/api/payments/verify',
+            'callback_url' => env('APP_URL') . '/payments/verify',
             'metadata' => [
                 'ad_id' => $ad->id,
                 'user_id' => $user->id,

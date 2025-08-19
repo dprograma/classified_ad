@@ -2,23 +2,43 @@
 
 namespace App\Mail\Transports;
 
-use Illuminate\Mail\Transport\Transport;
+use Symfony\Component\Mailer\SentMessage;
+use Symfony\Component\Mailer\Transport\AbstractTransport;
+use Symfony\Component\Mime\MessageConverter;
 use Illuminate\Support\Facades\Http;
 
-class ResendTransport extends Transport
+class ResendTransport extends AbstractTransport
 {
     protected $key;
 
     public function __construct(string $key)
     {
+        parent::__construct();
         $this->key = $key;
     }
 
-    public function send(\Swift_Mime_SimpleMessage $message, &$failedRecipients = null)
+    protected function doSend(SentMessage $message): void
     {
-        $this->beforeSendPerformed($message);
+        $email = MessageConverter::toEmail($message->getOriginalMessage());
 
-        $payload = $this->getPayload($message);
+        $payload = [
+            'from' => $this->formatAddress($email->getFrom()[0]),
+            'to' => array_map([$this, 'formatAddress'], $email->getTo()),
+            'subject' => $email->getSubject(),
+            'html' => $email->getHtmlBody() ?? $email->getTextBody(),
+        ];
+
+        if ($email->getCc()) {
+            $payload['cc'] = array_map([$this, 'formatAddress'], $email->getCc());
+        }
+
+        if ($email->getBcc()) {
+            $payload['bcc'] = array_map([$this, 'formatAddress'], $email->getBcc());
+        }
+
+        if ($email->getReplyTo()) {
+            $payload['reply_to'] = array_map([$this, 'formatAddress'], $email->getReplyTo());
+        }
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->key,
@@ -28,28 +48,18 @@ class ResendTransport extends Transport
         if ($response->failed()) {
             throw new \Exception('Failed to send email via Resend: ' . $response->body());
         }
-
-        $this->sendPerformed($message);
-
-        return $this->numberOfRecipients($message);
     }
 
-    protected function getPayload(\Swift_Mime_SimpleMessage $message)
+    private function formatAddress(\Symfony\Component\Mime\Address $address): string
     {
-        return [
-            'from' => $this->mapContactsToEmail($message->getFrom()),
-            'to' => $this->mapContactsToEmail($message->getTo()),
-            'subject' => $message->getSubject(),
-            'html' => $message->getBody(),
-        ];
-    }
-
-    protected function mapContactsToEmail(array $contacts)
-    {
-        $emails = [];
-        foreach ($contacts as $address => $name) {
-            $emails[] = $name ? $name . ' <' . $address . '>' : $address;
+        if ($address->getName()) {
+            return $address->getName() . ' <' . $address->getAddress() . '>';
         }
-        return implode(',', $emails);
+        return $address->getAddress();
+    }
+
+    public function __toString(): string
+    {
+        return 'resend';
     }
 }

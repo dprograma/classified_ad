@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { List, ListItem, ListItemText, Typography, Box } from '@mui/material';
-import axios from 'axios';
+import useApi from '../hooks/useApi';
 
 function CategoryList() {
   const [categories, setCategories] = useState([]);
+  const { callApi } = useApi();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/categories');
-        setCategories(response.data);
+        const data = await callApi('GET', '/categories');
+        setCategories(data);
       } catch (error) {
         console.error('Error fetching categories:', error);
+        // Error handling is done by useApi hook
       }
     };
     fetchCategories();
-  }, []);
+  }, [callApi]);
 
   return (
     <Box sx={{ mt: 4 }}>

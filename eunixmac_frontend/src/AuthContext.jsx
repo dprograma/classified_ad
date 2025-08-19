@@ -1,8 +1,17 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import { API_CONFIG } from './config/api';
 
 const AuthContext = createContext(null);
+
+// Create the axios instance outside the component
+const authApi = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  headers: {
+    'Accept': 'application/json',
+  }
+});
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -14,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await axios.get('http://localhost:8000/api/user', {
+          const response = await authApi.get('/user', {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
@@ -35,7 +44,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuthStatus();
-  }, []);
+  }, []); // Empty dependency array since we're only checking on mount
 
   const login = (userData, token) => {
     localStorage.setItem('token', token);

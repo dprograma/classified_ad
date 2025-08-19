@@ -1,10 +1,11 @@
 import React from 'react';
 import { Button, Stack } from '@mui/material';
 import { Google as GoogleIcon, Facebook as FacebookIcon, Twitter as TwitterIcon } from '@mui/icons-material';
+import { API_CONFIG } from '../config/api';
 
 const SocialLoginButtons = () => {
     const handleSocialLogin = (provider) => {
-        window.location.href = `http://localhost:8000/api/auth/${provider}/redirect`;
+        window.location.href = `${API_CONFIG.BASE_URL}/auth/${provider}/redirect`;
     };
 
     const socialButtons = [

@@ -35,9 +35,11 @@ Route::get('/auth/{provider}/callback', [SocialLoginController::class, 'callback
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
+Route::get('/categories/{categoryId}/fields', [AdController::class, 'getCategoryFields']);
 
 Route::get('/ads', [AdController::class, 'index']);
 Route::get('/ads/{ad}', [AdController::class, 'show']);
+Route::get('/ads/boost/pricing', [AdController::class, 'getBoostPricing']);
 
 Route::post('/payments/verify', [PaymentController::class, 'verifyPayment']); // Public route for Paystack callback
 
@@ -60,7 +62,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ads/{ad}/messages', [MessageController::class, 'index']);
     Route::post('/ads/{ad}/messages', [MessageController::class, 'store']);
 
-    Route::post('/ads/{ad}/boost', [PaymentController::class, 'initiateAdBoost']);
+    Route::post('/ads/{ad}/boost', [AdController::class, 'initiateBoost']);
+    Route::post('/ads/boost/verify', [AdController::class, 'verifyBoostPayment']);
+    Route::post('/ads/boost/check-expiry', [AdController::class, 'checkBoostExpiry']);
 
     Route::post('/educational-materials/{ad}/pay', [EducationalMaterialController::class, 'initiatePayment']);
     Route::get('/educational-materials/{ad}/download', [EducationalMaterialController::class, 'download']);

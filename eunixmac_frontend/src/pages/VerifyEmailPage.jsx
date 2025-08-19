@@ -2,10 +2,8 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import axios from 'axios'; // Or your preferred HTTP client
-
-// IMPORTANT: Set this to your backend API's base URL in your environment variables
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import axios from 'axios';
+import { API_CONFIG } from '../config/api';
 
 const VerifyEmailPage = () => {
   const [searchParams] = useSearchParams();
@@ -29,7 +27,7 @@ const VerifyEmailPage = () => {
     }
 
     // Reconstruct the full backend verification URL
-    const fullVerifyUrl = `${API_BASE_URL}${path}?${query}`;
+    const fullVerifyUrl = `${API_CONFIG.SERVER_URL}${path}?${query}`;
 
     const verifyEmail = async () => {
       try {
