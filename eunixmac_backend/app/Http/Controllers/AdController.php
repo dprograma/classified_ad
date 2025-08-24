@@ -14,12 +14,15 @@ class AdController extends Controller
     {
         $query = Ad::query()->where('status', 'active');
 
-        // Search functionality
+        // Enhanced search functionality
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->input('search');
             $query->where(function($q) use ($searchTerm) {
-                $q->where('title', 'ILIKE', '%' . $searchTerm . '%')
-                  ->orWhere('description', 'ILIKE', '%' . $searchTerm . '%');
+                $q->where('title', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhere('description', 'LIKE', '%' . $searchTerm . '%')
+                  ->orWhereHas('customFields', function($cf) use ($searchTerm) {
+                      $cf->where('field_value', 'LIKE', '%' . $searchTerm . '%');
+                  });
             });
         }
 
@@ -28,12 +31,17 @@ class AdController extends Controller
             $query->where('category_id', $request->input('category_id'));
         }
 
-        // Location filtering
+        // Location filtering with multiple options
         if ($request->has('location') && !empty($request->location)) {
-            $query->where('location', 'ILIKE', '%' . $request->input('location') . '%');
+            $locations = is_array($request->location) ? $request->location : [$request->location];
+            $query->where(function($q) use ($locations) {
+                foreach ($locations as $location) {
+                    $q->orWhere('location', 'LIKE', '%' . $location . '%');
+                }
+            });
         }
 
-        // Price range filtering
+        // Enhanced price range filtering
         if ($request->has('min_price') && is_numeric($request->min_price)) {
             $query->where('price', '>=', $request->input('min_price'));
         }
@@ -41,20 +49,98 @@ class AdController extends Controller
             $query->where('price', '<=', $request->input('max_price'));
         }
 
-        // Sorting
+        // Price range presets (like Jiji.ng)
+        if ($request->has('price_range')) {
+            $priceRange = $request->input('price_range');
+            switch ($priceRange) {
+                case 'under_50k':
+                    $query->where('price', '<', 50000);
+                    break;
+                case '50k_200k':
+                    $query->whereBetween('price', [50000, 200000]);
+                    break;
+                case '200k_1m':
+                    $query->whereBetween('price', [200000, 1000000]);
+                    break;
+                case '1m_5m':
+                    $query->whereBetween('price', [1000000, 5000000]);
+                    break;
+                case 'over_5m':
+                    $query->where('price', '>', 5000000);
+                    break;
+            }
+        }
+
+        // Custom field filtering (brand, model, condition, etc.)
+        if ($request->has('custom_fields')) {
+            $customFields = $request->input('custom_fields');
+            foreach ($customFields as $fieldName => $fieldValue) {
+                if (!empty($fieldValue)) {
+                    $values = is_array($fieldValue) ? $fieldValue : [$fieldValue];
+                    $query->whereHas('customFields', function($cf) use ($fieldName, $values) {
+                        $cf->where('field_name', $fieldName)
+                           ->where(function($q) use ($values) {
+                               foreach ($values as $value) {
+                                   $q->orWhere('field_value', 'LIKE', '%' . $value . '%');
+                               }
+                           });
+                    });
+                }
+            }
+        }
+
+        // Condition filtering (specific for used items)
+        if ($request->has('condition')) {
+            $conditions = is_array($request->condition) ? $request->condition : [$request->condition];
+            $query->whereHas('customFields', function($cf) use ($conditions) {
+                $cf->where('field_name', 'condition')
+                   ->whereIn('field_value', $conditions);
+            });
+        }
+
+        // Date range filtering
+        if ($request->has('date_from')) {
+            $query->where('created_at', '>=', $request->input('date_from'));
+        }
+        if ($request->has('date_to')) {
+            $query->where('created_at', '<=', $request->input('date_to'));
+        }
+
+        // Enhanced sorting options
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
         
+        // Valid sort options
+        $validSorts = ['created_at', 'price', 'title', 'views', 'updated_at'];
+        if (!in_array($sortBy, $validSorts)) {
+            $sortBy = 'created_at';
+        }
+
         // Boost ads first, then by selected sort
-        $query->orderByRaw('is_boosted DESC, boost_expires_at DESC NULLS LAST')
+        $query->orderByRaw('is_boosted DESC, IFNULL(boost_expires_at, "1900-01-01") DESC')
               ->orderBy($sortBy, $sortOrder);
 
         // Pagination
-        $perPage = min($request->input('per_page', 12), 50); // Max 50 items per page
+        $perPage = min($request->input('per_page', 12), 50);
         $ads = $query->with(['user', 'category', 'images', 'customFields'])
                     ->paginate($perPage);
 
-        return response()->json($ads);
+        // Add search metadata
+        $metadata = [
+            'total_count' => $ads->total(),
+            'search_term' => $request->input('search'),
+            'filters_applied' => [
+                'category' => $request->input('category_id'),
+                'location' => $request->input('location'),
+                'price_range' => $request->input('price_range'),
+                'condition' => $request->input('condition'),
+                'custom_fields' => $request->input('custom_fields', []),
+            ],
+            'sort_by' => $sortBy,
+            'sort_order' => $sortOrder
+        ];
+
+        return response()->json(array_merge($ads->toArray(), ['search_metadata' => $metadata]));
     }
 
     public function show(Ad $ad)
@@ -168,6 +254,21 @@ class AdController extends Controller
     {
         $this->authorize('update', $ad);
 
+        // Handle status-only updates (for toggle functionality)
+        if ($request->only(['status']) == $request->all() && $request->has('status')) {
+            $request->validate([
+                'status' => 'required|string|in:active,inactive,paused,expired',
+            ]);
+
+            $ad->update(['status' => $request->status]);
+            
+            return response()->json([
+                'message' => 'Ad status updated successfully',
+                'ad' => $ad->load(['images', 'customFields'])
+            ]);
+        }
+
+        // Handle full ad updates
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'title' => 'required|string|max:255',
@@ -291,6 +392,108 @@ class AdController extends Controller
         }
 
         return $validationRules;
+    }
+
+    /**
+     * Get search suggestions for autocomplete
+     */
+    public function getSearchSuggestions(Request $request)
+    {
+        $query = $request->input('query', '');
+        $limit = min($request->input('limit', 10), 20);
+
+        if (strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $suggestions = [];
+
+        // Get title suggestions
+        $titleSuggestions = Ad::where('status', 'active')
+            ->where('title', 'LIKE', '%' . $query . '%')
+            ->select('title')
+            ->distinct()
+            ->limit($limit)
+            ->pluck('title')
+            ->toArray();
+
+        // Get location suggestions
+        $locationSuggestions = Ad::where('status', 'active')
+            ->where('location', 'LIKE', '%' . $query . '%')
+            ->select('location')
+            ->distinct()
+            ->limit(5)
+            ->pluck('location')
+            ->toArray();
+
+        // Get custom field suggestions (brands, models, etc.)
+        $customFieldSuggestions = \App\Models\AdCustomField::whereHas('ad', function($q) {
+                $q->where('status', 'active');
+            })
+            ->where('field_value', 'LIKE', '%' . $query . '%')
+            ->select('field_value', 'field_name')
+            ->distinct()
+            ->limit(5)
+            ->get()
+            ->toArray();
+
+        return response()->json([
+            'titles' => array_slice($titleSuggestions, 0, 7),
+            'locations' => $locationSuggestions,
+            'custom_fields' => $customFieldSuggestions
+        ]);
+    }
+
+    /**
+     * Get filter options for a specific category
+     */
+    public function getCategoryFilters($categoryId)
+    {
+        $category = \App\Models\Category::find($categoryId);
+        if (!$category) {
+            return response()->json(['error' => 'Category not found'], 404);
+        }
+
+        // Get unique custom field values for this category
+        $filterOptions = [];
+        
+        $customFields = \App\Models\AdCustomField::whereHas('ad', function($q) use ($categoryId) {
+                $q->where('status', 'active')
+                  ->where('category_id', $categoryId);
+            })
+            ->select('field_name', 'field_value')
+            ->get()
+            ->groupBy('field_name');
+
+        foreach ($customFields as $fieldName => $values) {
+            $filterOptions[$fieldName] = $values->pluck('field_value')
+                ->unique()
+                ->values()
+                ->take(20)
+                ->toArray();
+        }
+
+        // Get location options for this category
+        $locations = Ad::where('status', 'active')
+            ->where('category_id', $categoryId)
+            ->select('location')
+            ->distinct()
+            ->pluck('location')
+            ->take(20)
+            ->toArray();
+
+        // Get price ranges for this category
+        $priceStats = Ad::where('status', 'active')
+            ->where('category_id', $categoryId)
+            ->selectRaw('MIN(price) as min_price, MAX(price) as max_price, AVG(price) as avg_price')
+            ->first();
+
+        return response()->json([
+            'category' => $category->name,
+            'custom_fields' => $filterOptions,
+            'locations' => $locations,
+            'price_stats' => $priceStats
+        ]);
     }
 
     /**
@@ -426,6 +629,7 @@ class AdController extends Controller
                 'reference' => $reference,
                 'amount' => $amount * 100, // Convert to kobo
                 'email' => $request->email,
+                'callback_url' => env('APP_URL') . '/api/payments/verify',
                 'metadata' => [
                     'ad_id' => $ad->id,
                     'boost_days' => $boostDays,

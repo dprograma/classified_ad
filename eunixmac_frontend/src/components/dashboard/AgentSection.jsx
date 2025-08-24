@@ -16,7 +16,14 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
 } from '@mui/material';
 import {
   BusinessCenter,
@@ -29,18 +36,23 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../AuthContext';
 import useApi from '../../hooks/useApi';
+import { toast } from 'react-toastify';
 
 const AgentSection = ({ materials, onRefresh }) => {
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
+  const [earningsReportDialogOpen, setEarningsReportDialogOpen] = useState(false);
   const { user } = useAuth();
   const { callApi, loading } = useApi();
 
   const handleBecomeAgent = async () => {
     try {
-      await callApi('POST', '/user/become-agent');
+      const response = await callApi('POST', '/user/become-agent');
+      toast.success('Congratulations! You are now an agent. You can start uploading educational materials.');
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error becoming agent:', error);
+      toast.error(error.message || 'Failed to become an agent. Please try again.');
     }
   };
 
@@ -314,6 +326,7 @@ const AgentSection = ({ materials, onRefresh }) => {
                   variant="outlined"
                   startIcon={<Analytics />}
                   fullWidth
+                  onClick={() => setAnalyticsDialogOpen(true)}
                 >
                   View Analytics
                 </Button>
@@ -321,6 +334,7 @@ const AgentSection = ({ materials, onRefresh }) => {
                   variant="outlined"
                   startIcon={<AttachMoney />}
                   fullWidth
+                  onClick={() => setEarningsReportDialogOpen(true)}
                 >
                   Earnings Report
                 </Button>
@@ -329,6 +343,253 @@ const AgentSection = ({ materials, onRefresh }) => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Analytics Dialog */}
+      <Dialog open={analyticsDialogOpen} onClose={() => setAnalyticsDialogOpen(false)} maxWidth="lg" fullWidth>
+        <DialogTitle>Agent Analytics</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Detailed analytics and performance metrics for your educational materials.
+          </Typography>
+          
+          {/* Performance Overview */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="primary.main" fontWeight="bold">
+                    {materials?.filter(m => m.status === 'approved').length || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Approved Materials
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="warning.main" fontWeight="bold">
+                    {materials?.filter(m => m.status === 'pending').length || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Pending Review
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="info.main" fontWeight="bold">
+                    {materials?.reduce((sum, m) => sum + (m.download_count || 0), 0) || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Downloads
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="success.main" fontWeight="bold">
+                    {materials?.length > 0 ? (
+                      (materials.reduce((sum, m) => sum + (m.rating || 0), 0) / materials.length).toFixed(1)
+                    ) : '0.0'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Average Rating
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          {/* Material Performance Table */}
+          <Typography variant="h6" gutterBottom>
+            Material Performance
+          </Typography>
+          <TableContainer component={Paper} elevation={0}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Material Title</TableCell>
+                  <TableCell>Type</TableCell>
+                  <TableCell>Status</TableCell>
+                  <TableCell align="right">Downloads</TableCell>
+                  <TableCell align="right">Earnings</TableCell>
+                  <TableCell>Rating</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {materials && materials.length > 0 ? (
+                  materials.map((material, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{material.title}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={material.type} 
+                          size="small" 
+                          color="primary" 
+                          variant="outlined"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={material.status} 
+                          size="small"
+                          color={
+                            material.status === 'approved' ? 'success' :
+                            material.status === 'pending' ? 'warning' : 'default'
+                          }
+                        />
+                      </TableCell>
+                      <TableCell align="right">{material.download_count || 0}</TableCell>
+                      <TableCell align="right">₦{(material.earnings || 0).toLocaleString()}</TableCell>
+                      <TableCell>{material.rating || 'N/A'}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                      <Typography color="text.secondary">
+                        No materials uploaded yet. Upload your first educational material to see analytics.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAnalyticsDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Earnings Report Dialog */}
+      <Dialog open={earningsReportDialogOpen} onClose={() => setEarningsReportDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Earnings Report</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Detailed breakdown of your earnings from educational material sales.
+          </Typography>
+          
+          {/* Earnings Summary */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" color="success.main" fontWeight="bold">
+                    ₦{agentStats.total_earnings.toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Earnings
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" color="info.main" fontWeight="bold">
+                    ₦{Math.round(agentStats.total_earnings * 0.7).toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Net Earnings (70%)
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" color="warning.main" fontWeight="bold">
+                    ₦{Math.round(agentStats.total_earnings * 0.3).toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Platform Fee (30%)
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" color="primary.main" fontWeight="bold">
+                    ₦{agentStats.total_sales > 0 ? Math.round(agentStats.total_earnings / agentStats.total_sales) : 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Avg. per Sale
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body2">
+              <strong>Note:</strong> Agent earnings are calculated as 70% of the sale price. 
+              The remaining 30% covers platform maintenance, payment processing, and support.
+            </Typography>
+          </Alert>
+
+          {/* Recent Earnings */}
+          <Typography variant="h6" gutterBottom>
+            Recent Earnings
+          </Typography>
+          <TableContainer component={Paper} elevation={0}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Material</TableCell>
+                  <TableCell align="right">Sale Price</TableCell>
+                  <TableCell align="right">Your Earnings</TableCell>
+                  <TableCell>Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {materials && materials.some(m => m.recent_sales?.length > 0) ? (
+                  materials.flatMap(m => m.recent_sales || []).map((sale, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{new Date(sale.date).toLocaleDateString()}</TableCell>
+                      <TableCell>{sale.material_title}</TableCell>
+                      <TableCell align="right">₦{sale.price?.toLocaleString()}</TableCell>
+                      <TableCell align="right">₦{Math.round(sale.price * 0.7).toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={sale.payout_status || 'Pending'} 
+                          size="small"
+                          color={sale.payout_status === 'paid' ? 'success' : 'warning'}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                      <Typography color="text.secondary">
+                        No earnings yet. Upload and sell educational materials to start earning.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEarningsReportDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

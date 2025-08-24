@@ -6,7 +6,7 @@ import FeaturedAds from '../components/FeaturedAds';
 import HowItWorks from '../components/HowItWorks';
 import Testimonials from '../components/Testimonials';
 import CallToAction from '../components/CallToAction';
-import Footer from '../components/Footer';
+import CompactSearch from '../components/CompactSearch';
 
 const LandingPage = () => {
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -39,12 +39,23 @@ const LandingPage = () => {
         }}>
             {/* Hero Section - Full width */}
             <HeroSection />
+
+            {/* Compact Search Section */}
+            <Box
+                component="section"
+                sx={{
+                    // paddingY: { xs: 4, md: 6 },
+                    background: 'linear-gradient(135deg, rgba(108,71,255,0.03) 0%, rgba(0,198,174,0.03) 100%)',
+                    position: 'relative',
+                }}
+            >
+            </Box>
             
             {/* Category Grid Section */}
             <Box 
                 component="section"
                 sx={{ 
-                    paddingY: spacing.section,
+                    // paddingY: spacing.section,
                     position: 'relative',
                     background: 'linear-gradient(180deg, rgba(108,71,255,0.01) 0%, rgba(0,198,174,0.01) 100%)',
                 }}
@@ -68,7 +79,7 @@ const LandingPage = () => {
             <Box 
                 component="section"
                 sx={{ 
-                    paddingY: spacing.section,
+                    // paddingY: spacing.section,
                     background: 'linear-gradient(180deg, rgba(245,245,245,0.5) 0%, rgba(250,250,250,0.8) 100%)',
                     position: 'relative',
                     '&::before': {
@@ -195,9 +206,6 @@ const LandingPage = () => {
                     <CallToAction />
                 </Container>
             </Box>
-            
-            {/* Footer - Full width */}
-            <Footer />
 
             {/* Floating Background Elements */}
             <Box sx={{

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Container, Stack, IconButton, TextField, Button, Collapse, Divider } from '@mui/material';
+import { Box, Typography, Container, Stack, IconButton, TextField, Button, Collapse, Divider, Alert, Snackbar } from '@mui/material';
 import { styled } from '@mui/system';
+import useApi from '../hooks/useApi';
 import { 
   Facebook, 
   Twitter, 
@@ -119,6 +120,8 @@ function Footer() {
     contact: false 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const { callApi } = useApi();
 
   useEffect(() => {
     const handleResize = () => {
@@ -137,14 +140,35 @@ function Footer() {
 
   const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
-    if (!newsletter.trim()) return;
+    if (!newsletter.trim()) {
+      setSnackbar({ open: true, message: 'Please enter a valid email address', severity: 'error' });
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newsletter.trim())) {
+      setSnackbar({ open: true, message: 'Please enter a valid email address', severity: 'error' });
+      return;
+    }
     
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    setNewsletter('');
-    // Show success message (you can implement toast notification here)
+    try {
+      await callApi('POST', '/newsletter/subscribe', { 
+        email: newsletter.trim() 
+      });
+      setNewsletter('');
+      setSnackbar({ open: true, message: 'Successfully subscribed to newsletter!', severity: 'success' });
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      setSnackbar({ 
+        open: true, 
+        message: error.response?.data?.message || 'Failed to subscribe. Please try again.', 
+        severity: 'error' 
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getResponsivePadding = (width) => {
@@ -549,6 +573,23 @@ function Footer() {
           </Typography>
         </Box>
       </Container>
+      
+      {/* Success/Error Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </FooterContainer>
   );
 }

@@ -43,6 +43,7 @@ function Navbar() {
   const { callApi } = useApi();
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
   const open = Boolean(anchorEl);
 
   const handleMenu = (event) => {
@@ -78,6 +79,19 @@ function Navbar() {
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch(e);
+    }
   };
 
   const navItems = isAuthenticated ? (
@@ -135,9 +149,12 @@ function Navbar() {
           </Typography>
         </LogoBox>
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', flexGrow: 1, mx: 2 }}>
-          <SearchBar elevation={2}>
+          <SearchBar elevation={2} component="form" onSubmit={handleSearch}>
             <InputBase
               placeholder="What are you looking for?"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleSearchKeyPress}
               sx={{ ml: 1, flex: 1, fontSize: '1.05rem' }}
             />
             <IconButton type="submit" sx={{ p: '10px', color: 'primary.main' }} aria-label="search">

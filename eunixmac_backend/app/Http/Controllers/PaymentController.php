@@ -26,7 +26,7 @@ class PaymentController extends Controller
         ])->post('https://api.paystack.co/transaction/initialize', [
             'email' => $user->email,
             'amount' => $amount * 100, // Paystack expects amount in kobo
-            'callback_url' => env('APP_URL') . '/payments/verify',
+            'callback_url' => env('APP_URL') . '/api/payments/verify',
             'metadata' => [
                 'ad_id' => $ad->id,
                 'user_id' => $user->id,
@@ -43,11 +43,12 @@ class PaymentController extends Controller
 
     public function verifyPayment(Request $request)
     {
-        $request->validate([
-            'reference' => 'required|string',
-        ]);
-
-        $reference = $request->reference;
+        // This method handles Paystack callbacks (both GET and POST)
+        $reference = $request->input('reference') ?? $request->input('trxref');
+        
+        if (!$reference) {
+            return redirect(env('FRONTEND_URL') . '/payment/callback?status=error&message=' . urlencode('Payment reference not found'));
+        }
 
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
@@ -61,25 +62,31 @@ class PaymentController extends Controller
             if ($metadata['type'] === 'ad_boost') {
                 $ad = Ad::find($metadata['ad_id']);
                 if ($ad) {
+                    $boostDays = $metadata['boost_days'] ?? 7; // Default to 7 if not specified
                     $ad->is_boosted = true;
-                    // Set boost expiration (e.g., 7 days from now)
-                    $ad->boost_expires_at = now()->addDays(7);
+                    $ad->boost_expires_at = now()->addDays($boostDays);
                     $ad->save();
                 }
             }
 
-            Payment::create([
-                'user_id' => $metadata['user_id'],
-                'payable_id' => $metadata['ad_id'],
-                'payable_type' => $metadata['type'],
-                'amount' => $data['amount'] / 100, // Convert back from kobo
-                'reference' => $reference,
-                'status' => 'success',
-            ]);
+            // Check if payment record already exists (avoid duplicates)
+            $existingPayment = Payment::where('reference', $reference)->first();
+            if (!$existingPayment) {
+                Payment::create([
+                    'user_id' => $metadata['user_id'],
+                    'payable_id' => $metadata['ad_id'],
+                    'payable_type' => $metadata['type'],
+                    'amount' => $data['amount'] / 100, // Convert back from kobo
+                    'reference' => $reference,
+                    'status' => 'success',
+                ]);
+            }
 
-            return response()->json(['message' => 'Payment verified successfully', 'data' => $data]);
+            // Redirect to frontend success page
+            return redirect(env('FRONTEND_URL') . '/payment/callback?status=success&reference=' . $reference . '&ad_id=' . $metadata['ad_id']);
         } else {
-            return response()->json(['message' => 'Payment verification failed', 'error' => $response->json()], 400);
+            // Redirect to frontend error page
+            return redirect(env('FRONTEND_URL') . '/payment/callback?status=error&reference=' . $reference . '&message=' . urlencode('Payment verification failed'));
         }
     }
 }

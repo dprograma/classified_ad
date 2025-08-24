@@ -22,30 +22,12 @@ import PaymentCallback from './pages/PaymentCallback';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import Settings from './pages/Settings';
+import SearchResults from './pages/SearchResults';
+import Help from './pages/Help';
+import UploadEducationalMaterial from './pages/UploadEducationalMaterial';
+import Categories from './pages/Categories';
+import AdDetail from './pages/AdDetail';
 
-// Components
-import HeroSection from './components/HeroSection';
-import CategoryGrid from './components/CategoryGrid';
-import FeaturedAds from './components/FeaturedAds';
-import HowItWorks from './components/HowItWorks';
-import Testimonials from './components/Testimonials';
-import CallToAction from './components/CallToAction';
-
-
-
-function Home() {
-  return (
-    <Box>
-      <HeroSection />
-      <CategoryGrid />
-      <FeaturedAds />
-      <HowItWorks />
-      <Testimonials />
-      <CallToAction />
-      <Footer />
-    </Box>
-  );
-}
 
 function App() {
   return (
@@ -68,6 +50,18 @@ function App() {
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/verify-email" element={<VerifyEmailPage />} />
                 <Route path="/payment/callback" element={<PaymentCallback />} />
+                <Route path="/search" element={<SearchResults />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/ads/:id" element={<AdDetail />} />
+                <Route 
+                  path="/educational-materials/upload" 
+                  element={
+                    <PrivateRoute>
+                      <UploadEducationalMaterial />
+                    </PrivateRoute>
+                  } 
+                />
                 <Route path="/" element={<LandingPage />} />
                 <Route
                   path="/dashboard"

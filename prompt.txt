@@ -1,15 +1,7 @@
-POST
-http://localhost:8000/api/ads
-[HTTP/1.1 422 Unprocessable Content 39ms]
+PUT
+http://localhost:8000/api/ads/3
+[HTTP/1.1 422 Unprocessable Content 30ms]
 
-Error posting ad: 
+Error updating ad status: 
 Object { message: "Request failed with status code 422", name: "AxiosError", code: "ERR_BAD_REQUEST", config: {…}, request: XMLHttpRequest, response: {…}, status: 422, stack: "", … }
-PostAd.jsx:205:15
-Error response data: 
-Object { message: "The images.1 failed to upload.", errors: {…} }
-​
-errors: Object { "images.1": (1) […] }
-​
-message: "The images.1 failed to upload."
-​
-<prototype>: Object { … }
+MyAdsSection.jsx:145:15

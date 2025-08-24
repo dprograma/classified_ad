@@ -36,12 +36,29 @@ Route::get('/auth/{provider}/callback', [SocialLoginController::class, 'callback
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
 Route::get('/categories/{categoryId}/fields', [AdController::class, 'getCategoryFields']);
+Route::get('/categories/{categoryId}/filters', [AdController::class, 'getCategoryFilters']);
+
+Route::post('/newsletter/subscribe', function (Request $request) {
+    $request->validate([
+        'email' => 'required|email|max:255'
+    ]);
+    
+    // For now, just return success. In production, you'd save to a database
+    // or integrate with a newsletter service like Mailchimp
+    \Log::info('Newsletter subscription request:', ['email' => $request->email]);
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Successfully subscribed to newsletter!'
+    ]);
+});
 
 Route::get('/ads', [AdController::class, 'index']);
+Route::get('/ads/search/suggestions', [AdController::class, 'getSearchSuggestions']);
 Route::get('/ads/{ad}', [AdController::class, 'show']);
 Route::get('/ads/boost/pricing', [AdController::class, 'getBoostPricing']);
 
-Route::post('/payments/verify', [PaymentController::class, 'verifyPayment']); // Public route for Paystack callback
+Route::match(['get', 'post'], '/payments/verify', [PaymentController::class, 'verifyPayment']); // Public route for Paystack callback
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
@@ -73,17 +90,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/educational-materials', [EducationalMaterialController::class, 'store']);
     });
 
-    Route::middleware('can:admin')->group(function () {
-        Route::post('/categories', [CategoryController::class, 'store']);
-        Route::put('/categories/{category}', [CategoryController::class, 'update']);
-        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+    // Admin routes - commented out until AdminController is implemented
+    // Route::middleware('can:admin')->group(function () {
+    //     Route::post('/categories', [CategoryController::class, 'store']);
+    //     Route::put('/categories/{category}', [CategoryController::class, 'update']);
+    //     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
-        Route::get('/admin/users', [AdminController::class, 'getUsers']);
-        Route::put('/admin/users/{user}/verify', [AdminController::class, 'verifyUser']);
-        Route::get('/admin/ads', [AdminController::class, 'getAds']);
-        Route::put('/admin/ads/{ad}/approve', [AdminController::class, 'approveAd']);
-        Route::put('/admin/ads/{ad}/reject', [AdminController::class, 'rejectAd']);
-        Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
-        Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
-    });
+    //     Route::get('/admin/users', [AdminController::class, 'getUsers']);
+    //     Route::put('/admin/users/{user}/verify', [AdminController::class, 'verifyUser']);
+    //     Route::get('/admin/ads', [AdminController::class, 'getAds']);
+    //     Route::put('/admin/ads/{ad}/approve', [AdminController::class, 'approveAd']);
+    //     Route::put('/admin/ads/{ad}/reject', [AdminController::class, 'rejectAd']);
+    //     Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
+    // });
 });

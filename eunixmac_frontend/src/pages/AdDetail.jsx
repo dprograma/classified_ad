@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Typography, Box, Card, CardContent, CardMedia, Chip, Stack, Button, TextField } from '@mui/material';
-import axios from 'axios';
+import { Typography, Box, Card, CardContent, CardMedia, Chip, Stack, Button, TextField, Container, CircularProgress } from '@mui/material';
 import BoostAd from '../components/BoostAd';
+import useApi from '../hooks/useApi';
 
 function AdDetail() {
   const { id } = useParams();
@@ -10,78 +10,204 @@ function AdDetail() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [showBoostDialog, setShowBoostDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { callApi } = useApi();
 
   useEffect(() => {
-    const fetchAd = async () => {
+    const fetchAdData = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/ads/${id}`);
-        setAd(response.data);
-      } catch (error) {
-        console.error('Error fetching ad:', error);
-      }
-    };
-
-    const fetchMessages = async () => {
-      try {
+        setLoading(true);
+        setError(null);
+        
+        // Check cache first for ad details
+        const adCacheKey = `ad_detail_${id}`;
+        const cachedAd = sessionStorage.getItem(adCacheKey);
+        const adCacheTimestamp = sessionStorage.getItem(`${adCacheKey}_timestamp`);
+        const now = Date.now();
+        
+        // Use cached ad if it's less than 5 minutes old
+        if (cachedAd && adCacheTimestamp && (now - parseInt(adCacheTimestamp)) < 300000) {
+          try {
+            const parsedAd = JSON.parse(cachedAd);
+            setAd(parsedAd);
+          } catch (parseError) {
+            console.warn('Failed to parse cached ad:', parseError);
+            // Continue to fetch from API
+          }
+        }
+        
+        // If no cached ad or cache is expired, fetch from API
+        if (!cachedAd || !adCacheTimestamp || (now - parseInt(adCacheTimestamp)) >= 300000) {
+          try {
+            const adData = await callApi('GET', `/ads/${id}`);
+            setAd(adData);
+            
+            // Cache the ad data
+            sessionStorage.setItem(adCacheKey, JSON.stringify(adData));
+            sessionStorage.setItem(`${adCacheKey}_timestamp`, now.toString());
+          } catch (adError) {
+            console.error('Error fetching ad:', adError);
+            
+            // For rate limiting errors, use cached data if available
+            if (adError.response?.status === 429 && cachedAd) {
+              try {
+                const parsedAd = JSON.parse(cachedAd);
+                setAd(parsedAd);
+              } catch (parseError) {
+                throw adError; // Re-throw if can't use cache
+              }
+            } else {
+              throw adError; // Re-throw for other errors
+            }
+          }
+        }
+        
+        // Fetch messages if user is authenticated
         const token = localStorage.getItem('token');
         if (token) {
-          const response = await axios.get(`http://localhost:8000/api/ads/${id}/messages`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          setMessages(response.data);
+          try {
+            const messagesCacheKey = `ad_messages_${id}`;
+            const cachedMessages = sessionStorage.getItem(messagesCacheKey);
+            const messagesCacheTimestamp = sessionStorage.getItem(`${messagesCacheKey}_timestamp`);
+            
+            // Use cached messages if they're less than 2 minutes old
+            if (cachedMessages && messagesCacheTimestamp && (now - parseInt(messagesCacheTimestamp)) < 120000) {
+              try {
+                const parsedMessages = JSON.parse(cachedMessages);
+                setMessages(parsedMessages);
+              } catch (parseError) {
+                // Continue to fetch from API
+                const messagesData = await callApi('GET', `/ads/${id}/messages`);
+                setMessages(messagesData || []);
+                
+                // Cache the messages
+                sessionStorage.setItem(messagesCacheKey, JSON.stringify(messagesData || []));
+                sessionStorage.setItem(`${messagesCacheKey}_timestamp`, now.toString());
+              }
+            } else {
+              // Fetch fresh messages
+              try {
+                const messagesData = await callApi('GET', `/ads/${id}/messages`);
+                setMessages(messagesData || []);
+                
+                // Cache the messages
+                sessionStorage.setItem(messagesCacheKey, JSON.stringify(messagesData || []));
+                sessionStorage.setItem(`${messagesCacheKey}_timestamp`, now.toString());
+              } catch (msgError) {
+                console.warn('Could not fetch messages:', msgError);
+                // Use cached messages if available, otherwise empty array
+                if (cachedMessages) {
+                  try {
+                    const parsedMessages = JSON.parse(cachedMessages);
+                    setMessages(parsedMessages);
+                  } catch (parseError) {
+                    setMessages([]);
+                  }
+                } else {
+                  setMessages([]);
+                }
+              }
+            }
+          } catch (msgError) {
+            console.warn('Could not fetch messages:', msgError);
+            setMessages([]);
+          }
         }
       } catch (error) {
-        console.error('Error fetching messages:', error);
+        console.error('Error fetching ad:', error);
+        setError('Failed to load ad details. Please try again.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchAd();
-    fetchMessages();
+    if (id) {
+      fetchAdData();
+    }
   }, [id]);
 
   const handleSendMessage = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (token && ad) {
-        await axios.post(`http://localhost:8000/api/ads/${ad.id}/messages`, {
-          message: newMessage,
+      if (token && ad && newMessage.trim()) {
+        await callApi('POST', `/ads/${ad.id}/messages`, {
+          message: newMessage.trim(),
           receiver_id: ad.user.id,
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         });
         setNewMessage('');
-        // Re-fetch messages to update the chat
-        const response = await axios.get(`http://localhost:8000/api/ads/${id}/messages`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setMessages(response.data);
+        
+        // Invalidate messages cache and re-fetch messages to update the chat
+        const messagesCacheKey = `ad_messages_${id}`;
+        sessionStorage.removeItem(messagesCacheKey);
+        sessionStorage.removeItem(`${messagesCacheKey}_timestamp`);
+        
+        try {
+          const messagesData = await callApi('GET', `/ads/${id}/messages`);
+          setMessages(messagesData || []);
+          
+          // Update cache with fresh messages
+          const now = Date.now();
+          sessionStorage.setItem(messagesCacheKey, JSON.stringify(messagesData || []));
+          sessionStorage.setItem(`${messagesCacheKey}_timestamp`, now.toString());
+        } catch (msgError) {
+          console.warn('Could not refresh messages:', msgError);
+        }
+      } else if (!token) {
+        alert('Please log in to send messages.');
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please log in.');
+      alert('Failed to send message. Please try again.');
     }
   };
 
-  if (!ad) {
-    return <Typography>Loading...</Typography>;
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error || !ad) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Box sx={{ textAlign: 'center', py: 4 }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            {error || 'Ad not found'}
+          </Typography>
+          <Button variant="outlined" onClick={() => window.history.back()}>
+            Go Back
+          </Button>
+        </Box>
+      </Container>
+    );
   }
 
   return (
-    <Box sx={{ mt: 4, p: 2 }}>
-      <Card>
-        {ad.images.length > 0 && (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+        {(ad.images && ad.images.length > 0) ? (
           <CardMedia
             component="img"
             height="400"
-            image={`http://localhost:8000/storage/${ad.images[0].image_path}`}
+            image={ad.images[0].image_path?.startsWith('http') ? ad.images[0].image_path : `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${ad.images[0].image_path}`}
             alt={ad.title}
-            sx={{ objectFit: 'contain' }}
+            onError={(e) => {
+              e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop&auto=format';
+            }}
+            sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
+          />
+        ) : (
+          <CardMedia
+            component="img"
+            height="400"
+            image="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop&auto=format"
+            alt={ad.title}
+            sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
           />
         )}
         <CardContent>
@@ -89,16 +215,16 @@ function AdDetail() {
             {ad.title}
           </Typography>
           <Typography variant="h5" color="primary" gutterBottom>
-            ₦{ad.price}
+            {ad.price ? `₦${Number(ad.price).toLocaleString()}` : ad.formatted_price || 'Price on request'}
           </Typography>
           <Typography variant="body1" paragraph>
             {ad.description}
           </Typography>
-          <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-            <Chip label={`Category: ${ad.category.name}`} color="primary" />
-            <Chip label={`Location: ${ad.location}`} color="secondary" />
-            <Chip label={`Status: ${ad.status}`} variant="outlined" />
-            {ad.is_boosted && <Chip label="Boosted" color="success" />}
+          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+            <Chip label={`Category: ${ad.category?.name || 'N/A'}`} color="primary" />
+            <Chip label={`Location: ${ad.location || 'N/A'}`} color="secondary" />
+            <Chip label={`Status: ${ad.status || 'Active'}`} variant="outlined" />
+            {(ad.is_boosted || ad.is_featured) && <Chip label="Featured" color="success" />}
           </Stack>
 
           <Typography variant="h6" gutterBottom>
@@ -170,7 +296,7 @@ function AdDetail() {
 
         </CardContent>
       </Card>
-    </Box>
+    </Container>
   );
 }
 

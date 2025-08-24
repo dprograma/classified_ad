@@ -1,346 +1,445 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Typography, Box, useTheme } from '@mui/material';
-import { PhoneAndroid, Laptop, Chair, Checkroom, SportsEsports, DirectionsCar, Home, Work, Pets, Build, Face, Star } from '@mui/icons-material';
+import { Box, Typography, useTheme, Chip } from '@mui/material';
+import { 
+  DirectionsCar, 
+  Home, 
+  PhoneAndroid, 
+  Laptop, 
+  Chair, 
+  Face, 
+  Checkroom, 
+  Pets, 
+  Work, 
+  Build, 
+  SportsEsports,
+  TrendingUp
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import useApi from '../hooks/useApi';
 
 const categories = [
-  { name: 'Vehicles', icon: <DirectionsCar />, id: 'vehicles' },
-  { name: 'Property', icon: <Home />, id: 'property' },
-  { name: 'Mobile Phones & Tablets', icon: <PhoneAndroid />, id: 'mobile' },
-  { name: 'Electronics', icon: <Laptop />, id: 'electronics' },
-  { name: 'Home, Furniture & Appliances', icon: <Chair />, id: 'home' },
-  { name: 'Health & Beauty', icon: <Face />, id: 'health' },
-  { name: 'Fashion', icon: <Checkroom />, id: 'fashion' },
-  { name: 'Pets', icon: <Pets />, id: 'pets' },
-  { name: 'Jobs & Services', icon: <Work />, id: 'jobs' },
-  { name: 'Building Materials', icon: <Build />, id: 'building' },
-  { name: 'Gaming', icon: <SportsEsports />, id: 'gaming' },
+  { 
+    name: 'Vehicles', 
+    icon: <DirectionsCar />, 
+    id: 'vehicles', 
+    count: '2.1k',
+    color: '#FF6B35',
+    bgColor: 'rgba(255, 107, 53, 0.1)'
+  },
+  { 
+    name: 'Property', 
+    icon: <Home />, 
+    id: 'property', 
+    count: '1.8k',
+    color: '#4ECDC4',
+    bgColor: 'rgba(78, 205, 196, 0.1)'
+  },
+  { 
+    name: 'Mobile', 
+    icon: <PhoneAndroid />, 
+    id: 'mobile', 
+    count: '3.2k',
+    color: '#45B7D1',
+    bgColor: 'rgba(69, 183, 209, 0.1)'
+  },
+  { 
+    name: 'Electronics', 
+    icon: <Laptop />, 
+    id: 'electronics', 
+    count: '2.7k',
+    color: '#8B5CF6',
+    bgColor: 'rgba(139, 92, 246, 0.1)'
+  },
+  { 
+    name: 'Furniture', 
+    icon: <Chair />, 
+    id: 'furniture', 
+    count: '1.4k',
+    color: '#F59E0B',
+    bgColor: 'rgba(245, 158, 11, 0.1)'
+  },
+  { 
+    name: 'Beauty', 
+    icon: <Face />, 
+    id: 'beauty', 
+    count: '890',
+    color: '#EC4899',
+    bgColor: 'rgba(236, 72, 153, 0.1)'
+  },
+  { 
+    name: 'Fashion', 
+    icon: <Checkroom />, 
+    id: 'fashion', 
+    count: '2.0k',
+    color: '#10B981',
+    bgColor: 'rgba(16, 185, 129, 0.1)'
+  },
+  { 
+    name: 'Pets', 
+    icon: <Pets />, 
+    id: 'pets', 
+    count: '654',
+    color: '#F97316',
+    bgColor: 'rgba(249, 115, 22, 0.1)'
+  },
+  { 
+    name: 'Services', 
+    icon: <Work />, 
+    id: 'services', 
+    count: '1.2k',
+    color: '#6366F1',
+    bgColor: 'rgba(99, 102, 241, 0.1)'
+  },
+  { 
+    name: 'Gaming', 
+    icon: <SportsEsports />, 
+    id: 'gaming', 
+    count: '756',
+    color: '#EF4444',
+    bgColor: 'rgba(239, 68, 68, 0.1)'
+  }
 ];
-
-const featuredCategory = {
-  name: 'Featured: Real Estate',
-  icon: <Star />,
-  description: 'Find the best deals on properties and land.',
-  id: 'featured',
-};
 
 const CategoryGrid = () => {
   const theme = useTheme();
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const navigate = useNavigate();
+  const { callApi } = useApi();
+  const [categoriesWithCount, setCategoriesWithCount] = useState(categories);
 
-  // Dynamic viewport tracking for responsive behavior
   useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    fetchCategoriesWithCount();
   }, []);
 
-  // Dynamic column calculation based on viewport width
-  const getGridColumns = (width) => {
-    if (width < 480) return 2;      // Mobile portrait
-    if (width < 640) return 3;      // Mobile landscape
-    if (width < 768) return 3;      // Small tablet
-    if (width < 1024) return 4;     // Tablet
-    if (width < 1280) return 5;     // Desktop
-    return 6;                       // Large desktop
+  const fetchCategoriesWithCount = async () => {
+    try {
+      // Try to fetch backend categories first to get the real mapping
+      let backendCategories = [];
+      try {
+        const categoriesResponse = await callApi('GET', '/categories');
+        backendCategories = categoriesResponse?.data || categoriesResponse || [];
+      } catch (categoriesError) {
+        console.warn('Could not fetch backend categories:', categoriesError);
+      }
+      
+      // Create a mapping between our frontend categories and backend categories
+      const categoryMapping = {};
+      if (backendCategories.length > 0) {
+        categories.forEach(frontendCategory => {
+          // Try to match by name (case insensitive) or slug
+          const backendMatch = backendCategories.find(backendCat => 
+            backendCat.name?.toLowerCase().includes(frontendCategory.name.toLowerCase()) ||
+            backendCat.slug === frontendCategory.id ||
+            frontendCategory.id.includes(backendCat.name?.toLowerCase()) ||
+            backendCat.name?.toLowerCase().includes(frontendCategory.id)
+          );
+          if (backendMatch) {
+            categoryMapping[frontendCategory.id] = backendMatch.id;
+          }
+        });
+      }
+      
+      // First get all ads to count by category
+      const allAdsResponse = await callApi('GET', '/ads?per_page=1000');
+      const allAds = allAdsResponse?.data || [];
+      
+      // Count ads per category using various possible identifiers
+      const categoryCounts = {};
+      allAds.forEach(ad => {
+        // Try different ways to get the category identifier
+        const possibleIds = [
+          ad.category_id,
+          ad.category?.id,
+          ad.category?.slug,
+          ad.category?.name?.toLowerCase()
+        ].filter(Boolean);
+        
+        possibleIds.forEach(id => {
+          if (id) {
+            categoryCounts[id] = (categoryCounts[id] || 0) + 1;
+          }
+        });
+      });
+
+      // Map counts to our categories using both frontend IDs and mapped backend IDs
+      const categoriesWithRealCount = categories.map(category => {
+        let count = categoryCounts[category.id] || 0;
+        
+        // Also try the mapped backend ID if available
+        const mappedId = categoryMapping[category.id];
+        if (mappedId && categoryCounts[mappedId]) {
+          count = Math.max(count, categoryCounts[mappedId]);
+        }
+        
+        const formattedCount = count > 999 ? `${(count / 1000).toFixed(1)}k` : count.toString();
+        return {
+          ...category,
+          count: formattedCount,
+          mappedId: mappedId // Store for navigation
+        };
+      });
+      
+      setCategoriesWithCount(categoriesWithRealCount);
+    } catch (error) {
+      console.error('Error fetching categories with counts:', error);
+      // Fallback to categories with zero counts
+      setCategoriesWithCount(categories.map(cat => ({ ...cat, count: '0' })));
+    }
   };
 
-  // Responsive spacing system
-  const getSpacing = (width) => {
-    if (width < 480) return '8px';
-    if (width < 768) return '12px';
-    if (width < 1024) return '16px';
-    return '20px';
+  const handleCategoryClick = (category) => {
+    // Use the mapped backend ID if available, otherwise use the frontend ID
+    const categoryId = category.mappedId || category.id;
+    navigate(`/search?category_id=${categoryId}`);
   };
 
-  // Responsive card dimensions
-  const getCardSize = (width) => {
-    if (width < 480) return { min: '140px', max: '160px' };
-    if (width < 768) return { min: '150px', max: '170px' };
-    if (width < 1024) return { min: '160px', max: '180px' };
-    return { min: '170px', max: '190px' };
-  };
-
-  // Responsive icon size
-  const getIconSize = (width) => {
-    if (width < 480) return 28;
-    if (width < 768) return 32;
-    if (width < 1024) return 36;
-    return 40;
-  };
-
-  // Responsive icon circle size
-  const getIconCircleSize = (width) => {
-    if (width < 480) return 56;
-    if (width < 768) return 64;
-    if (width < 1024) return 72;
-    return 80;
-  };
-
-  const columns = getGridColumns(windowWidth);
-  const spacing = getSpacing(windowWidth);
-  const cardSize = getCardSize(windowWidth);
-  const iconSize = getIconSize(windowWidth);
-  const iconCircleSize = getIconCircleSize(windowWidth);
-
-  const renderCategoryCard = (category, isFeatured = false) => {
-    const cardId = `category-${category.id}`;
-    
+  const renderCategoryItem = (category) => {
     return (
-      <Card
+      <Box
         key={category.id}
-        id={cardId}
-        role="button"
-        tabIndex={0}
-        aria-label={`Browse ${category.name} category`}
+        onClick={() => handleCategoryClick(category)}
         sx={{
-          minWidth: cardSize.min,
-          maxWidth: cardSize.max,
-          minHeight: cardSize.min,
-          aspectRatio: '1',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
           textAlign: 'center',
-          padding: {
-            xs: '12px',
-            sm: '16px',
-            md: '20px',
-            lg: '24px'
-          },
-          borderRadius: {
-            xs: '12px',
-            sm: '16px',
-            md: '20px'
-          },
-          boxShadow: isFeatured 
-            ? '0 4px 20px rgba(108,71,255,0.15)' 
-            : '0 2px 12px rgba(108,71,255,0.08)',
-          background: isFeatured 
-            ? 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)' 
-            : '#fff',
-          color: isFeatured ? '#fff' : 'inherit',
+          p: { xs: 1.5, sm: 2 },
+          borderRadius: '12px',
+          background: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
           cursor: 'pointer',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           position: 'relative',
           overflow: 'hidden',
+          minWidth: { xs: '120px', sm: '140px' },
+          minHeight: { xs: '100px', sm: '110px' },
+          flexShrink: 0, // Prevent shrinking in flex container
           
-          // Ensure minimum touch target
+          '&:hover': {
+            transform: 'translateY(-3px)',
+            boxShadow: '0 8px 25px rgba(0, 0, 0, 0.12)',
+            background: 'rgba(255, 255, 255, 0.95)',
+          },
+          
           '&::before': {
             content: '""',
             position: 'absolute',
             top: 0,
             left: 0,
-            right: 0,
-            bottom: 0,
-            minWidth: '44px',
-            minHeight: '44px',
+            width: '100%',
+            height: '3px',
+            background: category.color,
+            transition: 'height 0.3s ease',
           },
           
-          '&:hover, &:focus-visible': {
-            transform: 'translateY(-4px) scale(1.02)',
-            boxShadow: isFeatured 
-              ? '0 8px 32px rgba(108,71,255,0.25)' 
-              : '0 8px 24px rgba(108,71,255,0.15)',
-            outline: 'none',
-          },
-          
-          '&:focus-visible': {
-            outline: `3px solid ${theme.palette.primary.main}`,
-            outlineOffset: '2px',
-          },
-          
-          '&:active': {
-            transform: 'translateY(-2px) scale(1.01)',
-          },
-          
-          // Responsive hover effects
-          '@media (hover: none)': {
-            '&:hover': {
-              transform: 'none',
-              boxShadow: isFeatured 
-                ? '0 4px 20px rgba(108,71,255,0.15)' 
-                : '0 2px 12px rgba(108,71,255,0.08)',
-            }
-          }
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            // Handle category selection
-            console.log(`Selected category: ${category.name}`);
+          '&:hover::before': {
+            height: '4px',
           }
         }}
       >
+        {/* Icon Circle */}
         <Box
           sx={{
-            width: iconCircleSize,
-            height: iconCircleSize,
-            borderRadius: '50%',
-            background: isFeatured
-              ? 'rgba(255, 255, 255, 0.2)'
-              : 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
+            width: { xs: 40, sm: 45 },
+            height: { xs: 40, sm: 45 },
+            borderRadius: '10px',
+            background: category.bgColor,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: isFeatured ? '#fff' : '#fff',
-            boxShadow: '0 4px 12px rgba(108,71,255,0.15)',
-            marginBottom: {
-              xs: '12px',
-              sm: '16px',
-              md: '20px'
-            },
+            color: category.color,
+            mb: 1,
             transition: 'all 0.3s ease',
+            
             '& svg': {
-              fontSize: iconSize,
+              fontSize: { xs: 20, sm: 22 },
               transition: 'transform 0.3s ease',
             }
           }}
         >
           {React.cloneElement(category.icon, {
-            sx: { fontSize: iconSize }
+            sx: { fontSize: { xs: 20, sm: 22 }, color: category.color }
           })}
         </Box>
         
-        <CardContent sx={{ 
-          padding: 0,
-          '&:last-child': { paddingBottom: 0 }
-        }}>
-          <Typography 
-            variant="subtitle1" 
-            component="h3"
-            sx={{ 
-              fontWeight: 600,
-              fontSize: {
-                xs: 'clamp(0.75rem, 3.5vw, 0.875rem)',
-                sm: 'clamp(0.875rem, 2.5vw, 1rem)',
-                md: 'clamp(1rem, 1.5vw, 1.125rem)',
-                lg: '1.125rem'
-              },
-              lineHeight: 1.3,
-              marginBottom: isFeatured ? '8px' : 0,
-              // Ensure text doesn't break awkwardly
-              wordBreak: 'break-word',
-              hyphens: 'auto',
+        {/* Category Name */}
+        <Typography 
+          variant="subtitle2" 
+          sx={{ 
+            fontWeight: 600,
+            fontSize: { xs: '0.8rem', sm: '0.85rem' },
+            color: 'text.primary',
+            mb: 0.5,
+            lineHeight: 1.2
+          }}
+        >
+          {category.name}
+        </Typography>
+        
+        {/* Count Badge */}
+        <Chip
+          size="small"
+          label={category.count}
+          sx={{
+            height: 18,
+            fontSize: '0.7rem',
+            fontWeight: 500,
+            backgroundColor: `${category.color}15`,
+            color: category.color,
+            border: `1px solid ${category.color}30`,
+            '& .MuiChip-label': {
+              px: 0.8
+            }
+          }}
+        />
+        
+        {/* Trending indicator for top categories */}
+        {['mobile', 'electronics', 'vehicles'].includes(category.id) && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.3,
+              color: '#10B981',
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              background: 'rgba(16, 185, 129, 0.1)',
+              px: 0.5,
+              py: 0.2,
+              borderRadius: '4px'
             }}
           >
-            {category.name}
-          </Typography>
-          
-          {isFeatured && category.description && (
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                fontSize: {
-                  xs: 'clamp(0.625rem, 2.5vw, 0.75rem)',
-                  sm: 'clamp(0.75rem, 2vw, 0.875rem)',
-                  md: '0.875rem'
-                },
-                color: 'rgba(255,255,255,0.9)',
-                lineHeight: 1.4,
-                marginTop: '4px'
-              }}
-            >
-              {category.description}
-            </Typography>
-          )}
-        </CardContent>
-      </Card>
+            <TrendingUp sx={{ fontSize: 12 }} />
+            HOT
+          </Box>
+        )}
+      </Box>
     );
   };
 
   return (
     <Box
       component="section"
-      aria-labelledby="categories-heading"
       sx={{
         width: '100%',
-        maxWidth: '1400px',
+        maxWidth: '1200px',
         margin: '0 auto',
-        padding: {
-          xs: '16px',
-          sm: '24px',
-          md: '32px',
-          lg: '40px'
-        }
+        px: { xs: 2, sm: 3, md: 4 },
+        py: { xs: 1.5, sm: 2, md: 3 }
       }}
     >
-      <Typography 
-        id="categories-heading"
-        variant="h2" 
-        component="h2" 
-        sx={{ 
-          marginBottom: {
-            xs: '24px',
-            sm: '32px',
-            md: '40px',
-            lg: '48px'
-          },
-          fontWeight: 700,
-          textAlign: 'center',
-          fontSize: {
-            xs: 'clamp(1.5rem, 6vw, 2rem)',
-            sm: 'clamp(2rem, 5vw, 2.5rem)',
-            md: 'clamp(2.5rem, 4vw, 3rem)',
-            lg: '3rem'
-          },
-          lineHeight: 1.2,
-          color: theme.palette.text.primary
-        }}
-      >
-        Trending Categories
-      </Typography>
-      
+      {/* Header */}
+      <Box sx={{ mb: 2, textAlign: 'center' }}>
+        <Typography 
+          variant="h4"
+          sx={{ 
+            fontWeight: 700,
+            fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
+            background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            mb: 1
+          }}
+        >
+          Browse by Category
+        </Typography>
+        <Typography 
+          variant="body1" 
+          color="text.secondary"
+          sx={{ fontSize: '1rem', maxWidth: '500px', mx: 'auto' }}
+        >
+          Discover thousands of items across our most popular categories
+        </Typography>
+      </Box>
+
+      {/* Categories Horizontal Scroll */}
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${columns}, 1fr)`,
-          gap: spacing,
-          justifyItems: 'center',
-          alignItems: 'start',
-          width: '100%',
-          
-          // Featured category spans multiple columns on larger screens
-          '& > *:first-of-type': {
-            gridColumn: windowWidth >= 768 ? 'span 2' : 'span 1',
-            justifySelf: 'center',
+          display: 'flex',
+          gap: { xs: 1.5, sm: 2 },
+          overflowX: 'auto',
+          pb: 1,
+          px: 1,
+          mx: -1,
+          scrollBehavior: 'smooth',
+          '&::-webkit-scrollbar': {
+            height: '6px',
           },
-          
-          // Smooth transitions when grid changes
-          transition: 'all 0.3s ease',
-          
-          // Ensure proper spacing on very small screens
-          '@media (max-width: 320px)': {
-            gap: '6px',
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0,0,0,0.1)',
+            borderRadius: '3px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
+            borderRadius: '3px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
+          },
+          // Hide scrollbar on mobile for cleaner look
+          '@media (max-width: 768px)': {
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            scrollbarWidth: 'none',
           }
         }}
       >
-        {/* Featured category */}
-        {renderCategoryCard(featuredCategory, true)}
-        
-        {/* Regular categories */}
-        {categories.map((category) => renderCategoryCard(category))}
+        {categoriesWithCount.map((category) => renderCategoryItem(category))}
       </Box>
-      
-      {/* Screen reader only text for better accessibility */}
-      <Box
-        component="p"
-        sx={{
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          padding: 0,
-          margin: '-1px',
-          overflow: 'hidden',
-          clip: 'rect(0, 0, 0, 0)',
-          whiteSpace: 'nowrap',
-          border: 0,
-        }}
-      >
-        Use arrow keys to navigate between categories. Press Enter or Space to select a category.
+
+      {/* View All Button */}
+      <Box sx={{ textAlign: 'center', mt: 3 }}>
+        <Box
+          component="button"
+          onClick={() => navigate('/categories')}
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 1,
+            px: 3,
+            py: 1.5,
+            borderRadius: '50px',
+            border: '2px solid',
+            borderColor: 'primary.main',
+            background: 'transparent',
+            color: 'primary.main',
+            fontWeight: 600,
+            fontSize: '0.9rem',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            textDecoration: 'none',
+            
+            '&:hover': {
+              background: 'primary.main',
+              color: 'white',
+              transform: 'translateY(-2px)',
+              boxShadow: '0 8px 25px rgba(108, 71, 255, 0.3)'
+            }
+          }}
+        >
+          View All Categories
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 20,
+              height: 20,
+              borderRadius: '50%',
+              background: 'currentColor',
+              color: 'background.paper',
+              fontSize: '12px',
+              fontWeight: 700
+            }}
+          >
+            →
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

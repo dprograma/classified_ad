@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Container, InputBase, IconButton, Paper, useTheme, Fade, Chip, Stack } from '@mui/material';
+import { Box, Typography, Button, Container, useTheme, Fade, Chip, Stack } from '@mui/material';
 import { styled, keyframes } from '@mui/system';
-import { Search as SearchIcon, TrendingUp, Shield, Speed, Add } from '@mui/icons-material';
+import { TrendingUp, Shield, Speed, Add } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import CompactSearch from './CompactSearch';
 
 const gradientMove = keyframes`
   0% { background-position: 0% 50%; }
@@ -74,46 +75,6 @@ const HeroContainer = styled(Box)(({ theme }) => ({
   },
 }));
 
-const GlassSearchBar = styled(Paper)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  width: '100%',
-  maxWidth: '600px',
-  margin: '32px auto 0',
-  borderRadius: '20px',
-  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.1)',
-  padding: '6px',
-  background: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255, 255, 255, 0.3)',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  position: 'relative',
-  overflow: 'hidden',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: '-100%',
-    width: '100%',
-    height: '100%',
-    background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)`,
-    animation: `${shimmerAnimation} 3s ease-in-out infinite`,
-  },
-  '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: '0 30px 80px rgba(0, 0, 0, 0.15)',
-  },
-  '&:focus-within': {
-    transform: 'translateY(-4px)',
-    boxShadow: '0 30px 80px rgba(59, 130, 246, 0.2)',
-    background: 'rgba(255, 255, 255, 0.98)',
-  },
-  [theme.breakpoints.down('sm')]: {
-    maxWidth: '90%',
-    margin: '24px auto 0',
-    borderRadius: '16px',
-  },
-}));
 
 const FloatingOrb = styled('div')(({ theme, delay = 0, size = 120, top = '10%', left = '10%', color = 'rgba(255,255,255,0.1)' }) => ({
   position: 'absolute',
@@ -281,53 +242,19 @@ function HeroSection() {
         </Fade>
 
         <Fade in={mounted} timeout={1500}>
-          <GlassSearchBar 
-            elevation={0}
-            role="search"
-            aria-label="Search for products"
-          >
-            <InputBase
-              placeholder="What are you looking for today?"
-              aria-label="Search input"
-              sx={{ 
-                marginLeft: 2,
-                flex: 1, 
-                fontSize: '1.1rem',
-                color: theme.palette.text.primary,
-                fontWeight: 500,
-                '&::placeholder': {
-                  color: 'rgba(0,0,0,0.6)',
-                  opacity: 1,
-                },
-                [theme.breakpoints.down('sm')]: {
-                  fontSize: '1rem',
-                  marginLeft: 1.5,
-                },
+          <Box sx={{ 
+            maxWidth: '1000px', 
+            margin: '32px auto 0',
+            px: { xs: 2, sm: 0 },
+          }}>
+            <CompactSearch 
+              sx={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
               }}
             />
-            <IconButton 
-              type="submit" 
-              sx={{ 
-                padding: '12px',
-                margin: '6px',
-                background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
-                color: 'white',
-                borderRadius: '12px',
-                transition: 'all 0.3s ease',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
-                  transform: 'scale(1.05)',
-                },
-                [theme.breakpoints.down('sm')]: {
-                  padding: '10px',
-                  margin: '4px',
-                },
-              }} 
-              aria-label="Search button"
-            >
-              <SearchIcon />
-            </IconButton>
-          </GlassSearchBar>
+          </Box>
         </Fade>
 
         <Stack 
@@ -344,6 +271,7 @@ function HeroSection() {
             startIcon={<Add />}
             aria-label="Post your ad to start selling"
             sx={{
+              color: 'white',
               background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
               '&:hover': {
                 background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
@@ -372,7 +300,7 @@ function HeroSection() {
           </AnimatedButton>
         </Stack>
 
-        <Box sx={{ 
+        {/* <Box sx={{ 
           marginTop: 6,
           color: 'rgba(255,255,255,0.8)',
           fontSize: '0.9rem',
@@ -381,7 +309,7 @@ function HeroSection() {
           <Typography variant="body2">
             Join thousands of satisfied users across Nigeria
           </Typography>
-        </Box>
+        </Box> */}
       </Container>
     </HeroContainer>
   );

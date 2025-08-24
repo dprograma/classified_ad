@@ -18,7 +18,14 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
 } from '@mui/material';
 import {
   Group,
@@ -32,31 +39,37 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../AuthContext';
 import useApi from '../../hooks/useApi';
+import { toast } from 'react-toastify';
 
 const AffiliateSection = ({ affiliateData, onRefresh }) => {
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [earningsHistoryOpen, setEarningsHistoryOpen] = useState(false);
+  const [performanceReportOpen, setPerformanceReportOpen] = useState(false);
   const { user } = useAuth();
   const { callApi, loading } = useApi();
 
   const handleBecomeAffiliate = async () => {
     try {
-      await callApi('POST', '/user/become-affiliate');
+      const response = await callApi('POST', '/user/become-affiliate');
+      toast.success('Welcome to our affiliate program! Your unique referral link has been generated.');
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error becoming affiliate:', error);
+      toast.error(error.message || 'Failed to join affiliate program. Please try again.');
     }
   };
 
   const copyReferralLink = () => {
-    const referralLink = `${window.location.origin}?ref=${user?.id}`;
+    const referralLink = `${window.location.origin}?ref=${user?.referral_code || user?.id}`;
     navigator.clipboard.writeText(referralLink).then(() => {
-      // You could add a toast notification here
-      console.log('Referral link copied to clipboard');
+      toast.success('Referral link copied to clipboard!');
+    }).catch(() => {
+      toast.error('Failed to copy referral link');
     });
   };
 
   const shareReferralLink = () => {
-    const referralLink = `${window.location.origin}?ref=${user?.id}`;
+    const referralLink = `${window.location.origin}?ref=${user?.referral_code || user?.id}`;
     if (navigator.share) {
       navigator.share({
         title: 'Join this amazing classified ads platform',
@@ -251,7 +264,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
     pending_earnings: affiliateData?.pending_earnings || 0
   };
 
-  const referralLink = `${window.location.origin}?ref=${user?.id}`;
+  const referralLink = `${window.location.origin}?ref=${user?.referral_code || user?.id}`;
 
   return (
     <Box>
@@ -382,6 +395,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
                   variant="outlined"
                   startIcon={<AttachMoney />}
                   fullWidth
+                  onClick={() => setEarningsHistoryOpen(true)}
                 >
                   Earnings History
                 </Button>
@@ -389,6 +403,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
                   variant="outlined"
                   startIcon={<TrendingUp />}
                   fullWidth
+                  onClick={() => setPerformanceReportOpen(true)}
                 >
                   Performance Report
                 </Button>
@@ -415,6 +430,142 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
           )}
         </CardContent>
       </Card>
+
+      {/* Earnings History Dialog */}
+      <Dialog open={earningsHistoryOpen} onClose={() => setEarningsHistoryOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Earnings History</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            View your detailed earnings history and commission payments.
+          </Typography>
+          
+          <TableContainer component={Paper} elevation={0}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Referral</TableCell>
+                  <TableCell>Purchase Amount</TableCell>
+                  <TableCell>Commission Rate</TableCell>
+                  <TableCell align="right">Earnings</TableCell>
+                  <TableCell>Status</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {affiliateData?.earnings_history?.length > 0 ? (
+                  affiliateData.earnings_history.map((earning, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{new Date(earning.date).toLocaleDateString()}</TableCell>
+                      <TableCell>{earning.referral_email}</TableCell>
+                      <TableCell>₦{earning.purchase_amount?.toLocaleString()}</TableCell>
+                      <TableCell>65%</TableCell>
+                      <TableCell align="right">₦{earning.commission_amount?.toLocaleString()}</TableCell>
+                      <TableCell>
+                        <Chip 
+                          label={earning.status} 
+                          color={earning.status === 'paid' ? 'success' : 'warning'}
+                          size="small"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                      <Typography color="text.secondary">
+                        No earnings history yet. Start sharing your referral link to earn commissions!
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEarningsHistoryOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Performance Report Dialog */}
+      <Dialog open={performanceReportOpen} onClose={() => setPerformanceReportOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Performance Report</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            Detailed performance metrics and analytics for your affiliate activities.
+          </Typography>
+          
+          <Grid container spacing={3} sx={{ mb: 3 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="primary.main" fontWeight="bold">
+                    {((stats.successful_referrals / Math.max(stats.total_referrals, 1)) * 100).toFixed(1)}%
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Conversion Rate
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="success.main" fontWeight="bold">
+                    ₦{stats.total_earnings ? Math.round(stats.total_earnings / Math.max(stats.successful_referrals, 1)) : 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Avg. Earning per Sale
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="info.main" fontWeight="bold">
+                    {affiliateData?.click_count || 0}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Link Clicks
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={12} sm={6} md={3}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h4" color="warning.main" fontWeight="bold">
+                    {((stats.total_referrals / Math.max(affiliateData?.click_count, 1)) * 100).toFixed(1)}%
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Click to Signup
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
+          
+          <Alert severity="info" sx={{ mb: 2 }}>
+            <Typography variant="body2">
+              <strong>Tip:</strong> Share your referral link on social media, forums, and with friends to increase your reach and earnings!
+            </Typography>
+          </Alert>
+          
+          <Typography variant="h6" gutterBottom>
+            Monthly Performance
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Detailed monthly analytics coming soon...
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPerformanceReportOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

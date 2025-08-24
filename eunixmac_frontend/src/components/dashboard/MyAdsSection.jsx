@@ -28,7 +28,11 @@ import {
   Avatar,
   Tooltip,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Collapse,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import {
   Add,
@@ -59,6 +63,9 @@ const MyAdsSection = ({ ads, onRefresh }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [boostDialogOpen, setBoostDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [priceFilter, setPriceFilter] = useState('');
+  const [locationFilter, setLocationFilter] = useState('');
   const { callApi, loading } = useApi();
 
   // Filter ads based on status and search
@@ -84,8 +91,31 @@ const MyAdsSection = ({ ads, onRefresh }) => {
     
     if (searchTerm) {
       filtered = filtered.filter(ad => 
-        ad.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ad.description.toLowerCase().includes(searchTerm.toLowerCase())
+        ad.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ad.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (priceFilter) {
+      switch (priceFilter) {
+        case 'under_50k':
+          filtered = filtered.filter(ad => ad.price < 50000);
+          break;
+        case '50k_200k':
+          filtered = filtered.filter(ad => ad.price >= 50000 && ad.price <= 200000);
+          break;
+        case '200k_1m':
+          filtered = filtered.filter(ad => ad.price >= 200000 && ad.price <= 1000000);
+          break;
+        case 'over_1m':
+          filtered = filtered.filter(ad => ad.price > 1000000);
+          break;
+      }
+    }
+
+    if (locationFilter) {
+      filtered = filtered.filter(ad => 
+        ad.location?.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
     
@@ -199,6 +229,7 @@ const MyAdsSection = ({ ads, onRefresh }) => {
                 variant="outlined"
                 startIcon={<FilterList />}
                 fullWidth
+                onClick={() => setFiltersOpen(!filtersOpen)}
               >
                 More Filters
               </Button>
@@ -206,6 +237,55 @@ const MyAdsSection = ({ ads, onRefresh }) => {
           </Grid>
         </CardContent>
       </Card>
+
+      {/* Advanced Filters */}
+      <Collapse in={filtersOpen}>
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Advanced Filters
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Price Range</InputLabel>
+                  <Select
+                    value={priceFilter}
+                    label="Price Range"
+                    onChange={(e) => setPriceFilter(e.target.value)}
+                  >
+                    <MenuItem value="">Any Price</MenuItem>
+                    <MenuItem value="under_50k">Under ₦50,000</MenuItem>
+                    <MenuItem value="50k_200k">₦50,000 - ₦200,000</MenuItem>
+                    <MenuItem value="200k_1m">₦200,000 - ₦1,000,000</MenuItem>
+                    <MenuItem value="over_1m">Over ₦1,000,000</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Location"
+                  placeholder="Filter by location..."
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                />
+              </Grid>
+            </Grid>
+            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setPriceFilter('');
+                  setLocationFilter('');
+                }}
+              >
+                Clear Filters
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </Collapse>
 
       {/* Tabs */}
       <Card sx={{ mb: 3 }}>
@@ -275,7 +355,7 @@ const MyAdsSection = ({ ads, onRefresh }) => {
                             )}
                           </Box>
                           <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 200 }}>
-                            {ad.description}
+                            {ad.description || 'No description'}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {ad.location}

@@ -73,29 +73,46 @@ class AuthController extends Controller
     public function becomeAgent(Request $request)
     {
         $user = $request->user();
+        
+        if ($user->is_agent) {
+            return response()->json([
+                'message' => 'User is already an agent',
+            ], 400);
+        }
+        
         $user->is_agent = true;
         $user->save();
 
         return response()->json([
-            'message' => 'User is now an agent',
+            'message' => 'Congratulations! You are now an agent. You can start uploading educational materials.',
+            'user' => $user
         ]);
     }
 
     public function becomeAffiliate(Request $request)
     {
         $user = $request->user();
+        
+        if ($user->is_affiliate) {
+            return response()->json([
+                'message' => 'User is already an affiliate',
+                'referral_link' => env('APP_URL') . '?ref=' . $user->referral_code,
+            ], 400);
+        }
+        
         $user->is_affiliate = true;
-        $user->save();
-
-        // Generate and store a unique referral link for the user
-        // For simplicity, we'll just use the user ID as the referral code for now
-        // In a real application, you'd generate a more robust unique code
-        $user->referral_code = uniqid('affiliate_'); // Add a referral_code column to users table
+        
+        // Generate and store a unique referral code if not exists
+        if (!$user->referral_code) {
+            $user->referral_code = strtoupper(Str::random(8));
+        }
+        
         $user->save();
 
         return response()->json([
-            'message' => 'User is now an affiliate',
-            'referral_link' => env('APP_URL') . '/register?ref=' . $user->referral_code,
+            'message' => 'Welcome to our affiliate program! Your unique referral link has been generated.',
+            'referral_link' => env('APP_URL') . '?ref=' . $user->referral_code,
+            'user' => $user
         ]);
     }
 

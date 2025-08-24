@@ -80,6 +80,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_agent',
         'is_affiliate',
         'is_verified',
+        'referral_code',
     ];
 
     /**

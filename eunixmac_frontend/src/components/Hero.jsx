@@ -9,7 +9,7 @@ const Hero = () => {
         <p>Find what you need, sell what you don't. Your ultimate classifieds destination.</p>
         <div className="hero-actions">
           <button className="btn btn-primary">Browse Ads</button>
-          <button className="btn btn-secondary">Post an Ad</button>
+          <button className="btn btn-secondary text-white">Post an Ad</button>
         </div>
       </div>
     </section>

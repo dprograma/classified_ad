@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, CardMedia, Box, Chip, IconButton, Button } from '@mui/material';
 import { FavoriteBorder, Visibility, LocationOn, Favorite } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import useApi from '../hooks/useApi';
 
 const featuredAds = [
   {
@@ -62,6 +64,10 @@ const featuredAds = [
 const FeaturedAds = () => {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [favorites, setFavorites] = useState(new Set());
+  const [ads, setAds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { callApi } = useApi();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleResize = () => {
@@ -71,6 +77,75 @@ const FeaturedAds = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    fetchFeaturedAds();
+  }, []);
+
+  const fetchFeaturedAds = async () => {
+    // Check cache first
+    const cacheKey = 'featured_ads';
+    const cachedAds = sessionStorage.getItem(cacheKey);
+    const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
+    const now = Date.now();
+    
+    // Use cache if it's less than 3 minutes old
+    if (cachedAds && cacheTimestamp && (now - parseInt(cacheTimestamp)) < 180000) {
+      try {
+        const parsedAds = JSON.parse(cachedAds);
+        setAds(parsedAds);
+        setLoading(false);
+        return;
+      } catch (parseError) {
+        console.warn('Failed to parse cached featured ads:', parseError);
+        // Continue to fetch from API
+      }
+    }
+
+    try {
+      const data = await callApi('GET', '/ads?featured=true&limit=8');
+      let featuredOnlyAds = [];
+      
+      if (data && data.data && Array.isArray(data.data)) {
+        // Filter to only show boosted/featured ads
+        featuredOnlyAds = data.data.filter(ad => ad.is_featured || ad.featured || ad.is_boosted);
+      } else if (data && Array.isArray(data)) {
+        // Filter to only show boosted/featured ads
+        featuredOnlyAds = data.filter(ad => ad.is_featured || ad.featured || ad.is_boosted);
+      } else {
+        // Only use featured ads from static data
+        featuredOnlyAds = featuredAds.filter(ad => ad.featured);
+      }
+      
+      setAds(featuredOnlyAds);
+      
+      // Cache the results
+      sessionStorage.setItem(cacheKey, JSON.stringify(featuredOnlyAds));
+      sessionStorage.setItem(`${cacheKey}_timestamp`, now.toString());
+      
+    } catch (error) {
+      console.error('Error fetching featured ads:', error);
+      
+      // For rate limiting errors, use cache if available, otherwise use static data
+      if (error.response?.status === 429) {
+        if (cachedAds) {
+          try {
+            const parsedAds = JSON.parse(cachedAds);
+            setAds(parsedAds);
+            return;
+          } catch (parseError) {
+            // Fall through to static data
+          }
+        }
+      }
+      
+      // Only use featured ads from static data
+      const featuredStaticAds = featuredAds.filter(ad => ad.featured);
+      setAds(featuredStaticAds);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleFavorite = (adId) => {
     setFavorites(prev => {
@@ -101,6 +176,11 @@ const FeaturedAds = () => {
   const cardSize = getCardWidth(windowWidth);
   const scrollGap = getScrollGap(windowWidth);
 
+  // Don't render the section if no trending ads and not loading
+  if (!loading && ads.length === 0) {
+    return null;
+  }
+
   return (
     <Box
       component="section"
@@ -108,10 +188,10 @@ const FeaturedAds = () => {
       sx={{
         width: '100%',
         padding: {
-          xs: '16px',
-          sm: '24px',
-          md: '32px',
-          lg: '40px'
+          xs: '12px',
+          sm: '16px',
+          md: '20px',
+          lg: '24px'
         }
       }}
     >
@@ -121,10 +201,10 @@ const FeaturedAds = () => {
         component="h2" 
         sx={{ 
           marginBottom: {
-            xs: '24px',
-            sm: '32px',
-            md: '40px',
-            lg: '48px'
+            xs: '16px',
+            sm: '20px',
+            md: '24px',
+            lg: '28px'
           },
           fontWeight: 700, 
           textAlign: 'center',
@@ -144,49 +224,96 @@ const FeaturedAds = () => {
         Trending Ads
       </Typography>
 
-      <Box sx={{ 
-        display: 'flex', 
-        overflowX: 'auto', 
-        gap: scrollGap,
-        paddingBottom: {
-          xs: '16px',
-          sm: '20px',
-          md: '24px'
-        },
-        paddingLeft: {
-          xs: '8px',
-          sm: '12px',
-          md: '0'
-        },
-        paddingRight: {
-          xs: '8px',
-          sm: '12px',
-          md: '0'
-        },
-        scrollBehavior: 'smooth',
-        '&::-webkit-scrollbar': {
-          height: '8px',
-        },
-        '&::-webkit-scrollbar-track': {
-          background: 'rgba(108,71,255,0.1)',
-          borderRadius: '4px',
-        },
-        '&::-webkit-scrollbar-thumb': {
-          background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
-          borderRadius: '4px',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
-          }
-        },
-        // Hide scrollbar on mobile for cleaner look
-        '@media (max-width: 768px)': {
-          '&::-webkit-scrollbar': {
-            display: 'none',
+      {loading ? (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '200px',
+          color: 'text.secondary'
+        }}>
+          <Typography>Loading trending ads...</Typography>
+        </Box>
+      ) : ads.length === 0 ? (
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '200px',
+          textAlign: 'center',
+          backgroundColor: 'rgba(108, 71, 255, 0.05)',
+          borderRadius: '16px',
+          padding: '40px',
+          border: '2px dashed rgba(108, 71, 255, 0.2)'
+        }}>
+          <Typography 
+            variant="h6" 
+            color="text.secondary"
+            sx={{ 
+              marginBottom: 2,
+              fontWeight: 600,
+            }}
+          >
+            No trending ads at the moment
+          </Typography>
+          <Typography 
+            variant="body1" 
+            color="text.secondary"
+            sx={{ 
+              maxWidth: '400px',
+              lineHeight: 1.6
+            }}
+          >
+            Check back later for featured and boosted ads from our community
+          </Typography>
+        </Box>
+      ) : null}
+
+      {!loading && ads.length > 0 && (
+        <Box sx={{ 
+          display: 'flex', 
+          overflowX: 'auto', 
+          gap: scrollGap,
+          paddingBottom: {
+            xs: '16px',
+            sm: '20px',
+            md: '24px'
           },
-          scrollbarWidth: 'none',
-        }
-      }}>
-        {featuredAds.map((ad) => (
+          paddingLeft: {
+            xs: '8px',
+            sm: '12px',
+            md: '0'
+          },
+          paddingRight: {
+            xs: '8px',
+            sm: '12px',
+            md: '0'
+          },
+          scrollBehavior: 'smooth',
+          '&::-webkit-scrollbar': {
+            height: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(108,71,255,0.1)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
+            borderRadius: '4px',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
+            }
+          },
+          // Hide scrollbar on mobile for cleaner look
+          '@media (max-width: 768px)': {
+            '&::-webkit-scrollbar': {
+              display: 'none',
+            },
+            scrollbarWidth: 'none',
+          }
+        }}>
+        {ads.map((ad) => (
           <Card
             key={ad.id}
             sx={{
@@ -241,11 +368,16 @@ const FeaturedAds = () => {
               <CardMedia
                 component="img"
                 height={windowWidth < 480 ? "160" : windowWidth < 768 ? "180" : "200"}
-                image={ad.image}
+                image={ad.image_url || ad.image || ad.images?.[0] || '/placeholder-image.jpg'}
                 alt={ad.title}
+                onError={(e) => {
+                  // If image fails to load, use a fallback
+                  e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop&auto=format';
+                }}
                 sx={{ 
                   objectFit: 'cover',
                   transition: 'transform 0.3s ease',
+                  backgroundColor: '#f5f5f5',
                   '&:hover': {
                     transform: 'scale(1.05)',
                   }
@@ -276,7 +408,7 @@ const FeaturedAds = () => {
               )}
 
               {/* Featured Badge */}
-              {ad.featured && (
+              {(ad.featured || ad.is_featured) && (
                 <Chip
                   label="Featured"
                   color="secondary"
@@ -459,7 +591,7 @@ const FeaturedAds = () => {
                     }
                   }}
                 >
-                  {ad.price}
+                  {ad.price ? `₦${Number(ad.price).toLocaleString()}` : ad.formatted_price || 'Price on request'}
                 </Typography>
                 {ad.originalPrice && (
                   <Typography 
@@ -480,10 +612,11 @@ const FeaturedAds = () => {
               </Box>
 
               <Button 
-                variant={ad.featured ? "contained" : "outlined"}
+                variant={(ad.featured || ad.is_featured) ? "contained" : "outlined"}
                 color="primary" 
                 size="small" 
                 fullWidth
+                onClick={() => navigate(`/ads/${ad.id}`)}
                 sx={{ 
                   borderRadius: {
                     xs: '8px',
@@ -503,7 +636,7 @@ const FeaturedAds = () => {
                   },
                   textTransform: 'none',
                   transition: 'all 0.3s ease',
-                  ...(ad.featured && {
+                  ...((ad.featured || ad.is_featured) && {
                     background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
                     '&:hover': {
                       background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
@@ -517,49 +650,53 @@ const FeaturedAds = () => {
             </CardContent>
           </Card>
         ))}
-      </Box>
+        </Box>
+      )}
 
-      {/* View All Button */}
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        marginTop: {
-          xs: '24px',
-          sm: '32px',
-          md: '40px'
-        }
-      }}>
-        <Button
-          variant="outlined"
-          size="large"
-          sx={{
-            borderRadius: '12px',
-            padding: {
-              xs: '12px 24px',
-              sm: '14px 28px',
-              md: '16px 32px'
-            },
-            fontSize: {
-              xs: '0.9rem',
-              sm: '1rem',
-              md: '1.1rem'
-            },
-            fontWeight: 600,
-            textTransform: 'none',
-            borderColor: '#6C47FF',
-            color: '#6C47FF',
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
-              color: 'white',
-              borderColor: 'transparent',
-              transform: 'translateY(-2px)',
-            }
-          }}
-        >
-          View All Ads
-        </Button>
-      </Box>
+      {/* View All Button - Only show if there are ads */}
+      {!loading && ads.length > 0 && (
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          marginTop: {
+            xs: '24px',
+            sm: '32px',
+            md: '40px'
+          }
+        }}>
+          <Button
+            variant="outlined"
+            size="large"
+            onClick={() => navigate('/search')}
+            sx={{
+              borderRadius: '12px',
+              padding: {
+                xs: '12px 24px',
+                sm: '14px 28px',
+                md: '16px 32px'
+              },
+              fontSize: {
+                xs: '0.9rem',
+                sm: '1rem',
+                md: '1.1rem'
+              },
+              fontWeight: 600,
+              textTransform: 'none',
+              borderColor: '#6C47FF',
+              color: '#6C47FF',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
+                color: 'white',
+                borderColor: 'transparent',
+                transform: 'translateY(-2px)',
+              }
+            }}
+          >
+            View All Ads
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };

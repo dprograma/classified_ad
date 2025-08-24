@@ -23,17 +23,30 @@ function PaymentCallback() {
   const { callApi } = useApi();
 
   useEffect(() => {
+    const status = searchParams.get('status');
     const reference = searchParams.get('reference');
-    const trxref = searchParams.get('trxref');
+    const adId = searchParams.get('ad_id');
+    const message = searchParams.get('message');
     
-    // Use reference from URL params or trxref as fallback
-    const paymentRef = reference || trxref;
-    
-    if (paymentRef) {
-      verifyPayment(paymentRef);
-    } else {
+    if (status === 'success') {
+      setStatus('success');
+      setMessage('Payment verified successfully! Your ad has been boosted.');
+      setPaymentData({
+        ad_id: adId,
+        reference: reference
+      });
+    } else if (status === 'error') {
       setStatus('error');
-      setMessage('Payment reference not found in URL');
+      setMessage(message || 'Payment verification failed');
+    } else {
+      // Fallback to old verification method if no status param
+      const paymentRef = reference || searchParams.get('trxref');
+      if (paymentRef) {
+        verifyPayment(paymentRef);
+      } else {
+        setStatus('error');
+        setMessage('Payment reference not found in URL');
+      }
     }
   }, [searchParams]);
 
