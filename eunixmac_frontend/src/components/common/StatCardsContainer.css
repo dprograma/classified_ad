@@ -1,0 +1,88 @@
+/* Enhanced StatCards Container */
+.stat-cards-container {
+  display: grid;
+  gap: var(--gap, 16px);
+  width: 100%;
+  margin-bottom: 24px;
+  grid-template-columns: repeat(var(--mobile-columns, 1), 1fr);
+}
+
+/* Tablet - Two columns */
+@media (min-width: 640px) {
+  .stat-cards-container {
+    grid-template-columns: repeat(var(--tablet-columns, 2), 1fr);
+  }
+}
+
+/* Desktop - Four columns */
+@media (min-width: 1024px) {
+  .stat-cards-container {
+    grid-template-columns: repeat(var(--desktop-columns, 4), 1fr);
+  }
+}
+
+/* Large screens - Maintain max 4 columns with better spacing */
+@media (min-width: 1280px) {
+  .stat-cards-container {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Extra large screens - Better spacing */
+@media (min-width: 1536px) {
+  .stat-cards-container {
+    max-width: 1400px;
+    gap: var(--gap, 20px);
+  }
+}
+
+/* Ensure all cards have equal height */
+.stat-cards-container > * {
+  height: 100%;
+  min-height: 130px;
+}
+
+/* Custom layouts */
+.stat-cards-container--2-columns {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.stat-cards-container--3-columns {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.stat-cards-container--5-columns {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+@media (max-width: 768px) {
+  .stat-cards-container--2-columns,
+  .stat-cards-container--3-columns,
+  .stat-cards-container--5-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1023px) {
+  .stat-cards-container--3-columns,
+  .stat-cards-container--5-columns {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* No gap variant */
+.stat-cards-container--no-gap {
+  gap: 0;
+}
+
+/* Small gap variant */
+.stat-cards-container--small-gap {
+  gap: 8px;
+}
+
+/* Large gap variant */
+.stat-cards-container--large-gap {
+  gap: 24px;
+}

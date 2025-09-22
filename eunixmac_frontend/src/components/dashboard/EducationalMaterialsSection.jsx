@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -34,24 +35,38 @@ import {
   Schedule,
   Cancel
 } from '@mui/icons-material';
+import EnhancedStatCard from '../common/EnhancedStatCard';
+import StatCardsContainer from '../common/StatCardsContainer';
 import useApi from '../../hooks/useApi';
 import { format } from 'date-fns';
+import { toast } from 'react-toastify';
 
 const EducationalMaterialsSection = ({ materials, onRefresh }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const { callApi, loading } = useApi();
+  const navigate = useNavigate();
+
+  const handleViewMaterial = (material) => {
+    navigate(`/educational-materials/${material.id}`);
+  };
+
+  const handleEditMaterial = (material) => {
+    navigate(`/educational-materials/${material.id}/edit`);
+  };
 
   const handleDeleteMaterial = async () => {
     if (!selectedMaterial) return;
-    
+
     try {
       await callApi('DELETE', `/educational-materials/${selectedMaterial.id}`);
+      toast.success('Material deleted successfully');
       setDeleteDialogOpen(false);
       setSelectedMaterial(null);
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error deleting material:', error);
+      toast.error(error.message || 'Failed to delete material');
     }
   };
 
@@ -117,77 +132,51 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <School sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold">
-                {materialStats.total}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Materials
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <CheckCircle sx={{ fontSize: 32, color: 'success.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold">
-                {materialStats.active}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Active
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <Schedule sx={{ fontSize: 32, color: 'warning.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold">
-                {materialStats.pending}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Pending Review
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <Analytics sx={{ fontSize: 32, color: 'info.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold">
-                {materialStats.total_sales}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Sales
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 2 }}>
-              <AttachMoney sx={{ fontSize: 32, color: 'success.main', mb: 1 }} />
-              <Typography variant="h5" fontWeight="bold">
-                ₦{materialStats.total_earnings.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Earnings
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <StatCardsContainer
+        columns={{ mobile: 2, tablet: 2, desktop: 5 }}
+        gap="20px"
+        className="mb-6"
+      >
+        <EnhancedStatCard
+          icon={School}
+          value={materialStats.total}
+          label="Total Materials"
+          color="#3b82f6"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={CheckCircle}
+          value={materialStats.active}
+          label="Active Materials"
+          color="#10b981"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={Schedule}
+          value={materialStats.pending}
+          label="Pending Review"
+          color="#f59e0b"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={Analytics}
+          value={materialStats.total_sales}
+          label="Total Sales"
+          color="#8b5cf6"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={AttachMoney}
+          value={`₦${materialStats.total_earnings.toLocaleString()}`}
+          label="Total Earnings"
+          color="#059669"
+          size="medium"
+        />
+      </StatCardsContainer>
 
       {/* Materials Table */}
       {materials?.length === 0 ? (
@@ -279,19 +268,20 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
                       <Stack direction="row" spacing={1}>
                         <IconButton
                           size="small"
-                          href={`/educational-materials/${material.id}`}
-                          target="_blank"
+                          onClick={() => handleViewMaterial(material)}
+                          title="View Material"
                         >
                           <Visibility />
                         </IconButton>
-                        
+
                         <IconButton
                           size="small"
-                          href={`/educational-materials/${material.id}/edit`}
+                          onClick={() => handleEditMaterial(material)}
+                          title="Edit Material"
                         >
                           <Edit />
                         </IconButton>
-                        
+
                         <IconButton
                           size="small"
                           onClick={() => {
@@ -299,6 +289,7 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
                             setDeleteDialogOpen(true);
                           }}
                           color="error"
+                          title="Delete Material"
                         >
                           <Delete />
                         </IconButton>

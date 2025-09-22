@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
 use App\Models\User;
+use App\Models\UserSettings;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
@@ -16,6 +17,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use App\Exceptions\Custom\PermissionDeniedException;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -26,14 +28,25 @@ class AuthController extends Controller
             'email' => 'required|string|email|max:255|unique:users',
             'phone_number' => 'required|string|max:50|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'ref' => 'nullable|string|max:8'
         ]);
 
-        $user = User::create([
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
             'password' => Hash::make($request->password),
-        ]);
+        ];
+
+        // Handle referral code if provided
+        if ($request->ref) {
+            $referrer = User::where('referral_code', $request->ref)->first();
+            if ($referrer && $referrer->is_affiliate) {
+                $userData['referred_by'] = $referrer->id;
+            }
+        }
+
+        $user = User::create($userData);
 
         $user->sendEmailVerificationNotification();
 
@@ -121,13 +134,25 @@ class AuthController extends Controller
         $user = $request->user();
 
         $request->validate([
+            'name' => 'sometimes|string|max:255',
             'phone_number' => 'sometimes|string|max:50|unique:users,phone_number,' . $user->id,
+            'location' => 'sometimes|string|max:255',
+            'bio' => 'sometimes|string|max:1000',
             'password' => 'sometimes|nullable|string|min:8|confirmed',
             'profile_picture' => 'sometimes|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
 
+        if ($request->filled('name')) {
+            $user->name = $request->name;
+        }
         if ($request->filled('phone_number')) {
             $user->phone_number = $request->phone_number;
+        }
+        if ($request->filled('location')) {
+            $user->location = $request->location;
+        }
+        if ($request->filled('bio')) {
+            $user->bio = $request->bio;
         }
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -149,6 +174,48 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateSettings(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'email_notifications' => 'sometimes|boolean',
+            'sms_notifications' => 'sometimes|boolean',
+            'marketing_emails' => 'sometimes|boolean',
+            'push_notifications' => 'sometimes|boolean',
+            'show_phone' => 'sometimes|boolean',
+            'show_email' => 'sometimes|boolean',
+            'language' => 'sometimes|string|in:en,pidgin',
+        ]);
+
+        $settings = $user->settings()->firstOrCreate(['user_id' => $user->id]);
+        $settings->update($request->all());
+
+        return response()->json([
+            'message' => 'Settings updated successfully',
+            'settings' => $settings,
+        ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 400);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json(['message' => 'Password changed successfully']);
+    }
+
     public function deleteAccount(Request $request)
     {
         $user = $request->user();
@@ -161,14 +228,62 @@ class AuthController extends Controller
             throw new PermissionDeniedException('Incorrect password');
         }
 
-        // Delete profile picture if exists
-        if ($user->profile_picture) {
-            Storage::disk('public')->delete($user->profile_picture);
+        try {
+            // Use database transaction to ensure all deletions succeed or fail together
+            \DB::transaction(function () use ($user) {
+                // Delete profile picture if exists
+                if ($user->profile_picture) {
+                    Storage::disk('public')->delete($user->profile_picture);
+                }
+
+                // Delete all related data in the correct order to avoid foreign key constraints
+
+                // 1. Delete user settings
+                $user->settings()->delete();
+
+                // 2. Delete all messages sent and received by the user
+                $user->sentMessages()->delete();
+                $user->receivedMessages()->delete();
+
+                // 3. Delete all payments made by the user
+                $user->payments()->delete();
+
+                // 4. Delete all ads and their related data
+                foreach ($user->ads as $ad) {
+                    // Delete ad views for this ad
+                    \App\Models\AdView::where('ad_id', $ad->id)->delete();
+
+                    // Delete messages related to this ad
+                    \App\Models\Message::where('ad_id', $ad->id)->delete();
+
+                    // Delete any ad-specific images or files if needed
+                    // (Add logic here if ads have uploaded images)
+
+                    // Delete the ad itself
+                    $ad->delete();
+                }
+
+                // 5. Update referral relationships - set referred_by to null for referred users
+                // instead of deleting them (they should remain as independent users)
+                \App\Models\User::where('referred_by', $user->id)->update(['referred_by' => null]);
+
+                // 6. Delete all API tokens for this user
+                $user->tokens()->delete();
+
+                // 7. Finally, delete the user record
+                $user->delete();
+            });
+
+            return response()->json(['message' => 'Account deleted successfully']);
+
+        } catch (\Exception $e) {
+            \Log::error('Account deletion failed for user ' . $user->id . ': ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'Account deletion failed. Please try again or contact support.',
+                'error' => 'An error occurred while deleting your account.'
+            ], 500);
         }
-
-        $user->delete();
-
-        return response()->json(['message' => 'Account deleted successfully']);
     }
 
     public function forgotPassword(Request $request)

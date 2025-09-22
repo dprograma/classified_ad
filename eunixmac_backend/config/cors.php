@@ -21,6 +21,7 @@ return [
 
     'allowed_origins' => [
         'http://localhost:5173', // Your Vite frontend
+        'http://localhost:5174', // Current Vite frontend port
         'http://localhost:3000', // A common alternative React port
     ],
 
@@ -32,6 +33,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];

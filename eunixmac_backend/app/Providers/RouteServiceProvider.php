@@ -59,5 +59,38 @@ class RouteServiceProvider extends ServiceProvider
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by(optional($request->user())->id ?: $request->ip());
         });
+
+        // Rate limiting for authentication endpoints
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Too many authentication attempts. Please try again later.',
+                        'retry_after' => 60
+                    ], 429);
+                });
+        });
+
+        // Rate limiting for password reset endpoints
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(3)->by($request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Too many password reset attempts. Please try again later.',
+                        'retry_after' => 60
+                    ], 429);
+                });
+        });
+
+        // Rate limiting for registration
+        RateLimiter::for('registration', function (Request $request) {
+            return Limit::perMinute(3)->by($request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Too many registration attempts. Please try again later.',
+                        'retry_after' => 60
+                    ], 429);
+                });
+        });
     }
 }

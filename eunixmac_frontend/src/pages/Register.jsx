@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, Typography, Container, Paper, Stack, Divider, Fade, IconButton, InputAdornment } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
 import { Visibility, VisibilityOff, LockOutlined, EmailOutlined, PersonOutlined, PhoneOutlined } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import SocialLoginButtons from '../components/SocialLoginButtons';
 import useApi from '../hooks/useApi';
 import { toast } from 'react-toastify';
@@ -81,6 +81,7 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
 }));
 
 function Register() {
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [email, setEmail] = useState('');
@@ -90,11 +91,18 @@ function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
   const { loading, callApi } = useApi();
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    // Check for referral code in URL
+    const refParam = searchParams.get('ref');
+    if (refParam) {
+      setReferralCode(refParam);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -106,13 +114,20 @@ function Register() {
     }
 
     try {
-      await callApi('post', '/register', {
+      const registrationData = {
         name,
         email,
         phone_number: phoneNumber,
         password,
         password_confirmation: confirmPassword,
-      });
+      };
+
+      // Include referral code if present
+      if (referralCode) {
+        registrationData.ref = referralCode;
+      }
+
+      await callApi('post', '/register', registrationData);
       setRegistrationSuccess(true);
       toast.success('Registration successful! Please check your email for a verification link.');
     } catch (error) {

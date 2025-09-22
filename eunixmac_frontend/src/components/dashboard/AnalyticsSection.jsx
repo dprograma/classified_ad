@@ -15,6 +15,8 @@ import {
   People,
   Schedule
 } from '@mui/icons-material';
+import EnhancedStatCard from '../common/EnhancedStatCard';
+import StatCardsContainer from '../common/StatCardsContainer';
 
 const AnalyticsSection = ({ stats }) => {
   return (
@@ -27,63 +29,43 @@ const AnalyticsSection = ({ stats }) => {
       </Typography>
 
       {/* Quick Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Visibility sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {stats?.total_views || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Views
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <People sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {stats?.unique_visitors || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Unique Visitors
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <TrendingUp sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {stats?.click_through_rate || 0}%
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Click Rate
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Schedule sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {stats?.avg_time_on_page || 0}m
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Avg. Time on Page
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <StatCardsContainer
+        columns={{ mobile: 2, tablet: 2, desktop: 4 }}
+        gap="16px"
+        className="mb-6"
+      >
+        <EnhancedStatCard
+          icon={Visibility}
+          value={stats?.total_views || 0}
+          label="Total Views"
+          color="#3b82f6"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={People}
+          value={stats?.unique_visitors || 0}
+          label="Unique Visitors"
+          color="#10b981"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={TrendingUp}
+          value={`${stats?.click_through_rate || 0}%`}
+          label="Click Rate"
+          color="#06b6d4"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={Schedule}
+          value={`${stats?.avg_time_on_page || 0}m`}
+          label="Avg. Time on Page"
+          color="#f59e0b"
+          size="medium"
+        />
+      </StatCardsContainer>
 
       {/* Coming Soon */}
       <Card>

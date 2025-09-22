@@ -106,6 +106,18 @@ class AdController extends Controller
             $query->where('created_at', '<=', $request->input('date_to'));
         }
 
+        // Featured/Boosted ads filtering
+        if ($request->has('featured') && $request->input('featured') === 'true') {
+            $query->where('is_boosted', true)
+                  ->where('boost_expires_at', '>', now());
+        }
+
+        // Boosted ads filtering (alternative parameter)
+        if ($request->has('boosted') && $request->input('boosted') === 'true') {
+            $query->where('is_boosted', true)
+                  ->where('boost_expires_at', '>', now());
+        }
+
         // Enhanced sorting options
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
@@ -116,8 +128,8 @@ class AdController extends Controller
             $sortBy = 'created_at';
         }
 
-        // Boost ads first, then by selected sort
-        $query->orderByRaw('is_boosted DESC, IFNULL(boost_expires_at, "1900-01-01") DESC')
+        // Active boosted ads first (only non-expired boosts), then by selected sort
+        $query->orderByRaw('(is_boosted = 1 AND boost_expires_at > NOW()) DESC')
               ->orderBy($sortBy, $sortOrder);
 
         // Pagination
@@ -609,6 +621,12 @@ class AdController extends Controller
         $request->validate([
             'boost_days' => 'required|integer|in:7,14,30',
             'email' => 'required|email',
+        ], [
+            'boost_days.required' => 'Boost duration is required',
+            'boost_days.integer' => 'Boost duration must be a number',
+            'boost_days.in' => 'Boost duration must be 7, 14, or 30 days',
+            'email.required' => 'Email address is required',
+            'email.email' => 'Please provide a valid email address'
         ]);
 
         $boostDays = $request->boost_days;
@@ -679,10 +697,30 @@ class AdController extends Controller
     public function verifyBoostPayment(Request $request)
     {
         $request->validate([
-            'reference' => 'required|string',
+            'reference' => 'required|string|min:1|max:255',
+            'ad_id' => 'required_if:test_mode,true|integer|exists:ads,id',
+            'days' => 'required_if:test_mode,true|integer|in:7,14,30',
+            'test_mode' => 'boolean'
+        ], [
+            'reference.required' => 'Payment reference is required',
+            'reference.string' => 'Payment reference must be a string',
+            'reference.min' => 'Payment reference cannot be empty',
+            'reference.max' => 'Payment reference is too long',
+            'ad_id.required_if' => 'Ad ID is required for test mode',
+            'ad_id.integer' => 'Ad ID must be a valid number',
+            'ad_id.exists' => 'The specified ad does not exist',
+            'days.required_if' => 'Boost duration is required for test mode',
+            'days.integer' => 'Boost duration must be a number',
+            'days.in' => 'Boost duration must be 7, 14, or 30 days'
         ]);
 
         try {
+            // Check if in test mode
+            if (config('app.env') !== 'production' && $request->has('test_mode')) {
+                // Test mode payment verification
+                return $this->handleTestModePayment($request);
+            }
+
             $paystack = new \App\Services\PaystackService();
             $response = $paystack->verifyPayment($request->reference);
 
@@ -762,6 +800,74 @@ class AdController extends Controller
         return response()->json([
             'message' => 'Boost expiry check completed',
             'expired_ads_count' => $expiredAds->count()
+        ]);
+    }
+
+    /**
+     * Handle test mode payment verification
+     */
+    private function handleTestModePayment(Request $request)
+    {
+        $request->validate([
+            'ad_id' => 'required|integer|exists:ads,id',
+            'days' => 'required|integer|in:7,14,30'
+        ]);
+
+        $ad = Ad::find($request->ad_id);
+
+        // Check if user owns the ad
+        if ($ad->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Simulate successful payment
+        $pricing = ['7' => 1000, '14' => 1800, '30' => 3500];
+        $amount = $pricing[$request->days];
+
+        // Create test payment record
+        $payment = \App\Models\Payment::create([
+            'user_id' => $request->user()->id,
+            'payable_id' => $ad->id,
+            'payable_type' => 'ad_boost',
+            'amount' => $amount,
+            'reference' => 'test_' . uniqid(),
+            'status' => 'success',
+        ]);
+
+        // Activate boost
+        $expiresAt = now()->addDays($request->days);
+        $ad->update([
+            'is_boosted' => true,
+            'boost_expires_at' => $expiresAt,
+        ]);
+
+        return response()->json([
+            'message' => 'Ad boosted successfully (TEST MODE)!',
+            'data' => [
+                'ad_id' => $ad->id,
+                'boost_expires_at' => $expiresAt,
+                'amount_paid' => $payment->amount,
+                'test_mode' => true
+            ]
+        ]);
+    }
+
+    /**
+     * Get boost history for authenticated user
+     */
+    public function getBoostHistory(Request $request)
+    {
+        $user = $request->user();
+
+        $history = \App\Models\Payment::where('user_id', $user->id)
+            ->where('payable_type', 'AdBoost')
+            ->with(['payable:id,title,user_id'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return response()->json([
+            'message' => 'Boost history retrieved successfully',
+            'data' => $history
         ]);
     }
 }

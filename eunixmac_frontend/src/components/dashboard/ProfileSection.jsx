@@ -63,9 +63,7 @@ const ProfileSection = ({ user, onRefresh }) => {
         formData.append('profile_picture', profileImage);
       }
 
-      await callApi('POST', '/user/profile', formData, {
-        'Content-Type': 'multipart/form-data'
-      });
+      await callApi('POST', '/user/profile', formData);
       
       setEditDialogOpen(false);
       if (onRefresh) onRefresh();

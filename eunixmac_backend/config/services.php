@@ -47,6 +47,10 @@ return [
         'redirect' => env('TWITTER_REDIRECT_URI'),
     ],
 
+    'throttle' => [
+        'boost-payment' => '5,1', // 5 requests per minute for boost payments
+    ],
+
     'paystack' => [
         'public_key' => env('PAYSTACK_PUBLIC_KEY'),
         'secret_key' => env('PAYSTACK_SECRET_KEY'),

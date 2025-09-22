@@ -64,16 +64,17 @@ const FooterLink = styled('a')(({ theme }) => ({
 const SocialButton = styled(IconButton)(({ theme }) => ({
   backgroundColor: 'rgba(255,255,255,0.1)',
   color: 'rgba(255,255,255,0.8)',
-  width: '48px',
-  height: '48px',
-  margin: '0 8px',
+  width: '44px',
+  height: '44px',
+  margin: '0 4px',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   border: '1px solid rgba(255,255,255,0.2)',
+  borderRadius: '50%',
   '&:hover': {
     backgroundColor: '#6C47FF',
     color: 'white',
-    transform: 'translateY(-4px) scale(1.1)',
-    boxShadow: '0 8px 24px rgba(108,71,255,0.4)',
+    transform: 'translateY(-2px) scale(1.05)',
+    boxShadow: '0 4px 12px rgba(108,71,255,0.3)',
   },
   '&:nth-of-type(2):hover': {
     backgroundColor: '#1DA1F2',
@@ -88,20 +89,19 @@ const SocialButton = styled(IconButton)(({ theme }) => ({
 
 const quickLinks = [
   { label: 'Home', href: '/' },
-  { label: 'Browse Ads', href: '/ads' },
-  { label: 'Post Ad', href: '/post' },
-  { label: 'About Us', href: '/about' },
-  { label: 'Contact Us', href: '/contact' },
+  { label: 'Browse Categories', href: '/categories' },
+  { label: 'Search Ads', href: '/search' },
+  { label: 'Post Ad', href: '/post-ad' },
   { label: 'Help Center', href: '/help' },
 ];
 
 const categories = [
-  { label: 'Vehicles', href: '/category/vehicles' },
-  { label: 'Electronics', href: '/category/electronics' },
-  { label: 'Property', href: '/category/property' },
-  { label: 'Fashion', href: '/category/fashion' },
-  { label: 'Jobs', href: '/category/jobs' },
-  { label: 'Services', href: '/category/services' },
+  { label: 'Vehicles', href: '/search?category=vehicles' },
+  { label: 'Electronics', href: '/search?category=electronics' },
+  { label: 'Property', href: '/search?category=property' },
+  { label: 'Fashion', href: '/search?category=fashion' },
+  { label: 'Jobs', href: '/search?category=jobs' },
+  { label: 'All Categories', href: '/categories' },
 ];
 
 const legalLinks = [
@@ -196,9 +196,9 @@ function Footer() {
           }}
         >
           {/* About Section */}
-          <Box sx={{ 
-            gridColumn: { xs: '1', md: '1 / 3' },
-            textAlign: { xs: 'center', md: 'left' } 
+          <Box sx={{
+            gridColumn: { xs: '1', md: '1 / 2' },
+            textAlign: { xs: 'center', md: 'left' }
           }}>
             <Typography 
               variant="h5" 
@@ -256,15 +256,16 @@ function Footer() {
                 Stay Updated
               </Typography>
               
-              <Box 
+              <Box
                 component="form"
                 onSubmit={handleNewsletterSubmit}
-                sx={{ 
+                sx={{
                   display: 'flex',
                   flexDirection: { xs: 'column', sm: 'row' },
-                  gap: { xs: 2, sm: 1 },
+                  gap: { xs: 2, sm: 1.5 },
                   alignItems: 'stretch',
-                  justifyContent: { xs: 'center', md: 'flex-start' }
+                  justifyContent: { xs: 'center', md: 'flex-start' },
+                  marginBottom: { xs: 2, sm: 0 }
                 }}
               >
                 <TextField
@@ -273,14 +274,15 @@ function Footer() {
                   variant="outlined"
                   value={newsletter}
                   onChange={(e) => setNewsletter(e.target.value)}
-                  sx={{ 
+                  sx={{
                     backgroundColor: 'rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
+                    borderRadius: '8px',
                     flex: 1,
-                    maxWidth: { xs: '100%', sm: '240px' },
+                    maxWidth: { xs: '100%', sm: '200px' },
                     '& .MuiOutlinedInput-root': {
-                      borderRadius: '12px',
+                      borderRadius: '8px',
                       color: 'white',
+                      height: '40px',
                       '& fieldset': {
                         borderColor: 'rgba(255,255,255,0.3)',
                       },
@@ -291,35 +293,38 @@ function Footer() {
                         borderColor: '#00C6AE',
                       },
                     },
+                    '& .MuiInputBase-input': {
+                      padding: '8px 12px',
+                      fontSize: '0.875rem'
+                    },
                     '& .MuiInputBase-input::placeholder': {
                       color: 'rgba(255,255,255,0.7)',
                       opacity: 1,
                     },
                   }}
                 />
-                <Button 
+                <Button
                   type="submit"
-                  variant="contained" 
+                  variant="contained"
                   disabled={isSubmitting}
-                  endIcon={<Send />}
-                  sx={{ 
+                  endIcon={<Send sx={{ fontSize: '16px' }} />}
+                  sx={{
                     background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
-                    borderRadius: '12px',
+                    borderRadius: '8px',
+                    height: '40px',
                     padding: {
-                      xs: '10px 20px',
+                      xs: '8px 16px',
                       sm: '8px 16px'
                     },
-                    fontSize: {
-                      xs: '0.9rem',
-                      sm: '0.85rem'
-                    },
+                    fontSize: '0.875rem',
                     fontWeight: 600,
                     textTransform: 'none',
-                    minWidth: { xs: '100%', sm: 'auto' },
+                    minWidth: { xs: '100%', sm: '120px' },
+                    whiteSpace: 'nowrap',
                     '&:hover': {
                       background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 20px rgba(108,71,255,0.4)',
+                      transform: 'translateY(-1px)',
+                      boxShadow: '0 4px 12px rgba(108,71,255,0.3)',
                     },
                     '&:disabled': {
                       background: 'rgba(255,255,255,0.2)',
@@ -332,11 +337,12 @@ function Footer() {
             </Box>
 
             {/* Social Media */}
-            <Box sx={{ 
-              display: 'flex', 
+            <Box sx={{
+              display: 'flex',
               justifyContent: { xs: 'center', md: 'flex-start' },
-              gap: 1,
-              flexWrap: 'wrap'
+              gap: 0.5,
+              flexWrap: 'wrap',
+              marginTop: { xs: 2, sm: 1 }
             }}>
               <SocialButton href="#" aria-label="Facebook">
                 <Facebook />

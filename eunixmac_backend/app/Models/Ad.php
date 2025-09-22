@@ -19,6 +19,15 @@ class Ad extends Model
         'status',
         'is_boosted',
         'boost_expires_at',
+        'file_path',
+        'preview_image_path',
+        'subject_area',
+        'education_level',
+        'tags',
+        'preview_text',
+        'author_info',
+        'year_published',
+        'language',
     ];
 
     protected $casts = [
@@ -29,7 +38,7 @@ class Ad extends Model
         'updated_at' => 'datetime',
     ];
 
-    protected $appends = ['preview_image', 'formatted_price'];
+    protected $appends = ['preview_image', 'formatted_price', 'views_count', 'boost_performance'];
 
     public function user()
     {
@@ -61,6 +70,11 @@ class Ad extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function views()
+    {
+        return $this->hasMany(AdView::class);
+    }
+
     // Accessors
     public function getPreviewImageAttribute()
     {
@@ -75,7 +89,41 @@ class Ad extends Model
 
     public function getFormattedPriceAttribute()
     {
-        return '₦' . number_format($this->price, 2);
+        return $this->price ? '₦' . number_format($this->price, 2) : 'Price on request';
+    }
+
+    public function getViewsCountAttribute()
+    {
+        return $this->views()->count();
+    }
+
+    public function getBoostPerformanceAttribute()
+    {
+        if (!$this->is_boosted) {
+            return [
+                'total_views' => 0,
+                'unique_views' => 0,
+                'conversion_rate' => 0
+            ];
+        }
+
+        try {
+            $boostStart = $this->updated_at; // Assuming boost starts when ad is updated
+            $totalViews = $this->views()->where('viewed_at', '>=', $boostStart)->count();
+            $uniqueViews = $this->views()->where('viewed_at', '>=', $boostStart)->distinct('ip_address')->count();
+
+            return [
+                'total_views' => $totalViews,
+                'unique_views' => $uniqueViews,
+                'conversion_rate' => $totalViews > 0 ? round(($this->messages()->count() / $totalViews) * 100, 2) : 0
+            ];
+        } catch (\Exception $e) {
+            return [
+                'total_views' => 0,
+                'unique_views' => 0,
+                'conversion_rate' => 0
+            ];
+        }
     }
 
     // Scopes

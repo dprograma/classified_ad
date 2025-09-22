@@ -35,14 +35,21 @@ import {
   TrendingUp,
   People,
   CheckCircle,
-  Info
+  Info,
+  BarChart,
+  Calculate,
+  TouchApp,
+  Timeline
 } from '@mui/icons-material';
+import EnhancedStatCard from '../common/EnhancedStatCard';
+import StatCardsContainer from '../common/StatCardsContainer';
 import { useAuth } from '../../AuthContext';
 import useApi from '../../hooks/useApi';
 import { toast } from 'react-toastify';
 
 const AffiliateSection = ({ affiliateData, onRefresh }) => {
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [earningsHistoryOpen, setEarningsHistoryOpen] = useState(false);
   const [performanceReportOpen, setPerformanceReportOpen] = useState(false);
   const { user } = useAuth();
@@ -52,10 +59,12 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
     try {
       const response = await callApi('POST', '/user/become-affiliate');
       toast.success('Welcome to our affiliate program! Your unique referral link has been generated.');
+      setConfirmDialogOpen(false);
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error becoming affiliate:', error);
       toast.error(error.message || 'Failed to join affiliate program. Please try again.');
+      setConfirmDialogOpen(false);
     }
   };
 
@@ -132,7 +141,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
               <Button
                 variant="contained"
                 startIcon={<Group />}
-                onClick={handleBecomeAffiliate}
+                onClick={() => setConfirmDialogOpen(true)}
                 disabled={loading}
               >
                 Join Program
@@ -198,7 +207,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
                 <Typography variant="h6" gutterBottom>
                   Earning Examples:
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={0}>
                   <Grid item xs={12} sm={4}>
                     <Card variant="outlined">
                       <CardContent sx={{ textAlign: 'center', p: 2 }}>
@@ -253,6 +262,46 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Confirmation Dialog */}
+        <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} maxWidth="sm">
+          <DialogTitle>Join Affiliate Program</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              Are you sure you want to join our affiliate program? Once you join, you'll be able to:
+            </Typography>
+            <List dense>
+              <ListItem>
+                <ListItemIcon>
+                  <CheckCircle color="success" fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Earn 65% commission on referrals" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <CheckCircle color="success" fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Get your unique referral link" />
+              </ListItem>
+              <ListItem>
+                <ListItemIcon>
+                  <CheckCircle color="success" fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Track your earnings and referrals" />
+              </ListItem>
+            </List>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="contained"
+              onClick={handleBecomeAffiliate}
+              disabled={loading}
+            >
+              Yes, Join Program
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     );
   }
@@ -276,65 +325,45 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
       </Typography>
 
       {/* Affiliate Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <People sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {stats.total_referrals}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Referrals
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <CheckCircle sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {stats.successful_referrals}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Successful Referrals
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <AttachMoney sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                ₦{stats.total_earnings.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Earnings
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <TrendingUp sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                ₦{stats.pending_earnings.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Pending Earnings
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <StatCardsContainer
+        columns={{ mobile: 2, tablet: 2, desktop: 4 }}
+        gap="16px"
+        className="mb-6"
+      >
+        <EnhancedStatCard
+          icon={People}
+          value={stats.total_referrals}
+          label="Total Referrals"
+          color="#3b82f6"
+          size="medium"
+        />
 
-      <Grid container spacing={3}>
+        <EnhancedStatCard
+          icon={CheckCircle}
+          value={stats.successful_referrals}
+          label="Successful Referrals"
+          color="#10b981"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={AttachMoney}
+          value={`₦${stats.total_earnings.toLocaleString()}`}
+          label="Total Earnings"
+          color="#10b981"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={TrendingUp}
+          value={`₦${stats.pending_earnings.toLocaleString()}`}
+          label="Pending Earnings"
+          color="#f59e0b"
+          size="medium"
+        />
+      </StatCardsContainer>
+
+      <Grid container spacing={0}>
         {/* Referral Link */}
         <Grid item xs={12} md={8}>
           <Card>
@@ -495,59 +524,43 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
             Detailed performance metrics and analytics for your affiliate activities.
           </Typography>
           
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="primary.main" fontWeight="bold">
-                    {((stats.successful_referrals / Math.max(stats.total_referrals, 1)) * 100).toFixed(1)}%
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Conversion Rate
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="success.main" fontWeight="bold">
-                    ₦{stats.total_earnings ? Math.round(stats.total_earnings / Math.max(stats.successful_referrals, 1)) : 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Avg. Earning per Sale
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="info.main" fontWeight="bold">
-                    {affiliateData?.click_count || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Link Clicks
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="warning.main" fontWeight="bold">
-                    {((stats.total_referrals / Math.max(affiliateData?.click_count, 1)) * 100).toFixed(1)}%
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Click to Signup
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          <StatCardsContainer
+            columns={{ mobile: 2, tablet: 2, desktop: 4 }}
+            gap="16px"
+            className="mb-6"
+          >
+            <EnhancedStatCard
+              icon={BarChart}
+              value={`${((stats.successful_referrals / Math.max(stats.total_referrals, 1)) * 100).toFixed(1)}%`}
+              label="Conversion Rate"
+              color="#3b82f6"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={Calculate}
+              value={`₦${stats.total_earnings ? Math.round(stats.total_earnings / Math.max(stats.successful_referrals, 1)) : 0}`}
+              label="Avg. Earning per Sale"
+              color="#10b981"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={TouchApp}
+              value={affiliateData?.click_count || 0}
+              label="Link Clicks"
+              color="#06b6d4"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={Timeline}
+              value={`${((stats.total_referrals / Math.max(affiliateData?.click_count, 1)) * 100).toFixed(1)}%`}
+              label="Click to Signup"
+              color="#f59e0b"
+              size="medium"
+            />
+          </StatCardsContainer>
           
           <Alert severity="info" sx={{ mb: 2 }}>
             <Typography variant="body2">

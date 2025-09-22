@@ -32,8 +32,16 @@ import {
   Analytics,
   Upload,
   CheckCircle,
-  Info
+  Info,
+  Schedule,
+  Download,
+  Star,
+  TrendingUp,
+  AccountBalance,
+  Calculate
 } from '@mui/icons-material';
+import EnhancedStatCard from '../common/EnhancedStatCard';
+import StatCardsContainer from '../common/StatCardsContainer';
 import { useAuth } from '../../AuthContext';
 import useApi from '../../hooks/useApi';
 import { toast } from 'react-toastify';
@@ -58,7 +66,7 @@ const AgentSection = ({ materials, onRefresh }) => {
 
   const agentStats = {
     total_materials: materials?.length || 0,
-    active_materials: materials?.filter(m => m.status === 'active').length || 0,
+    active_materials: materials?.filter(m => m.status === 'approved').length || 0,
     total_sales: materials?.reduce((sum, m) => sum + (m.sales_count || 0), 0) || 0,
     total_earnings: materials?.reduce((sum, m) => sum + (m.total_earnings || 0), 0) || 0
   };
@@ -228,66 +236,46 @@ const AgentSection = ({ materials, onRefresh }) => {
       </Typography>
 
       {/* Agent Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <School sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {agentStats.total_materials}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Materials
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <CheckCircle sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {agentStats.active_materials}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Active Materials
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Analytics sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {agentStats.total_sales}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Sales
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <AttachMoney sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                ₦{agentStats.total_earnings.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Earnings
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <StatCardsContainer
+        columns={{ mobile: 2, tablet: 2, desktop: 4 }}
+        gap="16px"
+        className="mb-6"
+      >
+        <EnhancedStatCard
+          icon={School}
+          value={agentStats.total_materials}
+          label="Total Materials"
+          color="#3b82f6"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={CheckCircle}
+          value={agentStats.active_materials}
+          label="Active Materials"
+          color="#10b981"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={Analytics}
+          value={agentStats.total_sales}
+          label="Total Sales"
+          color="#06b6d4"
+          size="medium"
+        />
+
+        <EnhancedStatCard
+          icon={AttachMoney}
+          value={`₦${agentStats.total_earnings.toLocaleString()}`}
+          label="Total Earnings"
+          color="#f59e0b"
+          size="medium"
+        />
+      </StatCardsContainer>
 
       {/* Quick Actions */}
-      <Grid container spacing={3}>
+      <Grid container spacing={0}>
         <Grid item xs={12} md={8}>
           <Card>
             <CardContent>
@@ -353,61 +341,45 @@ const AgentSection = ({ materials, onRefresh }) => {
           </Typography>
           
           {/* Performance Overview */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="primary.main" fontWeight="bold">
-                    {materials?.filter(m => m.status === 'approved').length || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Approved Materials
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="warning.main" fontWeight="bold">
-                    {materials?.filter(m => m.status === 'pending').length || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Pending Review
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="info.main" fontWeight="bold">
-                    {materials?.reduce((sum, m) => sum + (m.download_count || 0), 0) || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Downloads
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h4" color="success.main" fontWeight="bold">
-                    {materials?.length > 0 ? (
-                      (materials.reduce((sum, m) => sum + (m.rating || 0), 0) / materials.length).toFixed(1)
-                    ) : '0.0'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Average Rating
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          <StatCardsContainer
+            columns={{ mobile: 2, tablet: 2, desktop: 4 }}
+            gap="16px"
+            className="mb-6"
+          >
+            <EnhancedStatCard
+              icon={CheckCircle}
+              value={materials?.filter(m => m.status === 'approved').length || 0}
+              label="Approved Materials"
+              color="#10b981"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={Schedule}
+              value={materials?.filter(m => m.status === 'pending').length || 0}
+              label="Pending Review"
+              color="#f59e0b"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={Download}
+              value={materials?.reduce((sum, m) => sum + (m.download_count || 0), 0) || 0}
+              label="Total Downloads"
+              color="#06b6d4"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={Star}
+              value={materials?.length > 0 ? (
+                (materials.reduce((sum, m) => sum + (m.rating || 0), 0) / materials.length).toFixed(1)
+              ) : '0.0'}
+              label="Average Rating"
+              color="#8b5cf6"
+              size="medium"
+            />
+          </StatCardsContainer>
 
           {/* Material Performance Table */}
           <Typography variant="h6" gutterBottom>
@@ -480,59 +452,43 @@ const AgentSection = ({ materials, onRefresh }) => {
           </Typography>
           
           {/* Earnings Summary */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" color="success.main" fontWeight="bold">
-                    ₦{agentStats.total_earnings.toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Earnings
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" color="info.main" fontWeight="bold">
-                    ₦{Math.round(agentStats.total_earnings * 0.7).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Net Earnings (70%)
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" color="warning.main" fontWeight="bold">
-                    ₦{Math.round(agentStats.total_earnings * 0.3).toLocaleString()}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Platform Fee (30%)
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            
-            <Grid item xs={12} sm={6} md={3}>
-              <Card variant="outlined">
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" color="primary.main" fontWeight="bold">
-                    ₦{agentStats.total_sales > 0 ? Math.round(agentStats.total_earnings / agentStats.total_sales) : 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Avg. per Sale
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          <StatCardsContainer
+            columns={{ mobile: 2, tablet: 2, desktop: 4 }}
+            gap="16px"
+            className="mb-6"
+          >
+            <EnhancedStatCard
+              icon={AttachMoney}
+              value={`₦${agentStats.total_earnings.toLocaleString()}`}
+              label="Total Earnings"
+              color="#10b981"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={TrendingUp}
+              value={`₦${Math.round(agentStats.total_earnings * 0.7).toLocaleString()}`}
+              label="Net Earnings (70%)"
+              color="#3b82f6"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={AccountBalance}
+              value={`₦${Math.round(agentStats.total_earnings * 0.3).toLocaleString()}`}
+              label="Platform Fee (30%)"
+              color="#f59e0b"
+              size="medium"
+            />
+
+            <EnhancedStatCard
+              icon={Calculate}
+              value={`₦${agentStats.total_sales > 0 ? Math.round(agentStats.total_earnings / agentStats.total_sales) : 0}`}
+              label="Avg. per Sale"
+              color="#06b6d4"
+              size="medium"
+            />
+          </StatCardsContainer>
 
           <Alert severity="info" sx={{ mb: 3 }}>
             <Typography variant="body2">

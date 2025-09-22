@@ -294,16 +294,21 @@ const MessagesSection = ({ conversations, onRefresh }) => {
                                 p: 2,
                                 maxWidth: '70%',
                                 backgroundColor: isOwn ? 'primary.main' : 'grey.100',
-                                color: isOwn ? 'primary.contrastText' : 'text.primary',
+                                color: isOwn ? 'white' : 'text.primary',
                               }}
                             >
-                              <Typography variant="body2">
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  color: isOwn ? 'white' : 'text.primary'
+                                }}
+                              >
                                 {message.message}
                               </Typography>
-                              <Typography 
-                                variant="caption" 
-                                sx={{ 
-                                  opacity: 0.7,
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: isOwn ? 'rgba(255,255,255,0.8)' : 'text.secondary',
                                   display: 'block',
                                   textAlign: 'right',
                                   mt: 0.5

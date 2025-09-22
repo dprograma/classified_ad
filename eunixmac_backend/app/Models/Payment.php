@@ -13,6 +13,7 @@ class Payment extends Model
         'user_id',
         'payable_id',
         'payable_type',
+        'type',
         'amount',
         'reference',
         'status',

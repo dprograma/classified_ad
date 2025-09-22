@@ -1,4 +1,4 @@
-# Deploying from GitHub to Production
+ # Deploying from GitHub to Production
 
 This document outlines methods for deploying your application from a GitHub repository to a production server.
 

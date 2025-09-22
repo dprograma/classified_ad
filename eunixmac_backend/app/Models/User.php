@@ -66,6 +66,21 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Payment::class);
     }
 
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    public function referrals()
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    public function settings()
+    {
+        return $this->hasOne(UserSettings::class);
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -76,11 +91,15 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'email_verified_at',
         'phone_number',
+        'location',
+        'bio',
         'password',
+        'profile_picture',
         'is_agent',
         'is_affiliate',
         'is_verified',
         'referral_code',
+        'referred_by',
     ];
 
     /**

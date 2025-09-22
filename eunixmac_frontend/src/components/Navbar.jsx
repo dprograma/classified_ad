@@ -1,10 +1,23 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem, IconButton, InputBase, Paper, useScrollTrigger, Drawer, List, ListItem, ListItemText } from '@mui/material';
+import {
+  AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem,
+  IconButton, InputBase, Paper, useScrollTrigger, Drawer, List,
+  ListItem, ListItemText, ListItemIcon, Divider, Chip, Fade
+} from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import useApi from '../hooks/useApi';
 import { toast } from 'react-toastify';
-import { Search as SearchIcon, Menu as MenuIcon } from '@mui/icons-material';
+import {
+  Search as SearchIcon,
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  Person as PersonIcon,
+  Settings as SettingsIcon,
+  ExitToApp as LogoutIcon,
+  KeyboardArrowDown as ArrowDownIcon,
+  AccountCircle as AccountIcon
+} from '@mui/icons-material';
 import { styled } from '@mui/system';
 import { getStorageUrl } from '../config/api';
 
@@ -35,6 +48,94 @@ const LogoBox = styled(Box)(({ theme }) => ({
   textDecoration: 'none',
   color: 'inherit',
   cursor: 'pointer',
+}));
+
+const AccountButton = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: '8px 12px',
+  borderRadius: '12px',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease-in-out',
+  border: '1px solid transparent',
+  '&:hover': {
+    backgroundColor: 'rgba(108, 71, 255, 0.06)',
+    borderColor: 'rgba(108, 71, 255, 0.12)',
+    transform: 'translateY(-1px)',
+  },
+}));
+
+const ModernMenu = styled(Menu)(({ theme }) => ({
+  '& .MuiPaper-root': {
+    borderRadius: '16px',
+    minWidth: '280px',
+    marginTop: '8px',
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(108, 71, 255, 0.08)',
+    border: '1px solid rgba(108, 71, 255, 0.08)',
+    overflow: 'visible',
+    '&:before': {
+      content: '""',
+      position: 'absolute',
+      top: '-6px',
+      right: '20px',
+      width: '12px',
+      height: '12px',
+      backgroundColor: '#fff',
+      borderLeft: '1px solid rgba(108, 71, 255, 0.08)',
+      borderTop: '1px solid rgba(108, 71, 255, 0.08)',
+      transform: 'rotate(45deg)',
+      zIndex: 1,
+    },
+  },
+  '& .MuiList-root': {
+    padding: '12px',
+  },
+}));
+
+const UserInfoSection = styled(Box)(({ theme }) => ({
+  padding: '16px',
+  borderBottom: '1px solid rgba(108, 71, 255, 0.08)',
+  marginBottom: '8px',
+  background: 'linear-gradient(135deg, rgba(108, 71, 255, 0.02) 0%, rgba(0, 198, 174, 0.02) 100%)',
+  borderRadius: '12px',
+  margin: '0 8px 12px 8px',
+}));
+
+const ModernMenuItem = styled(MenuItem)(({ theme }) => ({
+  borderRadius: '8px',
+  margin: '2px 0',
+  padding: '12px 16px',
+  transition: 'all 0.2s ease-in-out',
+  '&:hover': {
+    backgroundColor: 'rgba(108, 71, 255, 0.06)',
+    transform: 'translateX(4px)',
+  },
+  '& .MuiListItemIcon-root': {
+    minWidth: '40px',
+    color: 'rgba(108, 71, 255, 0.7)',
+  },
+  '& .MuiListItemText-primary': {
+    fontWeight: 500,
+    fontSize: '0.95rem',
+  },
+}));
+
+const LogoutMenuItem = styled(ModernMenuItem)(({ theme }) => ({
+  marginTop: '8px',
+  borderTop: '1px solid rgba(108, 71, 255, 0.08)',
+  paddingTop: '16px',
+  '&:hover': {
+    backgroundColor: 'rgba(244, 67, 54, 0.06)',
+    '& .MuiListItemIcon-root': {
+      color: '#f44336',
+    },
+    '& .MuiListItemText-primary': {
+      color: '#f44336',
+    },
+  },
+  '& .MuiListItemIcon-root': {
+    color: 'rgba(244, 67, 54, 0.7)',
+  },
 }));
 
 function Navbar() {
@@ -186,23 +287,109 @@ function Navbar() {
           </Button>
           {isAuthenticated ? (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <IconButton onClick={handleMenu} sx={{ p: 0 }}>
-                <Avatar alt={user?.name} src={user?.profile_picture ? getStorageUrl(user.profile_picture) : user?.picture} />
-              </IconButton>
-              <Menu
+              <AccountButton onClick={handleMenu}>
+                <Avatar
+                  alt={user?.name}
+                  src={user?.profile_picture ? getStorageUrl(user.profile_picture) : user?.picture}
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    mr: 1,
+                    border: '2px solid rgba(108, 71, 255, 0.1)',
+                    transition: 'border-color 0.2s ease-in-out'
+                  }}
+                />
+                <Box sx={{ display: { xs: 'none', sm: 'block' }, mr: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                    {user?.name?.split(' ')[0] || 'User'}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', lineHeight: 1 }}>
+                    {user?.role === 'admin' ? 'Administrator' : 'Member'}
+                  </Typography>
+                </Box>
+                <ArrowDownIcon
+                  sx={{
+                    fontSize: 18,
+                    color: 'text.secondary',
+                    transition: 'transform 0.2s ease-in-out',
+                    transform: open ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }}
+                />
+              </AccountButton>
+
+              <ModernMenu
                 id="menu-appbar"
                 anchorEl={anchorEl}
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 keepMounted
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 open={open}
                 onClose={handleClose}
+                TransitionComponent={Fade}
+                TransitionProps={{ timeout: 200 }}
               >
-                <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>Dashboard</MenuItem>
-                <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>Profile</MenuItem>
-                <MenuItem onClick={() => { navigate('/settings'); handleClose(); }}>Settings</MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
-              </Menu>
+                <UserInfoSection>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <Avatar
+                      alt={user?.name}
+                      src={user?.profile_picture ? getStorageUrl(user.profile_picture) : user?.picture}
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        mr: 2,
+                        border: '3px solid rgba(108, 71, 255, 0.1)'
+                      }}
+                    />
+                    <Box>
+                      <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                        {user?.name || 'User Name'}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5 }}>
+                        {user?.email}
+                      </Typography>
+                      <Chip
+                        label={user?.role === 'admin' ? 'Administrator' : 'Member'}
+                        size="small"
+                        sx={{
+                          fontSize: '0.7rem',
+                          height: 20,
+                          backgroundColor: user?.role === 'admin' ? 'rgba(108, 71, 255, 0.1)' : 'rgba(0, 198, 174, 0.1)',
+                          color: user?.role === 'admin' ? '#6C47FF' : '#00C6AE',
+                          fontWeight: 600
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                </UserInfoSection>
+
+                <ModernMenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>
+                  <ListItemIcon>
+                    <DashboardIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Dashboard" />
+                </ModernMenuItem>
+
+                <ModernMenuItem onClick={() => { navigate('/profile'); handleClose(); }}>
+                  <ListItemIcon>
+                    <PersonIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Profile" />
+                </ModernMenuItem>
+
+                <ModernMenuItem onClick={() => { navigate('/settings'); handleClose(); }}>
+                  <ListItemIcon>
+                    <SettingsIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Settings" />
+                </ModernMenuItem>
+
+                <LogoutMenuItem onClick={handleLogout}>
+                  <ListItemIcon>
+                    <LogoutIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Sign Out" />
+                </LogoutMenuItem>
+              </ModernMenu>
             </Box>
           ) : (
             <Box>

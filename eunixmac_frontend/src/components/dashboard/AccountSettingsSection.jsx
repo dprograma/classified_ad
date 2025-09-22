@@ -45,6 +45,8 @@ const AccountSettingsSection = ({ user, onRefresh }) => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [emailConfirmation, setEmailConfirmation] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
   
   const [passwordData, setPasswordData] = useState({
     current_password: '',
@@ -85,22 +87,62 @@ const AccountSettingsSection = ({ user, onRefresh }) => {
     }
 
     try {
-      await callApi('POST', '/user/change-password', passwordData);
+      await callApi('POST', '/user/change-password', {
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password,
+        new_password_confirmation: passwordData.confirm_password
+      });
       setPasswordDialogOpen(false);
       setPasswordData({ current_password: '', new_password: '', confirm_password: '' });
       alert('Password changed successfully');
     } catch (error) {
       console.error('Error changing password:', error);
+      alert(error.response?.data?.message || 'Failed to change password');
     }
   };
 
   const deleteAccount = async () => {
+    if (emailConfirmation !== user?.email) {
+      alert('Email confirmation does not match your email address');
+      return;
+    }
+
     try {
-      await callApi('DELETE', '/user');
+      await callApi('DELETE', '/user', {
+        current_password: deletePassword
+      });
       setDeleteAccountDialogOpen(false);
+      setEmailConfirmation('');
+      setDeletePassword('');
       logout();
     } catch (error) {
       console.error('Error deleting account:', error);
+      alert(error.response?.data?.message || 'Failed to delete account');
+    }
+  };
+
+  const redirectToSupport = (type) => {
+    const message = encodeURIComponent(`I would like to change my ${type}. Please assist me with this request.`);
+    window.open(`mailto:support@eunixmac.com?subject=Account Change Request - ${type}&body=${message}`, '_blank');
+  };
+
+  const handleEmailChange = () => {
+    // For now, allow email changes through profile update
+    // In the future, you might want to redirect to support for verification
+    const newEmail = prompt('Enter your new email address:');
+    if (newEmail && newEmail !== user?.email) {
+      // You can implement email change via profile API
+      alert('Email change functionality will be implemented. For now, please contact support.');
+      redirectToSupport('Email Address');
+    }
+  };
+
+  const handlePhoneChange = () => {
+    const newPhone = prompt('Enter your new phone number:');
+    if (newPhone && newPhone !== user?.phone_number) {
+      // You can implement phone change via profile API
+      alert('Phone number change functionality will be implemented. For now, please contact support.');
+      redirectToSupport('Phone Number');
     }
   };
 
@@ -250,11 +292,11 @@ const AccountSettingsSection = ({ user, onRefresh }) => {
                     primary="Email Address"
                     secondary={user?.email}
                   />
-                  <Button variant="outlined" size="small">
+                  <Button variant="outlined" size="small" onClick={handleEmailChange}>
                     Change
                   </Button>
                 </ListItem>
-                
+
                 <ListItem>
                   <ListItemIcon>
                     <Phone color="primary" />
@@ -263,7 +305,7 @@ const AccountSettingsSection = ({ user, onRefresh }) => {
                     primary="Phone Number"
                     secondary={user?.phone_number || 'Not provided'}
                   />
-                  <Button variant="outlined" size="small">
+                  <Button variant="outlined" size="small" onClick={handlePhoneChange}>
                     {user?.phone_number ? 'Change' : 'Add'}
                   </Button>
                 </ListItem>
@@ -422,13 +464,30 @@ const AccountSettingsSection = ({ user, onRefresh }) => {
           </Typography>
           <TextField
             placeholder={user?.email}
+            value={emailConfirmation}
+            onChange={(e) => setEmailConfirmation(e.target.value)}
+            fullWidth
+            sx={{ mt: 1 }}
+          />
+          <Typography sx={{ mt: 2 }}>
+            Enter your password to confirm deletion:
+          </Typography>
+          <TextField
+            type="password"
+            placeholder="Enter your password"
+            value={deletePassword}
+            onChange={(e) => setDeletePassword(e.target.value)}
             fullWidth
             sx={{ mt: 1 }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteAccountDialogOpen(false)}>Cancel</Button>
-          <Button onClick={deleteAccount} color="error" disabled={loading}>
+          <Button
+            onClick={deleteAccount}
+            color="error"
+            disabled={loading || !emailConfirmation || emailConfirmation !== user?.email || !deletePassword}
+          >
             Delete Account
           </Button>
         </DialogActions>

@@ -39,8 +39,11 @@ const useApi = () => {
       });
       return response.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred.';
-      toast.error(errorMessage);
+      // Don't show toast for rate limiting errors - let components handle them
+      if (error.response?.status !== 429) {
+        const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred.';
+        toast.error(errorMessage);
+      }
       throw error;
     } finally {
       setLoading(false);

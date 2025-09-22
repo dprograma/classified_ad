@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Ad;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentController extends Controller
 {
@@ -87,6 +88,149 @@ class PaymentController extends Controller
         } else {
             // Redirect to frontend error page
             return redirect(env('FRONTEND_URL') . '/payment/callback?status=error&reference=' . $reference . '&message=' . urlencode('Payment verification failed'));
+        }
+    }
+
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        $perPage = $request->get('per_page', 15);
+        $type = $request->get('type'); // Filter by payment type
+
+        $query = $user->payments()->latest();
+
+        // Filter by type if specified
+        if ($type && $type !== 'all') {
+            switch ($type) {
+                case 'boost':
+                    $query->whereIn('payable_type', ['ad_boost', 'AdBoost']);
+                    break;
+                case 'materials':
+                    $query->where('payable_type', 'educational_material');
+                    break;
+                case 'affiliate':
+                    $query->where('type', 'affiliate_payout');
+                    break;
+            }
+        }
+
+        $payments = $query->paginate($perPage);
+
+        // Add additional metadata for frontend
+        $payments->getCollection()->transform(function ($payment) {
+            $paymentArray = $payment->toArray();
+
+            // Add description based on payment type
+            switch ($payment->payable_type) {
+                case 'ad_boost':
+                case 'AdBoost':
+                    $paymentArray['description'] = 'Ad Boost Payment';
+                    $paymentArray['payable_type'] = 'AdBoost'; // Normalize for frontend
+
+                    // Try to load ad details if payable_id exists
+                    if ($payment->payable_id) {
+                        $ad = \App\Models\Ad::find($payment->payable_id);
+                        if ($ad) {
+                            $paymentArray['ad_details'] = [
+                                'id' => $ad->id,
+                                'title' => $ad->title,
+                                'price' => $ad->price,
+                                'is_boosted' => $ad->is_boosted,
+                                'boost_expires_at' => $ad->boost_expires_at
+                            ];
+                        }
+                    }
+                    break;
+                case 'educational_material':
+                    $paymentArray['description'] = 'Educational Material Purchase';
+                    $paymentArray['payable_type'] = 'EducationalMaterial'; // Normalize for frontend
+                    break;
+                default:
+                    $paymentArray['description'] = $payment->type ?? 'Payment';
+                    break;
+            }
+
+            return $paymentArray;
+        });
+
+        return response()->json($payments);
+    }
+
+    public function stats(Request $request)
+    {
+        $user = $request->user();
+
+        // Calculate total spent on boosts and materials
+        $totalSpent = $user->payments()
+            ->where('status', 'success')
+            ->whereIn('payable_type', ['AdBoost', 'ad_boost', 'educational_material'])
+            ->sum('amount');
+
+        // Calculate total earned from affiliate payouts
+        $totalEarned = $user->payments()
+            ->where('status', 'success')
+            ->where('type', 'affiliate_payout')
+            ->sum('amount');
+
+        // Total transaction count
+        $totalTransactions = $user->payments()->count();
+
+        // Count by payment type
+        $boostPayments = $user->payments()
+            ->whereIn('payable_type', ['AdBoost', 'ad_boost'])
+            ->count();
+
+        $materialPayments = $user->payments()
+            ->where('payable_type', 'educational_material')
+            ->count();
+
+        $affiliatePayments = $user->payments()
+            ->where('type', 'affiliate_payout')
+            ->count();
+
+        return response()->json([
+            'total_spent' => (float) $totalSpent,
+            'total_earned' => (float) $totalEarned,
+            'total_transactions' => $totalTransactions,
+            'boost_payments' => $boostPayments,
+            'material_payments' => $materialPayments,
+            'affiliate_payments' => $affiliatePayments
+        ]);
+    }
+
+    public function downloadReceipt(Request $request, Payment $payment)
+    {
+        $user = $request->user();
+
+        // Check if user owns this payment
+        if ($payment->user_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Only allow receipt download for successful payments
+        if ($payment->status !== 'success') {
+            return response()->json(['message' => 'Receipt only available for successful payments'], 400);
+        }
+
+        try {
+            // Generate PDF receipt
+            $receiptData = [
+                'payment' => $payment,
+                'user' => $user,
+                'company' => [
+                    'name' => 'EunixMac Classified Ads',
+                    'address' => 'Lagos, Nigeria',
+                    'email' => 'support@eunixmac.com',
+                    'phone' => '+234 XXX XXX XXXX'
+                ]
+            ];
+
+            $pdf = Pdf::loadView('receipts.payment', $receiptData);
+
+            return $pdf->download("receipt-{$payment->reference}.pdf");
+        } catch (\Exception $e) {
+            \Log::error('Receipt generation error: ' . $e->getMessage());
+            return response()->json(['message' => 'Unable to generate receipt. Please try again later.'], 500);
         }
     }
 }

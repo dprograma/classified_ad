@@ -76,6 +76,38 @@ const Help = () => {
     {
       question: "How do I delete my account?",
       answer: "Currently, account deletion must be requested through our support team. Please contact us with your account deletion request and we'll process it within 7 business days."
+    },
+    {
+      question: "How do I edit or delete my ads?",
+      answer: "Go to your dashboard and select 'My Ads'. Find the ad you want to modify and click the edit or delete button. You can update details, images, and pricing at any time."
+    },
+    {
+      question: "What payment methods do you accept?",
+      answer: "We accept various payment methods including bank cards, bank transfers, and mobile money. All payments are processed securely through our verified payment partners."
+    },
+    {
+      question: "How do I report a suspicious ad or user?",
+      answer: "Click the 'Report' button on any ad or user profile. Select the reason for reporting and provide additional details. Our moderation team will review reports within 24 hours."
+    },
+    {
+      question: "Can I promote my ads on social media?",
+      answer: "Yes! You can share your ads on social media platforms. Use the share button on your ad to get shareable links for Facebook, Twitter, WhatsApp, and other platforms."
+    },
+    {
+      question: "How do I change my password?",
+      answer: "Go to Dashboard > Account Settings > Security. Enter your current password and choose a new one. For security, use a strong password with letters, numbers, and symbols."
+    },
+    {
+      question: "What should I do if I'm locked out of my account?",
+      answer: "If you can't access your account, use the 'Forgot Password' link on the login page to reset your password. If issues persist, contact our support team with your account details."
+    },
+    {
+      question: "How long do ads stay active?",
+      answer: "Regular ads stay active for 30 days. You can refresh them to extend visibility. Boosted ads have varying durations based on the package you choose (3, 7, or 14 days)."
+    },
+    {
+      question: "Is there a limit to how many ads I can post?",
+      answer: "Free accounts can post up to 10 active ads. Verified users can post up to 25 ads. Agents have unlimited posting privileges for educational materials."
     }
   ];
 

@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import theme from './theme';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import CookieConsent from './components/CookieConsent';
 import { AuthProvider } from './AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -24,9 +25,19 @@ import Profile from './pages/Profile';
 import Settings from './pages/Settings';
 import SearchResults from './pages/SearchResults';
 import Help from './pages/Help';
+import BuyerSafety from './pages/BuyerSafety';
+import SellerGuide from './pages/SellerGuide';
+import AgentProgram from './pages/AgentProgram';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import CookiePolicy from './pages/CookiePolicy';
 import UploadEducationalMaterial from './pages/UploadEducationalMaterial';
+import MaterialView from './pages/MaterialView';
+import MaterialEdit from './pages/MaterialEdit';
 import Categories from './pages/Categories';
 import AdDetail from './pages/AdDetail';
+import AdminSupportManagement from './pages/AdminSupportManagement';
+import AdminMaterialsManagement from './pages/AdminMaterialsManagement';
 
 
 function App() {
@@ -52,15 +63,38 @@ function App() {
                 <Route path="/payment/callback" element={<PaymentCallback />} />
                 <Route path="/search" element={<SearchResults />} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/buyer-safety" element={<BuyerSafety />} />
+                <Route path="/seller-guide" element={<SellerGuide />} />
+                <Route path="/agent-program" element={<AgentProgram />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/cookies" element={<CookiePolicy />} />
+                <Route path="/safety" element={<BuyerSafety />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/ads/:id" element={<AdDetail />} />
-                <Route 
-                  path="/educational-materials/upload" 
+                <Route
+                  path="/educational-materials/upload"
                   element={
                     <PrivateRoute>
                       <UploadEducationalMaterial />
                     </PrivateRoute>
-                  } 
+                  }
+                />
+                <Route
+                  path="/educational-materials/:id"
+                  element={
+                    <PrivateRoute>
+                      <MaterialView />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/educational-materials/:id/edit"
+                  element={
+                    <PrivateRoute>
+                      <MaterialEdit />
+                    </PrivateRoute>
+                  }
                 />
                 <Route path="/" element={<LandingPage />} />
                 <Route
@@ -95,9 +129,26 @@ function App() {
                     </PrivateRoute>
                   }
                 />
+                <Route
+                  path="/admin/support"
+                  element={
+                    <PrivateRoute>
+                      <AdminSupportManagement />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/admin/materials"
+                  element={
+                    <PrivateRoute>
+                      <AdminMaterialsManagement />
+                    </PrivateRoute>
+                  }
+                />
               </Routes>
             </Box>
             <Footer />
+            <CookieConsent />
           </Box>
           <ToastContainer
             position="top-right"

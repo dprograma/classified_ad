@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -23,7 +23,9 @@ import {
   Tabs,
   Tab,
   Alert,
-  Divider
+  Divider,
+  CircularProgress,
+  Pagination
 } from '@mui/material';
 import {
   Payment,
@@ -38,29 +40,96 @@ import {
   Cancel,
   Schedule
 } from '@mui/icons-material';
+import EnhancedStatCard from '../common/EnhancedStatCard';
+import StatCardsContainer from '../common/StatCardsContainer';
 import { format } from 'date-fns';
 import useApi from '../../hooks/useApi';
+import { toast } from 'react-toastify';
+import { API_CONFIG } from '../../config/api';
 
-const PaymentHistorySection = ({ payments }) => {
+const PaymentHistorySection = () => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [payments, setPayments] = useState([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    total_spent: 0,
+    total_earned: 0,
+    total_transactions: 0,
+    boost_payments: 0,
+    material_payments: 0,
+    affiliate_payments: 0
+  });
+  const [pagination, setPagination] = useState({
+    current_page: 1,
+    total: 0,
+    per_page: 15,
+    last_page: 1
+  });
   const { callApi, loading } = useApi();
 
-  // Filter payments by type
-  const filterPayments = (type) => {
-    if (!payments) return [];
-    
-    switch (type) {
-      case 'boost':
-        return payments.filter(p => p.payable_type === 'AdBoost');
-      case 'materials':
-        return payments.filter(p => p.payable_type === 'EducationalMaterial');
-      case 'affiliate':
-        return payments.filter(p => p.type === 'affiliate_payout');
-      default:
-        return payments;
+  const tabLabels = ['All Payments', 'Ad Boosts', 'Materials', 'Affiliate Payouts'];
+  const tabFilters = ['all', 'boost', 'materials', 'affiliate'];
+
+  // Fetch payment statistics
+  const fetchStats = async () => {
+    try {
+      const response = await callApi('GET', '/payments/stats');
+      setStats(response);
+    } catch (error) {
+      console.error('Error fetching payment stats:', error);
     }
+  };
+
+  // Fetch payments from API
+  const fetchPayments = async (page = 1, type = 'all') => {
+    try {
+      setPaymentsLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        per_page: pagination.per_page.toString()
+      });
+
+      if (type !== 'all') {
+        params.append('type', type);
+      }
+
+      const response = await callApi('GET', `/payments?${params.toString()}`);
+
+      setPayments(response.data);
+      setPagination({
+        current_page: response.current_page,
+        total: response.total,
+        per_page: response.per_page,
+        last_page: response.last_page
+      });
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      toast.error('Failed to load payment history');
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
+  // Load payments when component mounts or tab changes
+  useEffect(() => {
+    fetchPayments(1, tabFilters[selectedTab]);
+  }, [selectedTab]);
+
+  // Load stats when component mounts
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  // Handle pagination
+  const handlePageChange = (event, newPage) => {
+    fetchPayments(newPage, tabFilters[selectedTab]);
+  };
+
+  // Since we're fetching filtered data from API, we just return the payments
+  const filterPayments = (type) => {
+    return payments || [];
   };
 
   const getPaymentIcon = (payment) => {
@@ -117,37 +186,49 @@ const PaymentHistorySection = ({ payments }) => {
 
   const downloadReceipt = async (paymentId) => {
     try {
-      const response = await callApi('GET', `/payments/${paymentId}/receipt`, null, {
-        responseType: 'blob'
+      // Use direct fetch for blob download
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_CONFIG.BASE_URL}/payments/${paymentId}/receipt`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/pdf'
+        }
       });
-      
-      // Create blob link to download
-      const url = window.URL.createObjectURL(new Blob([response]));
+
+      if (!response.ok) {
+        throw new Error('Receipt download failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `receipt-${paymentId}.pdf`);
+
+      // Get filename from Content-Disposition header or fallback
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `receipt-${paymentId}.pdf`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+
+      link.setAttribute('download', filename);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+
+      toast.success('Receipt downloaded successfully');
     } catch (error) {
       console.error('Error downloading receipt:', error);
+      toast.error('Failed to download receipt');
     }
   };
-
-  const tabLabels = ['All Payments', 'Ad Boosts', 'Materials', 'Affiliate Payouts'];
-  const tabFilters = ['all', 'boost', 'materials', 'affiliate'];
   
   const currentPayments = filterPayments(tabFilters[selectedTab]);
-
-  // Calculate totals
-  const totalSpent = payments?.reduce((sum, p) => 
-    p.status === 'success' && (p.payable_type === 'AdBoost' || p.payable_type === 'EducationalMaterial') 
-      ? sum + parseFloat(p.amount) : sum, 0) || 0;
-
-  const totalEarned = payments?.reduce((sum, p) => 
-    p.status === 'success' && p.type === 'affiliate_payout' 
-      ? sum + parseFloat(p.amount) : sum, 0) || 0;
 
   return (
     <Box>
@@ -159,49 +240,47 @@ const PaymentHistorySection = ({ payments }) => {
       </Typography>
 
       {/* Payment Summary */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <AttachMoney sx={{ fontSize: 40, color: 'error.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold" color="error.main">
-                ₦{totalSpent.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Spent
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <AttachMoney sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold" color="success.main">
-                ₦{totalEarned.toLocaleString()}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Earned
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Receipt sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
-              <Typography variant="h4" fontWeight="bold">
-                {payments?.length || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Transactions
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <StatCardsContainer
+        columns={{ mobile: 2, tablet: 2, desktop: 4 }}
+        gap="20px"
+        className="mb-6"
+      >
+        <EnhancedStatCard
+          icon={TrendingUp}
+          value={`₦${stats.total_spent.toLocaleString()}`}
+          label="Total Spent"
+          color="#ef4444"
+          size="medium"
+          subtitle="Money spent on boosts & materials"
+        />
+
+        <EnhancedStatCard
+          icon={AttachMoney}
+          value={`₦${stats.total_earned.toLocaleString()}`}
+          label="Total Earned"
+          color="#10b981"
+          size="medium"
+          subtitle="Earnings from affiliate & sales"
+        />
+
+        <EnhancedStatCard
+          icon={Receipt}
+          value={stats.total_transactions}
+          label="Total Transactions"
+          color="#3b82f6"
+          size="medium"
+          subtitle="All payment activities"
+        />
+
+        <EnhancedStatCard
+          icon={TrendingUp}
+          value={stats.boost_payments}
+          label="Boost Payments"
+          color="#8b5cf6"
+          size="medium"
+          subtitle="Ad promotion payments"
+        />
+      </StatCardsContainer>
 
       {/* Payment Tabs */}
       <Card sx={{ mb: 3 }}>
@@ -211,17 +290,37 @@ const PaymentHistorySection = ({ payments }) => {
           variant="scrollable"
           scrollButtons="auto"
         >
-          {tabLabels.map((label, index) => (
-            <Tab
-              key={index}
-              label={`${label} (${filterPayments(tabFilters[index]).length})`}
-            />
-          ))}
+          {tabLabels.map((label, index) => {
+            let count = pagination.total;
+            if (selectedTab !== index) {
+              switch (index) {
+                case 0: count = stats.total_transactions; break;
+                case 1: count = stats.boost_payments; break;
+                case 2: count = stats.material_payments; break;
+                case 3: count = stats.affiliate_payments; break;
+              }
+            }
+            return (
+              <Tab
+                key={index}
+                label={selectedTab === index ? `${label} (${count})` : label}
+              />
+            );
+          })}
         </Tabs>
       </Card>
 
       {/* Payments Table */}
-      {currentPayments.length === 0 ? (
+      {paymentsLoading ? (
+        <Card>
+          <CardContent sx={{ textAlign: 'center', py: 6 }}>
+            <CircularProgress sx={{ mb: 2 }} />
+            <Typography variant="h6" color="text.secondary">
+              Loading payment history...
+            </Typography>
+          </CardContent>
+        </Card>
+      ) : currentPayments.length === 0 ? (
         <Card>
           <CardContent sx={{ textAlign: 'center', py: 6 }}>
             <Payment sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
@@ -262,6 +361,11 @@ const PaymentHistorySection = ({ payments }) => {
                           <Typography variant="caption" color="text.secondary">
                             {payment.description || getPaymentTypeLabel(payment)}
                           </Typography>
+                          {payment.ad_details && (
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              Ad: {payment.ad_details.title} (₦{parseFloat(payment.ad_details.price).toLocaleString()})
+                            </Typography>
+                          )}
                         </Box>
                       </Box>
                     </TableCell>
@@ -326,6 +430,21 @@ const PaymentHistorySection = ({ payments }) => {
         </Card>
       )}
 
+      {/* Pagination */}
+      {!paymentsLoading && currentPayments.length > 0 && pagination.last_page > 1 && (
+        <Box display="flex" justifyContent="center" mt={3}>
+          <Pagination
+            count={pagination.last_page}
+            page={pagination.current_page}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
+      )}
+
       {/* Receipt/Details Dialog */}
       <Dialog open={receiptDialogOpen} onClose={() => setReceiptDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Payment Details</DialogTitle>
@@ -382,6 +501,23 @@ const PaymentHistorySection = ({ payments }) => {
                     {format(new Date(selectedPayment.created_at), 'MMMM dd, yyyy - HH:mm:ss')}
                   </Typography>
                 </Grid>
+                {selectedPayment.ad_details && (
+                  <Grid item xs={12}>
+                    <Typography variant="body2" color="text.secondary">
+                      Associated Ad
+                    </Typography>
+                    <Typography variant="body1" fontWeight="bold">
+                      {selectedPayment.ad_details.title}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Ad Price: ₦{parseFloat(selectedPayment.ad_details.price).toLocaleString()} |
+                      Boost Status: {selectedPayment.ad_details.is_boosted ? 'Active' : 'Inactive'}
+                      {selectedPayment.ad_details.boost_expires_at && selectedPayment.ad_details.is_boosted && (
+                        <> | Expires: {format(new Date(selectedPayment.ad_details.boost_expires_at), 'MMM dd, yyyy')}</>
+                      )}
+                    </Typography>
+                  </Grid>
+                )}
               </Grid>
               
               {selectedPayment.metadata && (

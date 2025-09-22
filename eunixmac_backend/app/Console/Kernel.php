@@ -15,7 +15,14 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Clean expired boosted ads every hour
+        $schedule->command('boost:check-expiry')
+                 ->hourly()
+                 ->withoutOverlapping()
+                 ->onOneServer();
+
+        // Alternative: Run every 30 minutes for more frequent cleanup
+        // $schedule->command('boost:check-expiry')->everyThirtyMinutes();
     }
 
     /**
