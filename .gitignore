@@ -3,6 +3,7 @@
 /public/storage
 /storage/*.key
 /vendor
+logs
 .env
 .env.backup
 .phpunit.result.cache
@@ -17,6 +18,15 @@ ARCHITECTURE_DESIGN.md
 DATABASE_DESIGN.md
 DEPLOYMENT.md
 TODO.md
+test.php
 
 UPDATED_PRD_Classified_Ads_Website.md
 USER_JOURNEY.md
+ADMIN_MATERIALS_PRODUCTION_READINESS.md
+AD_BOOST_IMPLEMENTATION.md
+BOOST_DEPLOYMENT_GUIDE.md
+CLAUDE.md
+sample-ads.md
+SUPPORT_SYSTEM_PRODUCTION_READINESS.md
+.gitignore
+.ftpignore
