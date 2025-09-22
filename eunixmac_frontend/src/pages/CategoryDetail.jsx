@@ -10,7 +10,7 @@ function CategoryDetail() {
   useEffect(() => {
     const fetchCategory = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/categories/${id}`);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/categories/${id}`);
         setCategory(response.data);
       } catch (error) {
         console.error('Error fetching category:', error);

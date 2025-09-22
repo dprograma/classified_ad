@@ -194,7 +194,7 @@ function AdDetail() {
           <CardMedia
             component="img"
             height="400"
-            image={ad.images[0].image_path?.startsWith('http') ? ad.images[0].image_path : `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${ad.images[0].image_path}`}
+            image={ad.images[0].image_path?.startsWith('http') ? ad.images[0].image_path : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://eunixma.com.ng'}/storage/${ad.images[0].image_path}`}
             alt={ad.title}
             onError={(e) => {
               e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop&auto=format';

@@ -161,7 +161,7 @@ const Profile = () => {
         setMounted(true);
         if (user) {
             setFormData(prev => ({ ...prev, phone_number: user.phone_number || '' }));
-            setPreview(user.profile_picture ? `${import.meta.env.VITE_API_URL}/storage/${user.profile_picture}` : null);
+            setPreview(user.profile_picture ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://eunixma.com.ng'}/storage/${user.profile_picture}` : null);
         }
     }, [user]);
 
