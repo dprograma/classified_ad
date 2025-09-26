@@ -173,10 +173,10 @@ function HeroSection() {
       <FloatingOrb delay={4} size={150} bottom="15%" left="10%" color="rgba(16, 185, 129, 0.1)" />
       <FloatingOrb delay={1} size={100} top="60%" right="15%" color="rgba(255, 255, 255, 0.05)" />
 
-      <Container 
-        maxWidth="lg" 
-        sx={{ 
-          position: 'relative', 
+      <Container
+        maxWidth="xl"
+        sx={{
+          position: 'relative',
           zIndex: 2,
           textAlign: 'center',
         }}
@@ -242,8 +242,8 @@ function HeroSection() {
         </Fade>
 
         <Fade in={mounted} timeout={1500}>
-          <Box sx={{ 
-            maxWidth: '1000px', 
+          <Box sx={{
+            maxWidth: '1200px',
             margin: '32px auto 0',
             px: { xs: 2, sm: 0 },
           }}>

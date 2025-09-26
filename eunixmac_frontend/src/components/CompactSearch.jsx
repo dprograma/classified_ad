@@ -187,7 +187,7 @@ const CompactSearch = ({ sx = {} }) => {
     <Paper
       elevation={3}
       sx={{
-        p: 3,
+        p: { xs: 2, sm: 2.5, md: 3 },
         borderRadius: 3,
         background: 'linear-gradient(135deg, rgba(108,71,255,0.02) 0%, rgba(0,198,174,0.02) 100%)',
         border: '1px solid',
@@ -199,18 +199,26 @@ const CompactSearch = ({ sx = {} }) => {
         variant="h5"
         component="h2"
         sx={{
-          mb: 3,
+          mb: { xs: 2, sm: 2.5, md: 3 },
           fontWeight: 700,
           textAlign: 'center',
-          color: 'text.primary'
+          color: 'text.primary',
+          fontSize: { xs: '1.25rem', sm: '1.375rem', md: '1.5rem' }
         }}
       >
         Find Your Perfect Match
       </Typography>
 
-      <Grid container spacing={2} alignItems="center">
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: 2,
+          alignItems: 'stretch',
+        }}
+      >
         {/* Search Term */}
-        <Grid item xs={12} md={4}>
+        <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 40%' }, minWidth: 0 }}>
           <Autocomplete
             options={suggestions || []}
             getOptionLabel={(option) => (option && option.value) ? option.value : ''}
@@ -229,19 +237,25 @@ const CompactSearch = ({ sx = {} }) => {
               <TextField
                 {...params}
                 label="What are you looking for?"
-                placeholder="Search for cars, phones, houses, apartments..."
+                placeholder="Search for cars, phones, houses..."
                 variant="outlined"
                 fullWidth
                 onKeyPress={handleKeyPress}
                 sx={{
                   '& .MuiInputBase-root': {
-                    height: '56px',
-                    width: '350px'
+                    height: { xs: '48px', sm: '52px', md: '56px' },
+                  },
+                  '& .MuiInputLabel-root': {
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    padding: { xs: '8px 12px', sm: '12px 14px' }
                   }
                 }}
                 InputProps={{
                   ...params.InputProps,
-                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />
+                  startAdornment: <Search sx={{ mr: 1, color: 'text.secondary', fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
                 }}
               />
             )}
@@ -260,25 +274,26 @@ const CompactSearch = ({ sx = {} }) => {
             }}
             freeSolo
           />
-        </Grid>
+        </Box>
 
         {/* Category */}
-        <Grid item xs={12} md={3}>
+        <Box sx={{ flex: { xs: '1 1 100%', md: '0 1 200px' }, minWidth: 0 }}>
           <FormControl fullWidth>
-            <InputLabel>Category</InputLabel>
+            <InputLabel sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Category</InputLabel>
             <Select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               label="Category"
               sx={{
-                height: '56px',
-                width: '200px',
+                height: { xs: '48px', sm: '52px', md: '56px' },
                 '& .MuiSelect-select': {
                   display: 'flex',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  padding: { xs: '8px 12px', sm: '12px 14px' }
                 }
               }}
-              startAdornment={<Category sx={{ mr: 1, color: 'text.secondary' }} />}
+              startAdornment={<Category sx={{ mr: 1, color: 'text.secondary', fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />}
             >
               <MenuItem value="">All Categories</MenuItem>
               {categories.map((category) => (
@@ -288,10 +303,10 @@ const CompactSearch = ({ sx = {} }) => {
               ))}
             </Select>
           </FormControl>
-        </Grid>
+        </Box>
 
         {/* Location */}
-        <Grid item xs={12} md={3}>
+        <Box sx={{ flex: { xs: '1 1 100%', md: '0 1 200px' }, minWidth: 0 }}>
           <Autocomplete
             options={popularLocations}
             value={selectedLocation}
@@ -300,38 +315,43 @@ const CompactSearch = ({ sx = {} }) => {
               <TextField
                 {...params}
                 label="Location"
-                placeholder="City/State"
+                placeholder="City or State"
                 variant="outlined"
                 fullWidth
                 sx={{
                   '& .MuiInputBase-root': {
-                    height: '56px',
-                    width: '200px'
+                    height: { xs: '48px', sm: '52px', md: '56px' },
+                  },
+                  '& .MuiInputLabel-root': {
+                    fontSize: { xs: '0.875rem', sm: '1rem' }
+                  },
+                  '& .MuiInputBase-input': {
+                    fontSize: { xs: '0.875rem', sm: '1rem' },
+                    padding: { xs: '8px 12px', sm: '12px 14px' }
                   }
                 }}
                 InputProps={{
                   ...params.InputProps,
-                  startAdornment: <LocationOn sx={{ mr: 1, color: 'text.secondary' }} />
+                  startAdornment: <LocationOn sx={{ mr: 1, color: 'text.secondary', fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />
                 }}
               />
             )}
             freeSolo
           />
-        </Grid>
+        </Box>
 
         {/* Search Button */}
-        <Grid item xs={12} md={2}>
+        <Box sx={{ flex: { xs: '1 1 100%', md: '0 0 auto' }, minWidth: { xs: 0, md: '120px' } }}>
           <Button
             variant="contained"
             fullWidth
-            onClick={handleSearch}
+            onClick={() => handleSearch()}
             sx={{
-              height: '56px',
-              width: '150px',
+              height: { xs: '48px', sm: '52px', md: '56px' },
               background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
               borderRadius: 2,
               fontWeight: 600,
-              fontSize: '1rem',
+              fontSize: { xs: '0.875rem', sm: '1rem' },
               textTransform: 'none',
               boxShadow: '0 4px 20px rgba(108,71,255,0.3)',
               '&:hover': {
@@ -339,20 +359,33 @@ const CompactSearch = ({ sx = {} }) => {
                 transform: 'translateY(-2px)',
                 boxShadow: '0 6px 25px rgba(108,71,255,0.4)',
               },
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
             }}
           >
             Search
           </Button>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Quick Categories */}
-      <Box sx={{ mt: 3, textAlign: 'center' }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+      <Box sx={{ mt: { xs: 2, sm: 2.5, md: 3 }, textAlign: 'center' }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            mb: { xs: 1, sm: 1.5 },
+            fontSize: { xs: '0.75rem', sm: '0.875rem' }
+          }}
+        >
           Popular searches:
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
+        <Box sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: { xs: 0.5, sm: 1 },
+          px: { xs: 1, sm: 0 }
+        }}>
           {['Cars', 'Phones', 'Laptops', 'Houses', 'Fashion', 'Electronics'].map((term) => (
             <Button
               key={term}
@@ -368,7 +401,9 @@ const CompactSearch = ({ sx = {} }) => {
               sx={{
                 color: 'primary.main',
                 textTransform: 'none',
-                fontSize: '0.8rem',
+                fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                minWidth: { xs: 'auto', sm: 'auto' },
+                padding: { xs: '4px 8px', sm: '6px 12px' },
                 '&:hover': {
                   backgroundColor: 'primary.main',
                   color: 'white'

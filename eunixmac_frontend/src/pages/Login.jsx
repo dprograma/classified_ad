@@ -98,12 +98,31 @@ function Login() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
-    if (token) {
-      // Assuming the token is a JWT, we can decode it to get user info
-      // In a real app, you'd probably want to make another API call to get user details
-      const user = JSON.parse(atob(token.split('.')[1]));
-      login(user, token);
-      navigate(from, { replace: true });
+    const error = params.get('error');
+
+    if (error) {
+      const errorMessages = {
+        'provider_error': 'Authentication failed. Please try again.',
+        'account_exists': 'An account with this email already exists. Please log in normally.',
+        'invalid_provider': 'Invalid authentication provider.',
+      };
+      // Use toast from useApi hook or create a simple alert
+      alert(errorMessages[error] || 'Authentication failed. Please try again.');
+      // Clean up URL
+      window.history.replaceState({}, document.title, '/login');
+    } else if (token) {
+      try {
+        // Assuming the token is a JWT, we can decode it to get user info
+        // In a real app, you'd probably want to make another API call to get user details
+        const user = JSON.parse(atob(token.split('.')[1]));
+        login(user, token);
+        navigate(from, { replace: true });
+      } catch (error) {
+        console.error('Failed to parse authentication token:', error);
+        alert('Authentication failed. Please try again.');
+        // Clean up URL
+        window.history.replaceState({}, document.title, '/login');
+      }
     }
   }, [location, login, navigate, from]);
 
