@@ -7,11 +7,21 @@ use App\Models\AdCustomField;
 use App\Models\AdImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class AdController extends Controller
 {
     public function index(Request $request)
     {
+        // Cache featured ads for 2 minutes to reduce load
+        if ($request->input('featured') === 'true' && !$request->has('search') && !$request->has('category_id')) {
+            $cacheKey = 'featured_ads_' . $request->input('limit', 8);
+
+            return Cache::remember($cacheKey, 120, function () use ($request) {
+                return $this->getFeaturedAdsQuery($request);
+            });
+        }
+
         $query = Ad::query()->where('status', 'active');
 
         // Enhanced search functionality
@@ -868,6 +878,29 @@ class AdController extends Controller
         return response()->json([
             'message' => 'Boost history retrieved successfully',
             'data' => $history
+        ]);
+    }
+
+    /**
+     * Helper method to get featured ads with optimized query
+     */
+    private function getFeaturedAdsQuery(Request $request)
+    {
+        $limit = min($request->input('limit', 8), 20);
+
+        $ads = Ad::query()
+            ->where('status', 'active')
+            ->where('is_boosted', true)
+            ->where('boost_expires_at', '>', now())
+            ->with(['user:id,name,email', 'category:id,name', 'images:id,ad_id,image_path'])
+            ->orderByRaw('(is_boosted = 1 AND boost_expires_at > NOW()) DESC')
+            ->orderBy('created_at', 'desc')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'data' => $ads,
+            'total' => $ads->count()
         ]);
     }
 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, CardMedia, Box, Chip, IconButton, Button } from '@mui/material';
 import { FavoriteBorder, Visibility, LocationOn, Favorite } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import useApi from '../hooks/useApi';
+import useSlowApi from '../hooks/useSlowApi';
 
 const featuredAds = [
   {
@@ -66,7 +66,7 @@ const FeaturedAds = () => {
   const [favorites, setFavorites] = useState(new Set());
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { callApi } = useApi();
+  const { callApi } = useSlowApi(); // Use slower API for featured ads on initial load
   const navigate = useNavigate();
 
   useEffect(() => {
