@@ -8,6 +8,7 @@ const useApi = () => {
 
   const api = axios.create({
     baseURL: API_CONFIG.BASE_URL,
+    timeout: 30000, // 30 second timeout to prevent indefinite hanging
     headers: {
         'Accept': 'application/json',
     }

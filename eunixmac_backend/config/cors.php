@@ -20,9 +20,13 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'http://localhost:5173', // Your Vite frontend
-        'http://localhost:5174', // Current Vite frontend port
-        'http://localhost:3000', // A common alternative React port
+        'https://eunixma.com.ng',           // Production frontend
+        'https://www.eunixma.com.ng',       // Production frontend with www
+        'http://eunixma.com.ng',            // Production HTTP (will redirect to HTTPS)
+        'http://www.eunixma.com.ng',        // Production HTTP with www
+        'http://localhost:5173',            // Local Vite frontend
+        'http://localhost:5174',            // Alternative Vite port
+        'http://localhost:3000',            // Alternative React port
     ],
 
     'allowed_origins_patterns' => [],

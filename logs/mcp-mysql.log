@@ -107,3 +107,166 @@
 2025-09-22T15:14:48.132Z | tools/list | {} | SUCCESS | RESPONSE: {"tools":[{"name":"sql_query","description":"Execute SQL query, supports DDL and DML operations","inputSchema":{"type":"object","properties":{"sql":{"type":"string","description":"SQL statement to execute"}},"required":["sql"]}},{"name":"get_database_info","description":"Get database information, including database list, table list and configuration information","inputSchema":{"type":"object","properties":{}}},{"name":"get_operation_logs","description":"Get operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50"},"offset":{"type":"number","description":"Offset, default 0"}}}},{"name":"check_permissions","description":"Check database permissions for DDL, DROP, DELETE and other operations","inputSchema":{"type":"object","properties":{}}},{"name":"get_ddl_sql_logs","description":"Get DDL SQL operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50, max 500"},"offset":{"type":"number","description":"Offset, default 0"}}}}],"environment":{"ALLOW_DDL":false,"ALLOW_DROP":false,"ALLOW_DELETE":false,"MYSQL_HOST":"localhost","MYSQL_PORT":"3306","MYSQL_USER":"root","MYSQL_DATABASE":"eunixmacdb","serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}}
 2025-09-22T15:14:48.154Z | connection_pool_created | {"host":"localhost","port":3306,"database":"eunixmacdb","connectionLimit":10} | SUCCESS | RESPONSE: {"status":"success"}
 2025-09-22T15:14:48.154Z | notifications/initialized | {} | SUCCESS | RESPONSE: null
+2025-09-22T20:18:37.937Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-09-22T20:18:37.939Z | initialize | {"protocolVersion":"2025-06-18","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"1.0.120"}} | SUCCESS | RESPONSE: null
+2025-09-22T20:18:37.939Z | initialize | {"protocolVersion":"2025-06-18","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"1.0.120"}} | SUCCESS | RESPONSE: {"protocolVersion":"2025-06-18","capabilities":{"tools":{"listChanged":false},"roots":{"listChanged":false}},"serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}
+2025-09-22T20:18:37.955Z | tools/list | {} | SUCCESS | RESPONSE: {"tools":[{"name":"sql_query","description":"Execute SQL query, supports DDL and DML operations","inputSchema":{"type":"object","properties":{"sql":{"type":"string","description":"SQL statement to execute"}},"required":["sql"]}},{"name":"get_database_info","description":"Get database information, including database list, table list and configuration information","inputSchema":{"type":"object","properties":{}}},{"name":"get_operation_logs","description":"Get operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50"},"offset":{"type":"number","description":"Offset, default 0"}}}},{"name":"check_permissions","description":"Check database permissions for DDL, DROP, DELETE and other operations","inputSchema":{"type":"object","properties":{}}},{"name":"get_ddl_sql_logs","description":"Get DDL SQL operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50, max 500"},"offset":{"type":"number","description":"Offset, default 0"}}}}],"environment":{"ALLOW_DDL":false,"ALLOW_DROP":false,"ALLOW_DELETE":false,"MYSQL_HOST":"localhost","MYSQL_PORT":"3306","MYSQL_USER":"root","MYSQL_DATABASE":"eunixmacdb","serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}}
+2025-09-22T20:18:38.015Z | connection_pool_created | {"host":"localhost","port":3306,"database":"eunixmacdb","connectionLimit":10} | SUCCESS | RESPONSE: {"status":"success"}
+2025-09-22T20:18:38.015Z | notifications/initialized | {} | SUCCESS | RESPONSE: null
+2025-09-23T14:31:02.174Z | SIGTERM | {"signal":"SIGTERM"} | SUCCESS | RESPONSE: {"status":"shutting_down"}
+2025-09-23T14:31:02.639Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-23T14:31:08.350Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-09-24T04:43:49.297Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-09-24T04:43:49.299Z | initialize | {"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"Kilo Code","version":"4.97.0"}} | SUCCESS | RESPONSE: null
+2025-09-24T04:43:49.299Z | initialize | {"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"Kilo Code","version":"4.97.0"}} | SUCCESS | RESPONSE: {"protocolVersion":"2025-03-26","capabilities":{"tools":{"listChanged":false}},"serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}
+2025-09-24T04:43:49.310Z | tools/list | {} | SUCCESS | RESPONSE: {"tools":[{"name":"sql_query","description":"Execute SQL query, supports DDL and DML operations","inputSchema":{"type":"object","properties":{"sql":{"type":"string","description":"SQL statement to execute"}},"required":["sql"]}},{"name":"get_database_info","description":"Get database information, including database list, table list and configuration information","inputSchema":{"type":"object","properties":{}}},{"name":"get_operation_logs","description":"Get operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50"},"offset":{"type":"number","description":"Offset, default 0"}}}},{"name":"check_permissions","description":"Check database permissions for DDL, DROP, DELETE and other operations","inputSchema":{"type":"object","properties":{}}},{"name":"get_ddl_sql_logs","description":"Get DDL SQL operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50, max 500"},"offset":{"type":"number","description":"Offset, default 0"}}}}],"environment":{"ALLOW_DDL":false,"ALLOW_DROP":false,"ALLOW_DELETE":false,"MYSQL_HOST":"localhost","MYSQL_PORT":"3306","MYSQL_USER":"root","MYSQL_DATABASE":"eunixmacdb","serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}}
+2025-09-24T04:43:49.312Z | resources/list | {} | SUCCESS | RESPONSE: {"resources":[]}
+2025-09-24T04:43:49.313Z | resources/templates/list | {} | Unknown method: resources/templates/list | RESPONSE: null
+2025-09-24T04:43:49.314Z | error | {"error":"Unknown method: resources/templates/list","stack":"Error: Unknown method: resources/templates/list\n    at FinalMCPServer.handleRequest (/Users/admin/.npm-global/lib/node_modules/@liangshanli/mcp-server-mysql/src/server-final.js:705:17)\n    at Socket.<anonymous> (/Users/admin/.npm-global/lib/node_modules/@liangshanli/mcp-server-mysql/src/server-final.js:781:43)\n    at Socket.emit (node:events:518:28)\n    at addChunk (node:internal/streams/readable:561:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)\n    at Readable.push (node:internal/streams/readable:392:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)"} | Unknown method: resources/templates/list | RESPONSE: null
+2025-09-24T04:43:49.361Z | connection_pool_created | {"host":"localhost","port":3306,"database":"eunixmacdb","connectionLimit":10} | SUCCESS | RESPONSE: {"status":"success"}
+2025-09-24T04:43:49.361Z | notifications/initialized | {} | SUCCESS | RESPONSE: null
+2025-09-24T09:14:58.756Z | SIGTERM | {"signal":"SIGTERM"} | SUCCESS | RESPONSE: {"status":"shutting_down"}
+2025-09-24T09:14:58.786Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-24T09:15:01.090Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-09-24T09:15:01.093Z | uncaughtException | {"error":"write EPIPE","stack":"Error: write EPIPE\n    at afterWriteDispatched (node:internal/stream_base_commons:159:15)\n    at writeGeneric (node:internal/stream_base_commons:150:3)\n    at Socket._writeGeneric (node:net:966:11)\n    at Socket._write (node:net:978:8)\n    at writeOrBuffer (node:internal/streams/writable:572:12)\n    at _write (node:internal/streams/writable:501:10)\n    at Writable.write (node:internal/streams/writable:510:10)\n    at console.value (node:internal/console/constructor:298:16)\n    at console.error (node:internal/console/constructor:412:26)\n    at main (/Users/admin/.npm-global/lib/node_modules/@liangshanli/mcp-server-mysql/src/server-final.js:872:11)"} | write EPIPE | RESPONSE: null
+2025-09-24T09:15:56.389Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-09-24T09:15:56.392Z | uncaughtException | {"error":"write EPIPE","stack":"Error: write EPIPE\n    at afterWriteDispatched (node:internal/stream_base_commons:159:15)\n    at writeGeneric (node:internal/stream_base_commons:150:3)\n    at Socket._writeGeneric (node:net:966:11)\n    at Socket._write (node:net:978:8)\n    at writeOrBuffer (node:internal/streams/writable:572:12)\n    at _write (node:internal/streams/writable:501:10)\n    at Writable.write (node:internal/streams/writable:510:10)\n    at console.value (node:internal/console/constructor:298:16)\n    at console.error (node:internal/console/constructor:412:26)\n    at main (/Users/admin/.npm-global/lib/node_modules/@liangshanli/mcp-server-mysql/src/server-final.js:872:11)"} | write EPIPE | RESPONSE: null
+2025-09-25T14:54:28.093Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-09-25T14:54:28.095Z | initialize | {"protocolVersion":"2025-06-18","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"1.0.124"}} | SUCCESS | RESPONSE: null
+2025-09-25T14:54:28.095Z | initialize | {"protocolVersion":"2025-06-18","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"1.0.124"}} | SUCCESS | RESPONSE: {"protocolVersion":"2025-06-18","capabilities":{"tools":{"listChanged":false},"roots":{"listChanged":false}},"serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}
+2025-09-25T14:54:28.105Z | tools/list | {} | SUCCESS | RESPONSE: {"tools":[{"name":"sql_query","description":"Execute SQL query, supports DDL and DML operations","inputSchema":{"type":"object","properties":{"sql":{"type":"string","description":"SQL statement to execute"}},"required":["sql"]}},{"name":"get_database_info","description":"Get database information, including database list, table list and configuration information","inputSchema":{"type":"object","properties":{}}},{"name":"get_operation_logs","description":"Get operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50"},"offset":{"type":"number","description":"Offset, default 0"}}}},{"name":"check_permissions","description":"Check database permissions for DDL, DROP, DELETE and other operations","inputSchema":{"type":"object","properties":{}}},{"name":"get_ddl_sql_logs","description":"Get DDL SQL operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50, max 500"},"offset":{"type":"number","description":"Offset, default 0"}}}}],"environment":{"ALLOW_DDL":false,"ALLOW_DROP":false,"ALLOW_DELETE":false,"MYSQL_HOST":"localhost","MYSQL_PORT":"3306","MYSQL_USER":"root","MYSQL_DATABASE":"eunixmacdb","serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}}
+2025-09-25T14:54:28.108Z | connection_pool_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T14:54:28.109Z | notifications/initialized | {} | SUCCESS | RESPONSE: null
+2025-09-25T14:54:48.358Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-09-25T14:54:48.360Z | initialize | {"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"Kilo Code","version":"4.97.1"}} | SUCCESS | RESPONSE: null
+2025-09-25T14:54:48.360Z | initialize | {"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"Kilo Code","version":"4.97.1"}} | SUCCESS | RESPONSE: {"protocolVersion":"2025-03-26","capabilities":{"tools":{"listChanged":false}},"serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}
+2025-09-25T14:54:48.371Z | tools/list | {} | SUCCESS | RESPONSE: {"tools":[{"name":"sql_query","description":"Execute SQL query, supports DDL and DML operations","inputSchema":{"type":"object","properties":{"sql":{"type":"string","description":"SQL statement to execute"}},"required":["sql"]}},{"name":"get_database_info","description":"Get database information, including database list, table list and configuration information","inputSchema":{"type":"object","properties":{}}},{"name":"get_operation_logs","description":"Get operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50"},"offset":{"type":"number","description":"Offset, default 0"}}}},{"name":"check_permissions","description":"Check database permissions for DDL, DROP, DELETE and other operations","inputSchema":{"type":"object","properties":{}}},{"name":"get_ddl_sql_logs","description":"Get DDL SQL operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50, max 500"},"offset":{"type":"number","description":"Offset, default 0"}}}}],"environment":{"ALLOW_DDL":false,"ALLOW_DROP":false,"ALLOW_DELETE":false,"MYSQL_HOST":"localhost","MYSQL_PORT":"3306","MYSQL_USER":"root","MYSQL_DATABASE":"eunixmacdb","serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}}
+2025-09-25T14:54:48.386Z | resources/list | {} | SUCCESS | RESPONSE: {"resources":[]}
+2025-09-25T14:54:48.388Z | resources/templates/list | {} | Unknown method: resources/templates/list | RESPONSE: null
+2025-09-25T14:54:48.389Z | error | {"error":"Unknown method: resources/templates/list","stack":"Error: Unknown method: resources/templates/list\n    at FinalMCPServer.handleRequest (/Users/admin/.npm-global/lib/node_modules/@liangshanli/mcp-server-mysql/src/server-final.js:705:17)\n    at Socket.<anonymous> (/Users/admin/.npm-global/lib/node_modules/@liangshanli/mcp-server-mysql/src/server-final.js:781:43)\n    at Socket.emit (node:events:518:28)\n    at addChunk (node:internal/streams/readable:561:12)\n    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)\n    at Readable.push (node:internal/streams/readable:392:5)\n    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23)"} | Unknown method: resources/templates/list | RESPONSE: null
+2025-09-25T14:54:48.396Z | connection_pool_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T14:54:48.396Z | notifications/initialized | {} | SUCCESS | RESPONSE: null
+2025-09-25T14:59:28.105Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T14:59:28.112Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T14:59:28.112Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T14:59:48.371Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T14:59:48.376Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T14:59:48.377Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:04:28.097Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:04:28.101Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:04:28.101Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:04:48.366Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:04:48.371Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:04:48.371Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:09:28.147Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:09:28.151Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:09:28.152Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:09:48.410Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:09:48.414Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:09:48.414Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:14:28.125Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:14:28.130Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:14:28.130Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:14:48.392Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:14:48.396Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:14:48.396Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:19:28.130Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:19:28.134Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:19:28.135Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:19:48.398Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:19:48.401Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:19:48.402Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:24:28.178Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:24:28.184Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:24:28.184Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:24:48.430Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:24:48.435Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:24:48.435Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:29:28.158Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:29:28.162Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:29:28.162Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:29:48.425Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:29:48.428Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:29:48.428Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:34:28.157Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:34:28.161Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:34:28.161Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:34:48.420Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:34:48.423Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:34:48.424Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:39:28.297Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:39:28.301Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:39:28.301Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:39:48.566Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:39:48.569Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:39:48.570Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:44:28.293Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:44:28.299Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:44:28.300Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:44:48.560Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:44:48.566Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:44:48.566Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:49:28.315Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:49:28.321Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:49:28.321Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:49:48.577Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:49:48.581Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:49:48.581Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:54:28.305Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:54:28.310Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:54:28.310Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:54:48.571Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T15:54:48.578Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T15:54:48.578Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T18:59:58.890Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T18:59:58.895Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T18:59:58.895Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:00:19.156Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T19:00:19.160Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:00:19.161Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:15:45.048Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T19:15:45.054Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:15:45.054Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:16:05.304Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T19:16:05.312Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:16:05.313Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:20:45.046Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T19:20:45.050Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:20:45.050Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:21:05.307Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T19:21:05.311Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:21:05.311Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:25:45.020Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T19:25:45.027Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:25:45.027Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:26:05.287Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-25T19:26:05.297Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-25T19:26:05.297Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-09-27T15:32:48.909Z | SIGTERM | {"signal":"SIGTERM"} | SUCCESS | RESPONSE: {"status":"shutting_down"}
+2025-09-27T15:32:49.041Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-09-27T15:32:51.699Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-09-27T15:32:51.705Z | uncaughtException | {"error":"write EPIPE","stack":"Error: write EPIPE\n    at afterWriteDispatched (node:internal/stream_base_commons:159:15)\n    at writeGeneric (node:internal/stream_base_commons:150:3)\n    at Socket._writeGeneric (node:net:966:11)\n    at Socket._write (node:net:978:8)\n    at writeOrBuffer (node:internal/streams/writable:572:12)\n    at _write (node:internal/streams/writable:501:10)\n    at Writable.write (node:internal/streams/writable:510:10)\n    at console.value (node:internal/console/constructor:298:16)\n    at console.error (node:internal/console/constructor:412:26)\n    at main (/Users/admin/.npm-global/lib/node_modules/@liangshanli/mcp-server-mysql/src/server-final.js:872:11)"} | write EPIPE | RESPONSE: null
+2025-10-03T06:42:51.593Z | server_start | {"name":"mysql-mcp-server","version":"1.0.0","logDir":"./logs","logFile":"logs/mcp-mysql.log"} | SUCCESS | RESPONSE: {"status":"started"}
+2025-10-03T06:42:51.595Z | initialize | {"protocolVersion":"2025-06-18","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"2.0.5"}} | SUCCESS | RESPONSE: null
+2025-10-03T06:42:51.595Z | initialize | {"protocolVersion":"2025-06-18","capabilities":{"roots":{}},"clientInfo":{"name":"claude-code","version":"2.0.5"}} | SUCCESS | RESPONSE: {"protocolVersion":"2025-06-18","capabilities":{"tools":{"listChanged":false},"roots":{"listChanged":false}},"serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}
+2025-10-03T06:42:51.604Z | tools/list | {} | SUCCESS | RESPONSE: {"tools":[{"name":"sql_query","description":"Execute SQL query, supports DDL and DML operations","inputSchema":{"type":"object","properties":{"sql":{"type":"string","description":"SQL statement to execute"}},"required":["sql"]}},{"name":"get_database_info","description":"Get database information, including database list, table list and configuration information","inputSchema":{"type":"object","properties":{}}},{"name":"get_operation_logs","description":"Get operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50"},"offset":{"type":"number","description":"Offset, default 0"}}}},{"name":"check_permissions","description":"Check database permissions for DDL, DROP, DELETE and other operations","inputSchema":{"type":"object","properties":{}}},{"name":"get_ddl_sql_logs","description":"Get DDL SQL operation logs","inputSchema":{"type":"object","properties":{"limit":{"type":"number","description":"Limit count, default 50, max 500"},"offset":{"type":"number","description":"Offset, default 0"}}}}],"environment":{"ALLOW_DDL":false,"ALLOW_DROP":false,"ALLOW_DELETE":false,"MYSQL_HOST":"localhost","MYSQL_PORT":"3306","MYSQL_USER":"root","MYSQL_DATABASE":"eunixmacdb","serverInfo":{"name":"mysql-mcp-server","version":"1.0.0"}}}
+2025-10-03T06:42:51.609Z | connection_pool_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T06:42:51.609Z | notifications/initialized | {} | SUCCESS | RESPONSE: null
+2025-10-03T06:47:51.602Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-10-03T06:47:51.607Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T06:47:51.608Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T06:54:02.010Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-10-03T06:54:02.012Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T06:54:02.013Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T07:03:41.687Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-10-03T07:03:41.690Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T07:03:41.690Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T07:08:41.682Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-10-03T07:08:41.685Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T07:08:41.685Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T07:14:43.357Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-10-03T07:14:43.360Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T07:14:43.360Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T07:19:43.360Z | connection_pool_closed | {} | SUCCESS | RESPONSE: {"status":"closed"}
+2025-10-03T07:19:43.365Z | connection_pool_recreate_error | {"error":""} | SUCCESS | RESPONSE: null
+2025-10-03T07:19:43.365Z | health_check_error | {"error":""} | SUCCESS | RESPONSE: null
