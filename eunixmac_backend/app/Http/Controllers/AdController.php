@@ -536,13 +536,13 @@ class AdController extends Controller
             $fields = [
                 ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
                 ['name' => 'model', 'label' => 'Model', 'type' => 'text', 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair', 'Poor'], 'required' => true],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used', 'Good', 'Fair', 'Poor'], 'required' => true],
                 ['name' => 'warranty', 'label' => 'Warranty (months)', 'type' => 'number', 'required' => false],
             ];
         }
 
         // Vehicles category fields
-        elseif (str_contains($categoryName, 'vehicle') || str_contains($categoryName, 'car') || str_contains($categoryName, 'truck')) {
+        elseif (str_contains($categoryName, 'vehicle') || str_contains($categoryName, 'cars') || str_contains($categoryName, 'truck') || preg_match('/\bcar\b/', $categoryName)) {
             $fields = [
                 ['name' => 'make', 'label' => 'Make', 'type' => 'text', 'required' => true],
                 ['name' => 'model', 'label' => 'Model', 'type' => 'text', 'required' => true],
@@ -550,7 +550,7 @@ class AdController extends Controller
                 ['name' => 'mileage', 'label' => 'Mileage (km)', 'type' => 'number', 'required' => false],
                 ['name' => 'fuel_type', 'label' => 'Fuel Type', 'type' => 'select', 'options' => ['Petrol', 'Diesel', 'Electric', 'Hybrid'], 'required' => true],
                 ['name' => 'transmission', 'label' => 'Transmission', 'type' => 'select', 'options' => ['Manual', 'Automatic'], 'required' => true],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair', 'Poor'], 'required' => true],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used', 'Good', 'Fair', 'Poor'], 'required' => true],
             ];
         }
 
@@ -572,7 +572,7 @@ class AdController extends Controller
                 ['name' => 'gender', 'label' => 'Gender', 'type' => 'select', 'options' => ['Men', 'Women', 'Kids', 'Unisex'], 'required' => true],
                 ['name' => 'material', 'label' => 'Material', 'type' => 'text', 'required' => false],
                 ['name' => 'color', 'label' => 'Color', 'type' => 'text', 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair', 'Poor'], 'required' => true],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used', 'Good', 'Fair', 'Poor'], 'required' => true],
             ];
         }
 
@@ -593,7 +593,7 @@ class AdController extends Controller
                 ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Skincare', 'Haircare', 'Makeup', 'Fragrance', 'Wellness', 'Other'], 'required' => true],
                 ['name' => 'size_volume', 'label' => 'Size/Volume', 'type' => 'text', 'required' => false],
                 ['name' => 'skin_hair_type', 'label' => 'Skin/Hair Type', 'type' => 'select', 'options' => ['All Types', 'Oily', 'Dry', 'Combination', 'Sensitive', 'Normal'], 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Gently Used'], 'required' => true],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used', 'Gently Used'], 'required' => true],
                 ['name' => 'expiry_date', 'label' => 'Expiry Date', 'type' => 'text', 'required' => false],
             ];
         }
