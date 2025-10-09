@@ -129,9 +129,25 @@ Route::middleware('auth:sanctum')->group(function () {
         // User and ad management
         Route::get('/admin/users', [AdminController::class, 'getUsers']);
         Route::put('/admin/users/{user}/verify', [AdminController::class, 'verifyUser']);
+        Route::put('/admin/users/{user}', [AdminController::class, 'updateUser']);
+        Route::delete('/admin/users/{user}', [AdminController::class, 'deleteUser']);
+
         Route::get('/admin/ads', [AdminController::class, 'getAds']);
         Route::put('/admin/ads/{ad}/approve', [AdminController::class, 'approveAd']);
         Route::put('/admin/ads/{ad}/reject', [AdminController::class, 'rejectAd']);
+        Route::put('/admin/ads/{ad}/status', [AdminController::class, 'updateAdStatus']);
+        Route::delete('/admin/ads/{ad}', [AdminController::class, 'deleteAd']);
+
+        // Agent management
+        Route::get('/admin/agents', [AdminController::class, 'getAgents']);
+        Route::put('/admin/agents/{user}/approve', [AdminController::class, 'approveAgent']);
+        Route::put('/admin/agents/{user}/revoke', [AdminController::class, 'revokeAgent']);
+
+        // Affiliate management
+        Route::get('/admin/affiliates', [AdminController::class, 'getAffiliates']);
+        Route::put('/admin/affiliates/{user}/approve', [AdminController::class, 'approveAffiliate']);
+        Route::put('/admin/affiliates/{user}/revoke', [AdminController::class, 'revokeAffiliate']);
+
         Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
 
         // Educational materials management

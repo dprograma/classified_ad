@@ -18,9 +18,50 @@ class AdminController extends Controller
         $this->middleware('can:admin');
     }
 
-    public function getUsers()
+    public function getUsers(Request $request)
     {
-        $users = User::all();
+        $query = User::query();
+
+        // Apply filters
+        if ($request->filled('role')) {
+            switch ($request->role) {
+                case 'admin':
+                    $query->where('is_admin', true);
+                    break;
+                case 'agent':
+                    $query->where('is_agent', true);
+                    break;
+                case 'affiliate':
+                    $query->where('is_affiliate', true);
+                    break;
+                case 'regular':
+                    $query->where('is_admin', false)
+                          ->where('is_agent', false)
+                          ->where('is_affiliate', false);
+                    break;
+            }
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone_number', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('email_verified')) {
+            $query->whereNotNull('email_verified_at');
+        }
+
+        // Sort
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $users = $query->withCount('ads')->paginate($request->get('per_page', 15));
+
         return response()->json($users);
     }
 
@@ -31,9 +72,42 @@ class AdminController extends Controller
         return response()->json($user);
     }
 
-    public function getAds()
+    public function getAds(Request $request)
     {
-        $ads = Ad::with(['user', 'category', 'images', 'customFields'])->get();
+        $query = Ad::with(['user', 'category', 'images', 'customFields']);
+
+        // Apply filters
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('location', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($userQuery) use ($search) {
+                      $userQuery->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($request->filled('boosted')) {
+            $query->where('is_boosted', $request->boosted === 'true' || $request->boosted === true);
+        }
+
+        // Sort
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $query->orderBy($sortBy, $sortOrder);
+
+        $ads = $query->paginate($request->get('per_page', 15));
+
         return response()->json($ads);
     }
 
@@ -421,5 +495,342 @@ class AdminController extends Controller
                     'file_type' => strtoupper(pathinfo($material->file_path, PATHINFO_EXTENSION)),
                 ];
             });
+    }
+
+    /**
+     * Update user details
+     */
+    public function updateUser(Request $request, User $user)
+    {
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'phone_number' => 'sometimes|string|max:20',
+            'is_admin' => 'sometimes|boolean',
+            'is_agent' => 'sometimes|boolean',
+            'is_affiliate' => 'sometimes|boolean',
+        ]);
+
+        $user->update($request->only(['name', 'email', 'phone_number', 'is_admin', 'is_agent', 'is_affiliate']));
+
+        Log::info('User updated by admin', [
+            'user_id' => $user->id,
+            'admin_id' => auth()->id(),
+            'changes' => $request->only(['name', 'email', 'phone_number', 'is_admin', 'is_agent', 'is_affiliate'])
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User updated successfully',
+            'user' => $user->fresh()
+        ]);
+    }
+
+    /**
+     * Delete user account
+     */
+    public function deleteUser(Request $request, User $user)
+    {
+        // Prevent self-deletion
+        if ($user->id === auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cannot delete your own account'
+            ], 403);
+        }
+
+        try {
+            // Delete user's ads and related data
+            foreach ($user->ads as $ad) {
+                // Delete ad images
+                foreach ($ad->images as $image) {
+                    if (Storage::disk('public')->exists($image->image_path)) {
+                        Storage::disk('public')->delete($image->image_path);
+                    }
+                }
+                $ad->images()->delete();
+                $ad->customFields()->delete();
+                $ad->delete();
+            }
+
+            Log::info('User deleted by admin', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'admin_id' => auth()->id()
+            ]);
+
+            $user->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete user', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete user'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get agents with statistics
+     */
+    public function getAgents(Request $request)
+    {
+        $query = User::where('is_agent', true)
+            ->withCount(['ads as materials_count' => function ($q) {
+                $q->whereIn('category_id', [83, 84, 85, 86])
+                  ->whereNotNull('file_path');
+            }]);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $agents = $query->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+
+        // Add earnings data
+        $agents->getCollection()->transform(function ($agent) {
+            $materialIds = $agent->ads->pluck('id');
+            $agent->total_sales = Payment::whereIn('payable_id', $materialIds)
+                ->where('payable_type', 'educational_material')
+                ->where('status', 'success')
+                ->count();
+            $agent->total_earnings = Payment::whereIn('payable_id', $materialIds)
+                ->where('payable_type', 'educational_material')
+                ->where('status', 'success')
+                ->sum('amount');
+            return $agent;
+        });
+
+        return response()->json($agents);
+    }
+
+    /**
+     * Get affiliates with statistics
+     */
+    public function getAffiliates(Request $request)
+    {
+        $query = User::where('is_affiliate', true)
+            ->withCount('referrals');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('affiliate_code', 'like', "%{$search}%");
+            });
+        }
+
+        $affiliates = $query->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+
+        // Add commission data
+        $affiliates->getCollection()->transform(function ($affiliate) {
+            // TODO: Calculate total commissions earned when affiliate_commission column is added
+            $affiliate->total_commissions = 0;
+            $affiliate->pending_commissions = 0;
+
+            return $affiliate;
+        });
+
+        return response()->json($affiliates);
+    }
+
+    /**
+     * Approve agent application
+     */
+    public function approveAgent(User $user)
+    {
+        if ($user->is_agent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is already an agent'
+            ], 400);
+        }
+
+        $user->is_agent = true;
+        $user->save();
+
+        Log::info('Agent approved', [
+            'user_id' => $user->id,
+            'admin_id' => auth()->id()
+        ]);
+
+        // TODO: Send approval notification email
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Agent approved successfully',
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Revoke agent status
+     */
+    public function revokeAgent(User $user)
+    {
+        if (!$user->is_agent) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is not an agent'
+            ], 400);
+        }
+
+        $user->is_agent = false;
+        $user->save();
+
+        Log::info('Agent status revoked', [
+            'user_id' => $user->id,
+            'admin_id' => auth()->id()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Agent status revoked successfully',
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Approve affiliate application
+     */
+    public function approveAffiliate(User $user)
+    {
+        if ($user->is_affiliate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is already an affiliate'
+            ], 400);
+        }
+
+        $user->is_affiliate = true;
+
+        // Generate affiliate code if not exists
+        if (!$user->affiliate_code) {
+            $user->affiliate_code = strtoupper(substr(md5($user->id . time()), 0, 8));
+        }
+
+        $user->save();
+
+        Log::info('Affiliate approved', [
+            'user_id' => $user->id,
+            'admin_id' => auth()->id()
+        ]);
+
+        // TODO: Send approval notification email
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Affiliate approved successfully',
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Revoke affiliate status
+     */
+    public function revokeAffiliate(User $user)
+    {
+        if (!$user->is_affiliate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is not an affiliate'
+            ], 400);
+        }
+
+        $user->is_affiliate = false;
+        $user->save();
+
+        Log::info('Affiliate status revoked', [
+            'user_id' => $user->id,
+            'admin_id' => auth()->id()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Affiliate status revoked successfully',
+            'user' => $user
+        ]);
+    }
+
+    /**
+     * Delete ad (admin)
+     */
+    public function deleteAd(Request $request, Ad $ad)
+    {
+        try {
+            // Delete ad images
+            foreach ($ad->images as $image) {
+                if (Storage::disk('public')->exists($image->image_path)) {
+                    Storage::disk('public')->delete($image->image_path);
+                }
+            }
+
+            Log::info('Ad deleted by admin', [
+                'ad_id' => $ad->id,
+                'title' => $ad->title,
+                'admin_id' => auth()->id()
+            ]);
+
+            $ad->images()->delete();
+            $ad->customFields()->delete();
+            $ad->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ad deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to delete ad', [
+                'ad_id' => $ad->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete ad'
+            ], 500);
+        }
+    }
+
+    /**
+     * Update ad status (admin)
+     */
+    public function updateAdStatus(Request $request, Ad $ad)
+    {
+        $request->validate([
+            'status' => 'required|in:active,inactive,paused,expired,rejected'
+        ]);
+
+        $oldStatus = $ad->status;
+        $ad->status = $request->status;
+        $ad->save();
+
+        Log::info('Ad status updated by admin', [
+            'ad_id' => $ad->id,
+            'old_status' => $oldStatus,
+            'new_status' => $request->status,
+            'admin_id' => auth()->id()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Ad status updated successfully',
+            'ad' => $ad->fresh(['user', 'category', 'images'])
+        ]);
     }
 }

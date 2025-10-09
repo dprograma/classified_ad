@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   TextField,
   Button,
@@ -16,11 +17,14 @@ import {
   CircularProgress,
   FormHelperText
 } from '@mui/material';
-import { CloudUpload, Delete, PhotoCamera } from '@mui/icons-material';
+import { CloudUpload, Delete } from '@mui/icons-material';
 import useApi from '../hooks/useApi';
+import { getStorageUrl } from '../config/api';
 import { getLocationOptions } from '../data/nigeriaLocations';
 
-function PostAd() {
+function EditAd() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -30,12 +34,48 @@ function PostAd() {
   });
   const [customFields, setCustomFields] = useState({});
   const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [imagePreview, setImagePreview] = useState([]);
   const [categories, setCategories] = useState([]);
   const [categoryFields, setCategoryFields] = useState([]);
   const { callApi, loading } = useApi();
   const [errors, setErrors] = useState({});
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [loadingAd, setLoadingAd] = useState(true);
+
+  const fetchAd = useCallback(async () => {
+    try {
+      setLoadingAd(true);
+      const data = await callApi('GET', `/ads/${id}`);
+
+      setFormData({
+        title: data.title || '',
+        description: data.description || '',
+        price: data.price || '',
+        location: data.location || '',
+        category_id: data.category_id || ''
+      });
+
+      // Set existing images
+      if (data.images && data.images.length > 0) {
+        setExistingImages(data.images);
+      }
+
+      // Set custom fields
+      if (data.custom_fields && data.custom_fields.length > 0) {
+        const fieldsObj = {};
+        data.custom_fields.forEach(field => {
+          fieldsObj[field.field_name] = field.field_value;
+        });
+        setCustomFields(fieldsObj);
+      }
+
+    } catch (error) {
+      console.error('Error fetching ad:', error);
+      setErrors({ submit: 'Failed to load ad details. Please try again.' });
+    } finally {
+      setLoadingAd(false);
+    }
+  }, [id, callApi]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -46,25 +86,24 @@ function PostAd() {
     }
   }, [callApi]);
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
   const fetchCategoryFields = useCallback(async () => {
     if (formData.category_id) {
       try {
         const data = await callApi('GET', `/categories/${formData.category_id}/fields`);
         setCategoryFields(data.fields || []);
-        setCustomFields({}); // Reset custom fields when category changes
       } catch (error) {
         console.error('Error fetching category fields:', error);
         setCategoryFields([]);
       }
     } else {
       setCategoryFields([]);
-      setCustomFields({});
     }
   }, [formData.category_id, callApi]);
+
+  useEffect(() => {
+    fetchAd();
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     fetchCategoryFields();
@@ -72,7 +111,6 @@ function PostAd() {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -93,14 +131,14 @@ function PostAd() {
         setErrors(prev => ({ ...prev, images: `File ${file.name} is too large. Max size is 5MB.` }));
         return;
       }
-      
+
       if (!file.type.startsWith('image/')) {
         setErrors(prev => ({ ...prev, images: `File ${file.name} is not an image.` }));
         return;
       }
 
       validFiles.push(file);
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         previews.push({ file, preview: e.target.result });
@@ -117,16 +155,20 @@ function PostAd() {
     }
   };
 
-  const removeImage = (index) => {
+  const removeNewImage = (index) => {
     const newImages = images.filter((_, i) => i !== index);
     const newPreviews = imagePreview.filter((_, i) => i !== index);
     setImages(newImages);
     setImagePreview(newPreviews);
   };
 
+  const removeExistingImage = (imageId) => {
+    setExistingImages(prev => prev.filter(img => img.id !== imageId));
+  };
+
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.description.trim() || formData.description.trim().length < 10) {
       newErrors.description = 'Description must be at least 10 characters';
@@ -134,83 +176,74 @@ function PostAd() {
     if (!formData.price || formData.price <= 0) newErrors.price = 'Price must be greater than 0';
     if (!formData.location.trim()) newErrors.location = 'Location is required';
     if (!formData.category_id) newErrors.category_id = 'Category is required';
-    
+
     // Validate required custom fields
     categoryFields.forEach(field => {
       if (field.required && !customFields[field.name]) {
         newErrors[`custom_${field.name}`] = `${field.label} is required`;
       }
     });
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setErrors({});
-    
+
     const submitData = new FormData();
-    
+
     // Add basic form data
     Object.keys(formData).forEach(key => {
       if (formData[key]) {
         submitData.append(key, formData[key]);
       }
     });
-    
+
     // Add custom fields
     const customFieldsArray = Object.keys(customFields).map(key => ({
       field_name: key,
       field_value: customFields[key]
     }));
-    
+
     if (customFieldsArray.length > 0) {
       customFieldsArray.forEach((field, index) => {
         submitData.append(`custom_fields[${index}][field_name]`, field.field_name);
         submitData.append(`custom_fields[${index}][field_value]`, field.field_value);
       });
     }
-    
-    // Add images
-    images.forEach((image, index) => {
+
+    // Add new images
+    images.forEach((image) => {
       submitData.append(`images`, image);
     });
 
+    // Add existing image IDs to keep
+    existingImages.forEach((image, index) => {
+      submitData.append(`existing_images[${index}]`, image.id);
+    });
+
     try {
-      const response = await callApi('POST', '/ads', submitData, {
+      await callApi('POST', `/ads/${id}?_method=PUT`, submitData, {
         'Content-Type': 'multipart/form-data',
       });
-      
-      setSubmitSuccess(true);
-      
-      // Clear form after successful submission
-      setFormData({
-        title: '',
-        description: '',
-        price: '',
-        location: '',
-        category_id: ''
-      });
-      setCustomFields({});
-      setImages([]);
-      setImagePreview([]);
-      setCategoryFields([]);
-      
+
+      // Navigate to dashboard after successful update
+      navigate('/dashboard');
+
     } catch (error) {
-      console.error('Error posting ad:', error);
-      console.log('Error response data:', error.response?.data);
-      console.log('Error status:', error.response?.status);
-      
+      console.error('Error updating ad:', error);
+
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
       } else {
-        setErrors({ submit: error.response?.data?.message || 'Failed to post ad. Please try again.' });
+        setErrors({ submit: error.response?.data?.message || 'Failed to update ad. Please try again.' });
       }
     }
   };
@@ -218,16 +251,16 @@ function PostAd() {
   const renderCustomField = (field) => {
     const value = customFields[field.name] || '';
     const error = errors[`custom_${field.name}`];
-    
+
     switch (field.type) {
       case 'select':
         return (
-          <FormControl 
-            fullWidth 
-            margin="normal" 
-            required={field.required} 
+          <FormControl
+            fullWidth
+            margin="normal"
+            required={field.required}
             error={!!error}
-            sx={{ 
+            sx={{
               width: '100%',
               minWidth: '250px'
             }}
@@ -239,15 +272,7 @@ function PostAd() {
               onChange={(e) => handleCustomFieldChange(field.name, e.target.value)}
               sx={{
                 width: '100%',
-                minWidth: '250px',
-                '& .MuiInputBase-root': {
-                  width: '100%'
-                },
-                '& .MuiSelect-select': {
-                  padding: '16.5px 14px',
-                  width: 'auto',
-                  minWidth: 'calc(100% - 28px)'
-                }
+                minWidth: '250px'
               }}
             >
               <MenuItem value="">Select {field.label}</MenuItem>
@@ -292,17 +317,11 @@ function PostAd() {
     }
   };
 
-  if (submitSuccess) {
+  if (loadingAd) {
     return (
       <Container maxWidth="md">
-        <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <Alert severity="success" sx={{ width: '100%', mb: 3 }}>
-            <Typography variant="h6">Ad Posted Successfully!</Typography>
-            <Typography>Your ad has been posted and is now live on the platform.</Typography>
-          </Alert>
-          <Button variant="contained" onClick={() => setSubmitSuccess(false)}>
-            Post Another Ad
-          </Button>
+        <Box sx={{ mt: 8, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+          <CircularProgress />
         </Box>
       </Container>
     );
@@ -312,15 +331,15 @@ function PostAd() {
     <Container maxWidth="md">
       <Box sx={{ mt: 4, mb: 4 }}>
         <Typography component="h1" variant="h4" gutterBottom align="center">
-          Post a New Ad
+          Edit Ad
         </Typography>
-        
+
         {errors.submit && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {errors.submit}
           </Alert>
         )}
-        
+
         <Paper elevation={3} sx={{ p: 4 }}>
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <Grid container spacing={3}>
@@ -330,7 +349,7 @@ function PostAd() {
                   Basic Information
                 </Typography>
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -343,13 +362,13 @@ function PostAd() {
                   placeholder="Enter a descriptive title for your ad"
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
-                <FormControl 
-                  fullWidth 
-                  required 
+                <FormControl
+                  fullWidth
+                  required
                   error={!!errors.category_id}
-                  sx={{ 
+                  sx={{
                     width: '100%',
                     minWidth: '250px'
                   }}
@@ -359,39 +378,15 @@ function PostAd() {
                     value={formData.category_id}
                     label="Category"
                     onChange={(e) => handleInputChange('category_id', e.target.value)}
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: '300px',
-                          width: 'auto',
-                          marginTop: '8px'
-                        },
-                      },
-                    }}
                     sx={{
                       width: '100%',
-                      minWidth: '250px',
-                      '& .MuiInputBase-root': {
-                        width: '100%'
-                      },
-                      '& .MuiSelect-select': {
-                        padding: '16.5px 14px',
-                        width: 'auto',
-                        minWidth: 'calc(100% - 28px)'
-                      }
+                      minWidth: '250px'
                     }}
                   >
                     {categories.map((category) => (
-                      <MenuItem 
-                        key={category.id} 
+                      <MenuItem
+                        key={category.id}
                         value={category.id}
-                        sx={{
-                          whiteSpace: 'normal', // Allow text to wrap in menu items
-                          padding: '12px 16px', // Add more padding for better touch targets
-                          '&:hover': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)' // Subtle hover effect
-                          }
-                        }}
                       >
                         {category.name}
                       </MenuItem>
@@ -400,7 +395,7 @@ function PostAd() {
                   {errors.category_id && <FormHelperText>{errors.category_id}</FormHelperText>}
                 </FormControl>
               </Grid>
-              
+
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -415,7 +410,7 @@ function PostAd() {
                   placeholder="Describe your item in detail..."
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -429,7 +424,7 @@ function PostAd() {
                   InputProps={{ inputProps: { min: 0, step: 0.01 } }}
                 />
               </Grid>
-              
+
               <Grid item xs={12} md={6}>
                 <FormControl
                   fullWidth
@@ -487,7 +482,7 @@ function PostAd() {
                   {errors.location && <FormHelperText>{errors.location}</FormHelperText>}
                 </FormControl>
               </Grid>
-              
+
               {/* Category-specific fields */}
               {categoryFields.length > 0 && (
                 <>
@@ -496,7 +491,7 @@ function PostAd() {
                       Additional Details
                     </Typography>
                   </Grid>
-                  
+
                   {categoryFields.map((field, index) => (
                     <Grid item xs={12} md={6} key={field.name}>
                       {renderCustomField(field)}
@@ -504,11 +499,60 @@ function PostAd() {
                   ))}
                 </>
               )}
-              
-              {/* Image Upload */}
+
+              {/* Existing Images */}
+              {existingImages.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                    Current Images
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {existingImages.map((image, index) => (
+                      <Grid item xs={6} sm={4} md={3} key={image.id}>
+                        <Box sx={{ position: 'relative' }}>
+                          <img
+                            src={getStorageUrl(image.image_path)}
+                            alt={`Existing ${index + 1}`}
+                            style={{
+                              width: '100%',
+                              height: '120px',
+                              objectFit: 'cover',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Button
+                            size="small"
+                            onClick={() => removeExistingImage(image.id)}
+                            sx={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 4,
+                              minWidth: 'auto',
+                              backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.9)' }
+                            }}
+                          >
+                            <Delete fontSize="small" />
+                          </Button>
+                          {image.is_preview && (
+                            <Chip
+                              label="Main"
+                              size="small"
+                              color="primary"
+                              sx={{ position: 'absolute', bottom: 4, left: 4 }}
+                            />
+                          )}
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Grid>
+              )}
+
+              {/* New Image Upload */}
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                  Images
+                  Add New Images
                 </Typography>
                 <Box sx={{ border: '2px dashed #ccc', borderRadius: 2, p: 3, textAlign: 'center' }}>
                   <input
@@ -538,12 +582,12 @@ function PostAd() {
                     </Typography>
                   )}
                 </Box>
-                
-                {/* Image Preview */}
+
+                {/* New Image Preview */}
                 {imagePreview.length > 0 && (
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle1" gutterBottom>
-                      Selected Images:
+                      New Images to Upload:
                     </Typography>
                     <Grid container spacing={2}>
                       {imagePreview.map((item, index) => (
@@ -551,7 +595,7 @@ function PostAd() {
                           <Box sx={{ position: 'relative' }}>
                             <img
                               src={item.preview}
-                              alt={`Preview ${index + 1}`}
+                              alt={`New ${index + 1}`}
                               style={{
                                 width: '100%',
                                 height: '120px',
@@ -561,7 +605,7 @@ function PostAd() {
                             />
                             <Button
                               size="small"
-                              onClick={() => removeImage(index)}
+                              onClick={() => removeNewImage(index)}
                               sx={{
                                 position: 'absolute',
                                 top: 4,
@@ -573,14 +617,6 @@ function PostAd() {
                             >
                               <Delete fontSize="small" />
                             </Button>
-                            {index === 0 && (
-                              <Chip
-                                label="Main"
-                                size="small"
-                                color="primary"
-                                sx={{ position: 'absolute', bottom: 4, left: 4 }}
-                              />
-                            )}
                           </Box>
                         </Grid>
                       ))}
@@ -588,25 +624,36 @@ function PostAd() {
                   </Box>
                 )}
               </Grid>
-              
+
               <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  disabled={loading}
-                  sx={{ mt: 3, py: 1.5 }}
-                >
-                  {loading ? (
-                    <>
-                      <CircularProgress size={24} sx={{ mr: 1 }} />
-                      Posting Ad...
-                    </>
-                  ) : (
-                    'Post Ad'
-                  )}
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    size="large"
+                    disabled={loading}
+                    sx={{ mt: 3, py: 1.5 }}
+                  >
+                    {loading ? (
+                      <>
+                        <CircularProgress size={24} sx={{ mr: 1 }} />
+                        Updating Ad...
+                      </>
+                    ) : (
+                      'Update Ad'
+                    )}
+                  </Button>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    size="large"
+                    onClick={() => navigate('/dashboard')}
+                    sx={{ mt: 3, py: 1.5 }}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
               </Grid>
             </Grid>
           </Box>
@@ -616,4 +663,4 @@ function PostAd() {
   );
 }
 
-export default PostAd;
+export default EditAd;

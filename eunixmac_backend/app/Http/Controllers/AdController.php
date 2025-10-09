@@ -576,13 +576,25 @@ class AdController extends Controller
             ];
         }
 
-        // Building Materials category fields  
+        // Building Materials category fields
         elseif (str_contains($categoryName, 'building') || str_contains($categoryName, 'material')) {
             $fields = [
                 ['name' => 'material_type', 'label' => 'Material Type', 'type' => 'select', 'options' => ['Cement', 'Blocks', 'Roofing Sheets', 'Tiles', 'Plumbing', 'Electrical'], 'required' => true],
                 ['name' => 'quantity', 'label' => 'Quantity Available', 'type' => 'number', 'required' => true],
                 ['name' => 'unit', 'label' => 'Unit (e.g., bags, pieces)', 'type' => 'text', 'required' => true],
                 ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
+            ];
+        }
+
+        // Beauty and Personal Care category fields
+        elseif (str_contains($categoryName, 'beauty') || str_contains($categoryName, 'personal care') || str_contains($categoryName, 'skincare') || str_contains($categoryName, 'makeup') || str_contains($categoryName, 'haircare')) {
+            $fields = [
+                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => true],
+                ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Skincare', 'Haircare', 'Makeup', 'Fragrance', 'Wellness', 'Other'], 'required' => true],
+                ['name' => 'size_volume', 'label' => 'Size/Volume', 'type' => 'text', 'required' => false],
+                ['name' => 'skin_hair_type', 'label' => 'Skin/Hair Type', 'type' => 'select', 'options' => ['All Types', 'Oily', 'Dry', 'Combination', 'Sensitive', 'Normal'], 'required' => false],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Gently Used'], 'required' => true],
+                ['name' => 'expiry_date', 'label' => 'Expiry Date', 'type' => 'text', 'required' => false],
             ];
         }
 

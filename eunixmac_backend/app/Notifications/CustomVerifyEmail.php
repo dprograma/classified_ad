@@ -56,9 +56,9 @@ class CustomVerifyEmail extends VerifyEmailBase
         $verificationUrl = $this->verificationUrl($notifiable);
 
         return (new MailMessage)
-            ->subject('Verify Your Eunixmac Account')
+            ->subject('Verify Your Eunixma Account')
             ->greeting('Hello!')
-            ->line('Thanks for signing up for Eunixmac, the best place for classified ads. Please click the button below to verify your email address and get started.')
+            ->line('Thanks for signing up for Eunixma, the best place for classified ads. Please click the button below to verify your email address and get started.')
             ->action('Verify Email Address', $verificationUrl)
             ->line('If you did not create an account, you can safely ignore this email.');
     }

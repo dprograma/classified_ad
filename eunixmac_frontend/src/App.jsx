@@ -15,6 +15,7 @@ import PrivateRoute from './components/PrivateRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import PostAd from './pages/PostAd';
+import EditAd from './pages/EditAd';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import LandingPage from './pages/LandingPage';
@@ -72,6 +73,14 @@ function App() {
                 <Route path="/safety" element={<BuyerSafety />} />
                 <Route path="/categories" element={<Categories />} />
                 <Route path="/ads/:id" element={<AdDetail />} />
+                <Route
+                  path="/ads/:id/edit"
+                  element={
+                    <PrivateRoute>
+                      <EditAd />
+                    </PrivateRoute>
+                  }
+                />
                 <Route
                   path="/educational-materials/upload"
                   element={
