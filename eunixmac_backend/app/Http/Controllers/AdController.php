@@ -576,8 +576,21 @@ class AdController extends Controller
             ];
         }
 
+        // Education Material category fields (MUST be checked before Building Materials)
+        elseif (str_contains($categoryName, 'education') || str_contains($categoryName, 'past questions') || str_contains($categoryName, 'ebooks') || str_contains($categoryName, 'publications')) {
+            $fields = [
+                ['name' => 'material_type', 'label' => 'Material Type', 'type' => 'select', 'options' => ['Past Questions', 'Ebook', 'Publication', 'Study Guide', 'Textbook', 'Course Material', 'Other'], 'required' => true],
+                ['name' => 'subject', 'label' => 'Subject/Topic', 'type' => 'text', 'required' => true],
+                ['name' => 'education_level', 'label' => 'Education Level', 'type' => 'select', 'options' => ['Primary', 'Secondary', 'Undergraduate', 'Postgraduate', 'Professional', 'All Levels'], 'required' => true],
+                ['name' => 'format', 'label' => 'Format', 'type' => 'select', 'options' => ['PDF', 'Physical Copy', 'eBook', 'Audio', 'Video', 'Other'], 'required' => true],
+                ['name' => 'year', 'label' => 'Year/Edition', 'type' => 'text', 'required' => false],
+                ['name' => 'author_publisher', 'label' => 'Author/Publisher', 'type' => 'text', 'required' => false],
+                ['name' => 'condition', 'label' => 'Condition (Physical)', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair', 'Digital Only'], 'required' => false],
+            ];
+        }
+
         // Building Materials category fields
-        elseif (str_contains($categoryName, 'building') || str_contains($categoryName, 'material')) {
+        elseif (str_contains($categoryName, 'building')) {
             $fields = [
                 ['name' => 'material_type', 'label' => 'Material Type', 'type' => 'select', 'options' => ['Cement', 'Blocks', 'Roofing Sheets', 'Tiles', 'Plumbing', 'Electrical'], 'required' => true],
                 ['name' => 'quantity', 'label' => 'Quantity Available', 'type' => 'number', 'required' => true],
@@ -595,6 +608,99 @@ class AdController extends Controller
                 ['name' => 'skin_hair_type', 'label' => 'Skin/Hair Type', 'type' => 'select', 'options' => ['All Types', 'Oily', 'Dry', 'Combination', 'Sensitive', 'Normal'], 'required' => false],
                 ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used', 'Gently Used'], 'required' => true],
                 ['name' => 'expiry_date', 'label' => 'Expiry Date', 'type' => 'text', 'required' => false],
+            ];
+        }
+
+        // Sports and Outdoors category fields
+        elseif (str_contains($categoryName, 'sports') || str_contains($categoryName, 'outdoor') || str_contains($categoryName, 'fitness')) {
+            $fields = [
+                ['name' => 'sport_type', 'label' => 'Sport Type', 'type' => 'select', 'options' => ['Fitness Equipment', 'Team Sports', 'Outdoor Gear', 'Camping', 'Hiking', 'Cycling', 'Water Sports', 'Other'], 'required' => true],
+                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair'], 'required' => true],
+                ['name' => 'size', 'label' => 'Size (if applicable)', 'type' => 'text', 'required' => false],
+                ['name' => 'material', 'label' => 'Material', 'type' => 'text', 'required' => false],
+            ];
+        }
+
+        // Toys and Games category fields
+        elseif (str_contains($categoryName, 'toys') || str_contains($categoryName, 'games')) {
+            $fields = [
+                ['name' => 'toy_type', 'label' => 'Toy/Game Type', 'type' => 'select', 'options' => ['Action Figures', 'Dolls', 'Board Games', 'Puzzles', 'Outdoor Toys', 'Educational', 'Electronic', 'Other'], 'required' => true],
+                ['name' => 'age_range', 'label' => 'Age Range', 'type' => 'select', 'options' => ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years', 'All Ages'], 'required' => true],
+                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair'], 'required' => true],
+                ['name' => 'number_of_pieces', 'label' => 'Number of Pieces (if applicable)', 'type' => 'number', 'required' => false],
+            ];
+        }
+
+        // Books and Media category fields
+        elseif (str_contains($categoryName, 'books') || str_contains($categoryName, 'media') || str_contains($categoryName, 'fiction') || str_contains($categoryName, 'music') || str_contains($categoryName, 'movies')) {
+            $fields = [
+                ['name' => 'media_type', 'label' => 'Media Type', 'type' => 'select', 'options' => ['Fiction Book', 'Non-Fiction Book', 'Music Album', 'Movie/DVD', 'TV Show', 'Magazine', 'Comic/Manga', 'Other'], 'required' => true],
+                ['name' => 'title', 'label' => 'Title', 'type' => 'text', 'required' => true],
+                ['name' => 'author_artist', 'label' => 'Author/Artist', 'type' => 'text', 'required' => false],
+                ['name' => 'format', 'label' => 'Format', 'type' => 'select', 'options' => ['Hardcover', 'Paperback', 'Digital/eBook', 'Audio', 'CD', 'DVD', 'Blu-ray', 'Vinyl', 'Other'], 'required' => true],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair', 'Acceptable'], 'required' => true],
+                ['name' => 'publication_year', 'label' => 'Publication/Release Year', 'type' => 'number', 'required' => false],
+                ['name' => 'language', 'label' => 'Language', 'type' => 'text', 'required' => false],
+            ];
+        }
+
+        // Health and Wellness category fields
+        elseif (str_contains($categoryName, 'health') || str_contains($categoryName, 'wellness')) {
+            $fields = [
+                ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Supplements', 'Fitness Equipment', 'Healthy Snacks', 'Medical Equipment', 'Monitoring Device', 'Other'], 'required' => true],
+                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used'], 'required' => true],
+                ['name' => 'expiry_date', 'label' => 'Expiry Date (if applicable)', 'type' => 'text', 'required' => false],
+                ['name' => 'quantity', 'label' => 'Quantity/Size', 'type' => 'text', 'required' => false],
+            ];
+        }
+
+        // Baby and Kids category fields
+        elseif (str_contains($categoryName, 'baby') || str_contains($categoryName, 'kids')) {
+            $fields = [
+                ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Strollers', 'Car Seats', 'Toys', 'Clothing', 'Nursery Furniture', 'Feeding', 'Diapering', 'Other'], 'required' => true],
+                ['name' => 'age_range', 'label' => 'Age Range', 'type' => 'select', 'options' => ['0-6 months', '6-12 months', '1-2 years', '3-5 years', '6-8 years', '9-12 years'], 'required' => true],
+                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair'], 'required' => true],
+                ['name' => 'gender', 'label' => 'Gender (if applicable)', 'type' => 'select', 'options' => ['Boy', 'Girl', 'Unisex'], 'required' => false],
+                ['name' => 'size', 'label' => 'Size (if applicable)', 'type' => 'text', 'required' => false],
+            ];
+        }
+
+        // Pet Care category fields
+        elseif (str_contains($categoryName, 'pet')) {
+            $fields = [
+                ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Food', 'Toys', 'Grooming', 'Health/Medicine', 'Accessories', 'Housing', 'Training', 'Other'], 'required' => true],
+                ['name' => 'pet_type', 'label' => 'Pet Type', 'type' => 'select', 'options' => ['Dog', 'Cat', 'Bird', 'Fish', 'Small Animals', 'Reptile', 'All Pets'], 'required' => true],
+                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
+                ['name' => 'size_weight', 'label' => 'Size/Weight', 'type' => 'text', 'required' => false],
+                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used'], 'required' => true],
+                ['name' => 'expiry_date', 'label' => 'Expiry Date (if applicable)', 'type' => 'text', 'required' => false],
+            ];
+        }
+
+        // Jobs category fields
+        elseif (str_contains($categoryName, 'jobs') || str_contains($categoryName, 'full-time') || str_contains($categoryName, 'part-time') || str_contains($categoryName, 'internship') || str_contains($categoryName, 'freelance')) {
+            $fields = [
+                ['name' => 'job_type', 'label' => 'Job Type', 'type' => 'select', 'options' => ['Full-time', 'Part-time', 'Internship', 'Freelance', 'Contract', 'Temporary'], 'required' => true],
+                ['name' => 'industry', 'label' => 'Industry', 'type' => 'select', 'options' => ['Technology', 'Finance', 'Healthcare', 'Education', 'Retail', 'Hospitality', 'Manufacturing', 'Marketing', 'Sales', 'Other'], 'required' => true],
+                ['name' => 'experience_level', 'label' => 'Experience Level', 'type' => 'select', 'options' => ['Entry Level', 'Junior', 'Mid-Level', 'Senior', 'Executive'], 'required' => true],
+                ['name' => 'salary_range', 'label' => 'Salary Range (Optional)', 'type' => 'text', 'required' => false],
+                ['name' => 'company_name', 'label' => 'Company Name', 'type' => 'text', 'required' => false],
+                ['name' => 'remote_option', 'label' => 'Remote Option', 'type' => 'select', 'options' => ['On-site', 'Remote', 'Hybrid'], 'required' => false],
+            ];
+        }
+
+        // Services category fields
+        elseif (str_contains($categoryName, 'services') || str_contains($categoryName, 'beauty service') || str_contains($categoryName, 'tutoring')) {
+            $fields = [
+                ['name' => 'service_type', 'label' => 'Service Type', 'type' => 'select', 'options' => ['Beauty', 'Pet Care', 'Home Cleaning', 'Tutoring', 'Repair', 'Moving', 'Event Planning', 'Photography', 'Other'], 'required' => true],
+                ['name' => 'experience_years', 'label' => 'Years of Experience', 'type' => 'number', 'required' => false],
+                ['name' => 'pricing_type', 'label' => 'Pricing Type', 'type' => 'select', 'options' => ['Hourly', 'Per Session', 'Fixed Rate', 'Negotiable'], 'required' => true],
+                ['name' => 'availability', 'label' => 'Availability', 'type' => 'select', 'options' => ['Weekdays', 'Weekends', 'Evenings', 'Flexible'], 'required' => false],
+                ['name' => 'service_location', 'label' => 'Service Location', 'type' => 'select', 'options' => ['Client Location', 'Provider Location', 'Both'], 'required' => false],
             ];
         }
 
