@@ -4,63 +4,6 @@ import { FavoriteBorder, Visibility, LocationOn, Favorite } from '@mui/icons-mat
 import { useNavigate } from 'react-router-dom';
 import useSlowApi from '../hooks/useSlowApi';
 
-const featuredAds = [
-  {
-    id: 1,
-    title: 'iPhone 14 Pro',
-    price: '₦950,000',
-    originalPrice: '₦1,200,000',
-    image: 'https://placehold.co/300x200.png?text=iPhone+14+Pro',
-    location: 'Lagos',
-    featured: true,
-    discount: '21%',
-    condition: 'Like New',
-    verified: true,
-  },
-  {
-    id: 2,
-    title: 'HP Spectre x360',
-    price: '₦850,000',
-    image: 'https://placehold.co/300x200.png?text=HP+Spectre+x360',
-    location: 'Abuja',
-    featured: false,
-    condition: 'Excellent',
-    verified: true,
-  },
-  {
-    id: 3,
-    title: 'Toyota Camry 2021',
-    price: '₦15,000,000',
-    image: 'https://placehold.co/300x200.png?text=Toyota+Camry',
-    location: 'Port Harcourt',
-    featured: true,
-    condition: 'Brand New',
-    verified: true,
-  },
-  {
-    id: 4,
-    title: 'Samsung 65" QLED TV',
-    price: '₦450,000',
-    originalPrice: '₦580,000',
-    image: 'https://placehold.co/300x200.png?text=Samsung+TV',
-    location: 'Kano',
-    featured: false,
-    discount: '22%',
-    condition: 'Good',
-    verified: false,
-  },
-  {
-    id: 5,
-    title: 'MacBook Pro M2',
-    price: '₦1,200,000',
-    image: 'https://placehold.co/300x200.png?text=MacBook+Pro',
-    location: 'Ibadan',
-    featured: true,
-    condition: 'Like New',
-    verified: true,
-  },
-];
-
 const FeaturedAds = () => {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [favorites, setFavorites] = useState(new Set());
@@ -103,45 +46,18 @@ const FeaturedAds = () => {
     }
 
     try {
-      const data = await callApi('GET', '/ads?featured=true&limit=8');
-      let featuredOnlyAds = [];
-      
+      const data = await callApi('GET', '/ads?limit=8');
       if (data && data.data && Array.isArray(data.data)) {
-        // Filter to only show boosted/featured ads
-        featuredOnlyAds = data.data.filter(ad => ad.is_featured || ad.featured || ad.is_boosted);
+        setAds(data.data);
       } else if (data && Array.isArray(data)) {
-        // Filter to only show boosted/featured ads
-        featuredOnlyAds = data.filter(ad => ad.is_featured || ad.featured || ad.is_boosted);
+        setAds(data);
       } else {
-        // Only use featured ads from static data
-        featuredOnlyAds = featuredAds.filter(ad => ad.featured);
+        setAds([]);
       }
-      
-      setAds(featuredOnlyAds);
-      
-      // Cache the results
-      sessionStorage.setItem(cacheKey, JSON.stringify(featuredOnlyAds));
-      sessionStorage.setItem(`${cacheKey}_timestamp`, now.toString());
       
     } catch (error) {
       console.error('Error fetching featured ads:', error);
-      
-      // For rate limiting errors, use cache if available, otherwise use static data
-      if (error.response?.status === 429) {
-        if (cachedAds) {
-          try {
-            const parsedAds = JSON.parse(cachedAds);
-            setAds(parsedAds);
-            return;
-          } catch (parseError) {
-            // Fall through to static data
-          }
-        }
-      }
-      
-      // Only use featured ads from static data
-      const featuredStaticAds = featuredAds.filter(ad => ad.featured);
-      setAds(featuredStaticAds);
+      setAds([]);
     } finally {
       setLoading(false);
     }
@@ -221,7 +137,7 @@ const FeaturedAds = () => {
           WebkitTextFillColor: 'transparent',
         }}
       >
-        Trending Ads
+        Featured Ads
       </Typography>
 
       {loading ? (
@@ -255,7 +171,7 @@ const FeaturedAds = () => {
               fontWeight: 600,
             }}
           >
-            No trending ads at the moment
+            No featured ads at the moment
           </Typography>
           <Typography 
             variant="body1" 
@@ -265,7 +181,7 @@ const FeaturedAds = () => {
               lineHeight: 1.6
             }}
           >
-            Check back later for featured and boosted ads from our community
+            Check back later for featured ads from our community
           </Typography>
         </Box>
       ) : null}
@@ -326,36 +242,17 @@ const FeaturedAds = () => {
                 md: '20px'
               },
               overflow: 'hidden',
-              boxShadow: ad.featured 
-                ? '0 4px 20px rgba(108,71,255,0.15)' 
-                : '0 2px 12px rgba(108,71,255,0.08)',
+              boxShadow: '0 2px 12px rgba(108,71,255,0.08)',
               position: 'relative',
               background: '#fff',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               cursor: 'pointer',
-              border: ad.featured ? '2px solid transparent' : '1px solid rgba(108,71,255,0.1)',
-              backgroundClip: ad.featured ? 'padding-box' : 'border-box',
-              '&::before': ad.featured ? {
-                content: '""',
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                borderRadius: 'inherit',
-                padding: '2px',
-                background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
-                mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                maskComposite: 'exclude',
-                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                WebkitMaskComposite: 'xor',
-                zIndex: -1,
-              } : {},
+              border: '1px solid rgba(108,71,255,0.1)',
+              backgroundClip: 'border-box',
+              '&::before': {},
               '&:hover': {
                 transform: 'translateY(-6px) scale(1.02)',
-                boxShadow: ad.featured 
-                  ? '0 12px 40px rgba(108,71,255,0.25)' 
-                  : '0 8px 32px rgba(108,71,255,0.18)',
+                boxShadow: '0 8px 32px rgba(108,71,255,0.18)',
               },
               '&:active': {
                 transform: 'translateY(-3px) scale(1.01)',
@@ -403,30 +300,6 @@ const FeaturedAds = () => {
                     },
                     borderRadius: '8px',
                     zIndex: 2,
-                  }}
-                />
-              )}
-
-              {/* Featured Badge */}
-              {(ad.featured || ad.is_featured) && (
-                <Chip
-                  label="Featured"
-                  color="secondary"
-                  size="small"
-                  sx={{
-                    position: 'absolute',
-                    top: ad.discount ? 48 : 12,
-                    left: 12,
-                    fontWeight: 700,
-                    fontSize: {
-                      xs: '0.7rem',
-                      sm: '0.75rem',
-                      md: '0.8rem'
-                    },
-                    borderRadius: '8px',
-                    zIndex: 2,
-                    background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
-                    color: 'white',
                   }}
                 />
               )}
@@ -612,7 +485,7 @@ const FeaturedAds = () => {
               </Box>
 
               <Button 
-                variant={(ad.featured || ad.is_featured) ? "contained" : "outlined"}
+                variant={"outlined"}
                 color="primary" 
                 size="small" 
                 fullWidth
@@ -636,7 +509,7 @@ const FeaturedAds = () => {
                   },
                   textTransform: 'none',
                   transition: 'all 0.3s ease',
-                  ...((ad.featured || ad.is_featured) && {
+                  ...((false) && {
                     background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
                     '&:hover': {
                       background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',

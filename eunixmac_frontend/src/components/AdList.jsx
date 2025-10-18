@@ -30,10 +30,6 @@ function AdList() {
     fetchAds();
   }, [fetchAds]);
 
-  const isAdBoosted = (ad) => {
-    return ad.is_boosted && ad.boost_expires_at && new Date(ad.boost_expires_at) > new Date();
-  };
-
   const handleSearch = () => {
     fetchAds();
   };
@@ -64,21 +60,6 @@ function AdList() {
         {ads.map((ad) => (
           <Grid item key={ad.id} xs={12} sm={6} md={4}>
             <Badge
-              badgeContent={
-                isAdBoosted(ad) ? (
-                  <Chip
-                    label="Boosted"
-                    size="small"
-                    color="primary"
-                    icon={<TrendingUp fontSize="small" />}
-                    sx={{ 
-                      fontSize: '0.7rem',
-                      height: '20px',
-                      '& .MuiChip-icon': { fontSize: '0.8rem' }
-                    }}
-                  />
-                ) : null
-              }
               sx={{
                 width: '100%',
                 '& .MuiBadge-badge': {
@@ -95,30 +76,16 @@ function AdList() {
                   textDecoration: 'none', 
                   height: '100%',
                   width: '100%',
-                  border: isAdBoosted(ad) ? 2 : 1,
-                  borderColor: isAdBoosted(ad) ? 'primary.main' : 'divider',
+                  border: 1,
+                  borderColor: 'divider',
                   position: 'relative',
                   '&:hover': {
-                    boxShadow: isAdBoosted(ad) ? 4 : 2,
+                    boxShadow: 2,
                     transform: 'translateY(-2px)',
                     transition: 'all 0.2s ease-in-out'
                   }
                 }}
               >
-                {/* Boost indicator overlay */}
-                {isAdBoosted(ad) && (
-                  <Box
-                    sx={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '4px',
-                      background: 'linear-gradient(90deg, #ff6b35 0%, #f7931e 100%)',
-                      zIndex: 1
-                    }}
-                  />
-                )}
                 
                 {ad.images && ad.images.length > 0 && (
                   <CardMedia
@@ -134,9 +101,6 @@ function AdList() {
                     <Typography gutterBottom variant="h6" component="div" sx={{ mb: 0, flex: 1 }}>
                       {ad.title}
                     </Typography>
-                    {isAdBoosted(ad) && (
-                      <Star sx={{ color: 'primary.main', fontSize: '1.2rem' }} />
-                    )}
                   </Box>
                   
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -151,15 +115,6 @@ function AdList() {
                     <Typography variant="body2" color="text.secondary">
                       {ad.location}
                     </Typography>
-                    {isAdBoosted(ad) && (
-                      <Chip
-                        label="Featured"
-                        size="small"
-                        color="primary"
-                        variant="outlined"
-                        sx={{ fontSize: '0.7rem', height: '24px' }}
-                      />
-                    )}
                   </Box>
                 </CardContent>
               </Card>

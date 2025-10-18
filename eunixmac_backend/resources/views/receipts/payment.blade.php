@@ -138,9 +138,6 @@
                 <div class="detail-label">Payment Type:</div>
                 <div class="detail-value">
                     @switch($payment->payable_type)
-                        @case('AdBoost')
-                            Ad Boost Payment
-                            @break
                         @case('educational_material')
                             Educational Material Purchase
                             @break

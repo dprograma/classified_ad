@@ -158,12 +158,6 @@ const TermsOfService = () => {
             </ListItem>
             <ListItem>
               <ListItemText
-                primary="Boosted Listings"
-                secondary="Premium placement fees for enhanced visibility"
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemText
                 primary="Agent Commissions"
                 secondary="Commission fees on educational material sales"
               />

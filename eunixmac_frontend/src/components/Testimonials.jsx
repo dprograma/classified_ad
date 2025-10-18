@@ -10,7 +10,6 @@ const testimonials = [
     testimonial: 'I sold my old laptop within 24 hours of posting it on this platform. The interface is intuitive and the buyers were genuine. Highly recommended!',
     color: '#6C47FF',
     gradient: 'linear-gradient(135deg, #6C47FF 0%, #8B5FFF 100%)',
-    featured: true,
     rating: 5,
     location: 'Lagos, Nigeria',
     category: 'Electronics',
@@ -22,7 +21,6 @@ const testimonials = [
     testimonial: 'A great place to find amazing deals on quality items. I bought a used car at a very good price and the seller was transparent about everything.',
     color: '#00C6AE',
     gradient: 'linear-gradient(135deg, #00C6AE 0%, #00E5C7 100%)',
-    featured: false,
     rating: 5,
     location: 'Abuja, Nigeria',
     category: 'Vehicles',
@@ -34,7 +32,6 @@ const testimonials = [
     testimonial: 'The interface is so easy to use, and I love the fact that I can chat with sellers directly. Found exactly what I was looking for!',
     color: '#FFBF00',
     gradient: 'linear-gradient(135deg, #FFBF00 0%, #FFD700 100%)',
-    featured: false,
     rating: 4,
     location: 'Kano, Nigeria',
     category: 'Home & Garden',
@@ -46,7 +43,6 @@ const testimonials = [
     testimonial: 'Excellent platform for both buying and selling. The verification system gives me confidence in the transactions. Great customer support too!',
     color: '#FF6B6B',
     gradient: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%)',
-    featured: true,
     rating: 5,
     location: 'Port Harcourt, Nigeria',
     category: 'Fashion',
@@ -58,7 +54,6 @@ const testimonials = [
     testimonial: 'Been using this platform for months now. The search functionality is powerful and I always find what I need quickly.',
     color: '#9C27B0',
     gradient: 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)',
-    featured: false,
     rating: 4,
     location: 'Ibadan, Nigeria',
     category: 'Services',
@@ -317,7 +312,7 @@ const Testimonials = () => {
                   xs: '24px',
                   sm: '28px',
                   md: '32px',
-                  lg: testimonial.featured ? '36px' : '32px'
+                  lg: '32px'
                 },
                 textAlign: 'center',
                 borderRadius: {
@@ -328,15 +323,11 @@ const Testimonials = () => {
                 background: isActive 
                   ? 'linear-gradient(135deg, rgba(108,71,255,0.05) 0%, rgba(0,198,174,0.05) 100%)'
                   : '#fff',
-                border: testimonial.featured 
-                  ? '2px solid transparent'
-                  : isActive 
+                border: isActive 
                     ? '2px solid rgba(108,71,255,0.2)'
                     : '1px solid rgba(108,71,255,0.1)',
-                backgroundClip: testimonial.featured ? 'padding-box' : 'border-box',
-                boxShadow: testimonial.featured 
-                  ? '0 8px 32px rgba(108,71,255,0.15)'
-                  : isActive 
+                backgroundClip: 'border-box',
+                boxShadow: isActive 
                     ? '0 6px 24px rgba(108,71,255,0.12)'
                     : '0 4px 16px rgba(108,71,255,0.08)',
                 position: 'relative',
@@ -346,28 +337,11 @@ const Testimonials = () => {
                 cursor: 'pointer',
                 '&:hover': {
                   transform: isActive ? 'scale(1.04)' : 'scale(1.02)',
-                  boxShadow: testimonial.featured 
-                    ? '0 12px 40px rgba(108,71,255,0.2)'
-                    : '0 8px 28px rgba(108,71,255,0.15)',
+                boxShadow: isActive 
+                    ? '0 6px 24px rgba(108,71,255,0.12)'
+                    : '0 4px 16px rgba(108,71,255,0.08)',
                 },
-                ...(testimonial.featured && {
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    borderRadius: 'inherit',
-                    padding: '2px',
-                    background: testimonial.gradient,
-                    mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    maskComposite: 'exclude',
-                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    zIndex: -1,
-                  }
-                })
+
               }}
               onClick={() => goToTestimonial(index)}
               role="article"
@@ -384,43 +358,24 @@ const Testimonials = () => {
                 <FormatQuote sx={{ fontSize: '32px', transform: 'rotate(180deg)' }} />
               </Box>
 
-              {/* Featured Badge */}
-              {testimonial.featured && (
-                <Box sx={{
-                  position: 'absolute',
-                  top: '-8px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  background: testimonial.gradient,
-                  color: 'white',
-                  padding: '4px 12px',
-                  borderRadius: '12px',
-                  fontSize: '0.75rem',
-                  fontWeight: 700,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                }}>
-                  ⭐ Featured
-                </Box>
-              )}
-
               <Avatar sx={{
                 background: testimonial.gradient,
                 width: {
-                  xs: testimonial.featured ? 72 : 64,
-                  sm: testimonial.featured ? 80 : 72,
-                  md: testimonial.featured ? 88 : 80
+                  xs: 64,
+                  sm: 72,
+                  md: 80
                 },
                 height: {
-                  xs: testimonial.featured ? 72 : 64,
-                  sm: testimonial.featured ? 80 : 72,
-                  md: testimonial.featured ? 88 : 80
+                  xs: 64,
+                  sm: 72,
+                  md: 80
                 },
                 margin: '0 auto',
                 marginBottom: '16px',
                 fontSize: {
-                  xs: testimonial.featured ? '32px' : '28px',
-                  sm: testimonial.featured ? '36px' : '32px',
-                  md: testimonial.featured ? '40px' : '36px'
+                  xs: '28px',
+                  sm: '32px',
+                  md: '36px'
                 },
                 fontWeight: 700,
                 color: '#fff',
@@ -432,14 +387,14 @@ const Testimonials = () => {
               </Avatar>
 
               <Typography 
-                variant={testimonial.featured ? 'h5' : 'h6'} 
+                variant={'h6'} 
                 component="h3"
                 sx={{ 
                   fontWeight: 700,
                   fontSize: {
-                    xs: testimonial.featured ? '1.2rem' : '1rem',
-                    sm: testimonial.featured ? '1.3rem' : '1.1rem',
-                    md: testimonial.featured ? '1.4rem' : '1.2rem'
+                    xs: '1rem',
+                    sm: '1.1rem',
+                    md: '1.2rem'
                   },
                   marginBottom: '8px',
                   color: testimonial.color,
@@ -480,11 +435,10 @@ const Testimonials = () => {
                 variant="body1" 
                 sx={{ 
                   fontSize: {
-                    xs: testimonial.featured ? '0.95rem' : '0.85rem',
-                    sm: testimonial.featured ? '1rem' : '0.9rem',
-                    md: testimonial.featured ? '1.05rem' : '0.95rem'
-                  },
-                  lineHeight: 1.6,
+                                      xs: '0.85rem',
+                                      sm: '0.9rem',
+                                      md: '0.95rem'
+                                    },                  lineHeight: 1.6,
                   color: 'text.primary',
                   fontStyle: 'italic',
                   position: 'relative',

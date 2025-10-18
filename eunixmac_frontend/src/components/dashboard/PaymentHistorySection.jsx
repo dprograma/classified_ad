@@ -57,7 +57,6 @@ const PaymentHistorySection = () => {
     total_spent: 0,
     total_earned: 0,
     total_transactions: 0,
-    boost_payments: 0,
     material_payments: 0,
     affiliate_payments: 0
   });
@@ -69,8 +68,8 @@ const PaymentHistorySection = () => {
   });
   const { callApi, loading } = useApi();
 
-  const tabLabels = ['All Payments', 'Ad Boosts', 'Materials', 'Affiliate Payouts'];
-  const tabFilters = ['all', 'boost', 'materials', 'affiliate'];
+  const tabLabels = ['All Payments', 'Materials', 'Affiliate Payouts'];
+  const tabFilters = ['all', 'materials', 'affiliate'];
 
   // Fetch payment statistics
   const fetchStats = async () => {
@@ -134,8 +133,6 @@ const PaymentHistorySection = () => {
 
   const getPaymentIcon = (payment) => {
     switch (payment.payable_type) {
-      case 'AdBoost':
-        return <TrendingUp color="primary" />;
       case 'EducationalMaterial':
         return <School color="info" />;
       default:
@@ -145,8 +142,6 @@ const PaymentHistorySection = () => {
 
   const getPaymentTypeLabel = (payment) => {
     switch (payment.payable_type) {
-      case 'AdBoost':
-        return 'Ad Boost';
       case 'EducationalMaterial':
         return 'Educational Material';
       default:
@@ -251,7 +246,7 @@ const PaymentHistorySection = () => {
           label="Total Spent"
           color="#ef4444"
           size="medium"
-          subtitle="Money spent on boosts & materials"
+          subtitle="Money spent on materials"
         />
 
         <EnhancedStatCard
@@ -273,9 +268,9 @@ const PaymentHistorySection = () => {
         />
 
         <EnhancedStatCard
-          icon={TrendingUp}
-          value={stats.boost_payments}
-          label="Boost Payments"
+          icon={School}
+          value={stats.material_payments}
+          label="Material Payments"
           color="#8b5cf6"
           size="medium"
           subtitle="Ad promotion payments"
@@ -295,9 +290,8 @@ const PaymentHistorySection = () => {
             if (selectedTab !== index) {
               switch (index) {
                 case 0: count = stats.total_transactions; break;
-                case 1: count = stats.boost_payments; break;
-                case 2: count = stats.material_payments; break;
-                case 3: count = stats.affiliate_payments; break;
+                case 1: count = stats.material_payments; break;
+                case 2: count = stats.affiliate_payments; break;
               }
             }
             return (
@@ -510,11 +504,7 @@ const PaymentHistorySection = () => {
                       {selectedPayment.ad_details.title}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Ad Price: ₦{parseFloat(selectedPayment.ad_details.price).toLocaleString()} |
-                      Boost Status: {selectedPayment.ad_details.is_boosted ? 'Active' : 'Inactive'}
-                      {selectedPayment.ad_details.boost_expires_at && selectedPayment.ad_details.is_boosted && (
-                        <> | Expires: {format(new Date(selectedPayment.ad_details.boost_expires_at), 'MMM dd, yyyy')}</>
-                      )}
+                      Ad Price: ₦{parseFloat(selectedPayment.ad_details.price).toLocaleString()}
                     </Typography>
                   </Grid>
                 )}

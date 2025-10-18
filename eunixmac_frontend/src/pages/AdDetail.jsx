@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Typography, Box, Card, CardContent, CardMedia, Chip, Stack, Button, TextField, Container, CircularProgress } from '@mui/material';
-import BoostAd from '../components/BoostAd';
 import useApi from '../hooks/useApi';
 
 function AdDetail() {
@@ -9,7 +8,6 @@ function AdDetail() {
   const [ad, setAd] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [showBoostDialog, setShowBoostDialog] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { callApi } = useApi();
@@ -224,7 +222,6 @@ function AdDetail() {
             <Chip label={`Category: ${ad.category?.name || 'N/A'}`} color="primary" />
             <Chip label={`Location: ${ad.location || 'N/A'}`} color="secondary" />
             <Chip label={`Status: ${ad.status || 'Active'}`} variant="outlined" />
-            {(ad.is_boosted || ad.is_featured) && <Chip label="Featured" color="success" />}
           </Stack>
 
           <Typography variant="h6" gutterBottom>
@@ -243,19 +240,7 @@ function AdDetail() {
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
             <Button variant="contained" href={`tel:${ad.user.phone_number}`}>Call Seller</Button>
             <Button variant="contained" color="success" href={`https://wa.me/${ad.user.phone_number}`} target="_blank">WhatsApp Seller</Button>
-            <Button variant="contained" onClick={() => setShowBoostDialog(true)}>Boost Ad</Button>
           </Stack>
-
-          {showBoostDialog && (
-            <BoostAd
-              adId={ad.id}
-              onClose={() => setShowBoostDialog(false)}
-              onBoostSuccess={() => {
-                setShowBoostDialog(false);
-                // Optionally re-fetch ad details to show it's boosted
-              }}
-            />
-          )}
 
           {ad.custom_fields && ad.custom_fields.length > 0 && (
             <Box sx={{ mt: 3 }}>

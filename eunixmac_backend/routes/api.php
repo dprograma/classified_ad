@@ -24,7 +24,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SocialLoginController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\AdminSupportController;
-use App\Http\Controllers\AdminBoostController;
 use App\Http\Controllers\AdminController;
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:registration');
@@ -60,7 +59,6 @@ Route::post('/newsletter/subscribe', function (Request $request) {
 Route::get('/ads', [AdController::class, 'index']);
 Route::get('/ads/search/suggestions', [AdController::class, 'getSearchSuggestions']);
 Route::get('/ads/{ad}', [AdController::class, 'show']);
-Route::get('/ads/boost/pricing', [AdController::class, 'getBoostPricing']);
 
 Route::match(['get', 'post'], '/payments/verify', [PaymentController::class, 'verifyPayment']); // Public route for Paystack callback
 
@@ -92,11 +90,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ads/{ad}/messages', [MessageController::class, 'index']);
     Route::post('/ads/{ad}/messages', [MessageController::class, 'store']);
     Route::put('/conversations/{conversationId}/read', [MessageController::class, 'markAsRead']);
-
-    Route::post('/ads/{ad}/boost', [AdController::class, 'initiateBoost'])->middleware('throttle:boost-payment');
-    Route::post('/ads/boost/verify', [AdController::class, 'verifyBoostPayment'])->middleware('throttle:boost-payment');
-    Route::post('/ads/boost/check-expiry', [AdController::class, 'checkBoostExpiry']);
-    Route::get('/ads/boost/history', [AdController::class, 'getBoostHistory']);
 
     Route::get('/educational-materials', [EducationalMaterialController::class, 'index']);
     Route::get('/educational-materials/{ad}', [EducationalMaterialController::class, 'show']);
@@ -158,8 +151,5 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/admin/materials/{ad}', [AdminController::class, 'deleteMaterial']);
         Route::get('/admin/materials-stats', [AdminController::class, 'getMaterialsStats']);
 
-        // Boost admin routes
-        Route::get('/admin/boost/analytics', [AdminBoostController::class, 'analytics']);
-        Route::get('/admin/boost/statistics', [AdminBoostController::class, 'statistics']);
     });
 });

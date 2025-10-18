@@ -138,10 +138,6 @@ function EnhancedAdList({ initialSearchParams = {} }) {
     }, 300);
   };
 
-  const isAdBoosted = (ad) => {
-    return ad.is_boosted && ad.boost_expires_at && new Date(ad.boost_expires_at) > new Date();
-  };
-
   const formatPrice = (price) => {
     return `₦${parseFloat(price).toLocaleString()}`;
   };
@@ -181,21 +177,6 @@ function EnhancedAdList({ initialSearchParams = {} }) {
       {ads.map((ad) => (
         <Grid item key={ad.id} xs={12} sm={6} md={4} lg={3}>
           <Badge
-            badgeContent={
-              isAdBoosted(ad) ? (
-                <Chip
-                  label="Boosted"
-                  size="small"
-                  color="primary"
-                  icon={<TrendingUp fontSize="small" />}
-                  sx={{
-                    fontSize: '0.7rem',
-                    height: '20px',
-                    '& .MuiChip-icon': { fontSize: '0.8rem' }
-                  }}
-                />
-              ) : null
-            }
             sx={{
               width: '100%',
               '& .MuiBadge-badge': {
@@ -212,30 +193,16 @@ function EnhancedAdList({ initialSearchParams = {} }) {
                 textDecoration: 'none',
                 height: '100%',
                 width: '100%',
-                border: isAdBoosted(ad) ? 2 : 1,
-                borderColor: isAdBoosted(ad) ? 'primary.main' : 'divider',
+                border: 1,
+                borderColor: 'divider',
                 position: 'relative',
                 transition: 'all 0.3s ease',
                 '&:hover': {
                   transform: 'translateY(-4px)',
-                  boxShadow: isAdBoosted(ad) ? 6 : 4,
+                  boxShadow: 4,
                 }
               }}
             >
-              {/* Boost indicator */}
-              {isAdBoosted(ad) && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '4px',
-                    background: 'linear-gradient(90deg, #ff6b35 0%, #f7931e 100%)',
-                    zIndex: 1
-                  }}
-                />
-              )}
 
               {ad.images && ad.images.length > 0 && (
                 <CardMedia
@@ -325,8 +292,8 @@ function EnhancedAdList({ initialSearchParams = {} }) {
           sx={{
             mb: 2,
             textDecoration: 'none',
-            border: isAdBoosted(ad) ? 2 : 1,
-            borderColor: isAdBoosted(ad) ? 'primary.main' : 'divider',
+            border: 1,
+            borderColor: 'divider',
             '&:hover': {
               boxShadow: 3,
             }
@@ -345,15 +312,6 @@ function EnhancedAdList({ initialSearchParams = {} }) {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
                   {ad.title}
-                  {isAdBoosted(ad) && (
-                    <Chip
-                      label="Boosted"
-                      size="small"
-                      color="primary"
-                      icon={<TrendingUp fontSize="small" />}
-                      sx={{ ml: 1, fontSize: '0.7rem' }}
-                    />
-                  )}
                 </Typography>
                 <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
                   {formatPrice(ad.price)}

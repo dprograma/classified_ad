@@ -54,14 +54,12 @@ import {
 import { Link } from 'react-router-dom';
 import useApi from '../../hooks/useApi';
 import { getStorageUrl } from '../../config/api';
-import BoostAd from '../BoostAd';
 
 const MyAdsSection = ({ ads, onRefresh }) => {
   const [selectedTab, setSelectedTab] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAd, setSelectedAd] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [boostDialogOpen, setBoostDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [priceFilter, setPriceFilter] = useState('');
@@ -78,9 +76,6 @@ const MyAdsSection = ({ ads, onRefresh }) => {
         break;
       case 'inactive':
         filtered = filtered.filter(ad => ad.status === 'inactive' || ad.status === 'paused');
-        break;
-      case 'boosted':
-        filtered = filtered.filter(ad => ad.is_boosted && new Date(ad.boost_expires_at) > new Date());
         break;
       case 'expired':
         filtered = filtered.filter(ad => ad.status === 'expired');
@@ -167,9 +162,6 @@ const MyAdsSection = ({ ads, onRefresh }) => {
   };
 
   const getStatusIcon = (ad) => {
-    if (ad.is_boosted && new Date(ad.boost_expires_at) > new Date()) {
-      return <TrendingUp fontSize="small" />;
-    }
     switch (ad.status) {
       case 'active': return <CheckCircle fontSize="small" />;
       case 'inactive': return <Pause fontSize="small" />;
@@ -178,8 +170,8 @@ const MyAdsSection = ({ ads, onRefresh }) => {
     }
   };
 
-  const tabLabels = ['All Ads', 'Active', 'Inactive', 'Boosted', 'Expired'];
-  const tabFilters = ['all', 'active', 'inactive', 'boosted', 'expired'];
+  const tabLabels = ['All Ads', 'Active', 'Inactive', 'Expired'];
+  const tabFilters = ['all', 'active', 'inactive', 'expired'];
   
   const currentAds = filterAds(tabFilters[selectedTab]);
 
@@ -350,9 +342,6 @@ const MyAdsSection = ({ ads, onRefresh }) => {
                             <Typography variant="body1" fontWeight="bold">
                               {ad.title}
                             </Typography>
-                            {ad.is_boosted && new Date(ad.boost_expires_at) > new Date() && (
-                              <Star color="primary" fontSize="small" />
-                            )}
                           </Box>
                           <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 200 }}>
                             {ad.description || 'No description'}
@@ -369,7 +358,7 @@ const MyAdsSection = ({ ads, onRefresh }) => {
                         color={getStatusColor(ad.status)}
                         size="small"
                         icon={getStatusIcon(ad)}
-                        variant={ad.is_boosted && new Date(ad.boost_expires_at) > new Date() ? "filled" : "outlined"}
+                        variant={"outlined"}
                       />
                     </TableCell>
                     <TableCell>
@@ -413,19 +402,6 @@ const MyAdsSection = ({ ads, onRefresh }) => {
                           </IconButton>
                         </Tooltip>
                         
-                        <Tooltip title="Boost Ad">
-                          <IconButton
-                            size="small"
-                            onClick={() => {
-                              setSelectedAd(ad);
-                              setBoostDialogOpen(true);
-                            }}
-                            disabled={ad.is_boosted && new Date(ad.boost_expires_at) > new Date()}
-                          >
-                            <TrendingUp />
-                          </IconButton>
-                        </Tooltip>
-
                         <Tooltip title="More Actions">
                           <IconButton
                             size="small"
@@ -499,18 +475,6 @@ const MyAdsSection = ({ ads, onRefresh }) => {
         </DialogActions>
       </Dialog>
 
-      {/* Boost Ad Dialog */}
-      {boostDialogOpen && selectedAd && (
-        <BoostAd
-          adId={selectedAd.id}
-          adTitle={selectedAd.title}
-          onClose={() => {
-            setBoostDialogOpen(false);
-            setSelectedAd(null);
-            if (onRefresh) onRefresh();
-          }}
-        />
-      )}
     </Box>
   );
 };

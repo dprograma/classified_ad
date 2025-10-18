@@ -215,7 +215,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
                           ₦650
                         </Typography>
                         <Typography variant="body2">
-                          From ₦1,000 boost purchase
+                          From ₦1,000 purchase
                         </Typography>
                       </CardContent>
                     </Card>
@@ -227,7 +227,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
                           ₦1,170
                         </Typography>
                         <Typography variant="body2">
-                          From ₦1,800 boost purchase
+                          From ₦1,800 purchase
                         </Typography>
                       </CardContent>
                     </Card>
@@ -239,7 +239,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
                           ₦2,275
                         </Typography>
                         <Typography variant="body2">
-                          From ₦3,500 boost purchase
+                          From ₦3,500 purchase
                         </Typography>
                       </CardContent>
                     </Card>
@@ -396,8 +396,7 @@ const AffiliateSection = ({ affiliateData, onRefresh }) => {
               
               <Alert severity="info">
                 <Typography variant="body2">
-                  <strong>How it works:</strong> When someone clicks your link and makes their first purchase 
-                  (like boosting an ad), you earn 65% of that purchase amount!
+                  <strong>How it works:</strong> When someone clicks your link and makes their first purchase, you earn 65% of that purchase amount!
                 </Typography>
               </Alert>
             </CardContent>

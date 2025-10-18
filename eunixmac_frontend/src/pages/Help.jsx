@@ -62,10 +62,6 @@ const Help = () => {
       answer: "Payment issues can occur due to insufficient funds, expired card details, or network issues. Please check your payment method and try again. If the issue persists, contact our support team."
     },
     {
-      question: "How can I boost my ads?",
-      answer: "You can boost your ads from the 'My Ads' section in your dashboard. Click on the boost icon next to your ad, select a boost package, and complete the payment process."
-    },
-    {
       question: "How do I become an agent?",
       answer: "To become an agent, go to your dashboard overview and click 'Become an Agent'. This will allow you to upload and sell educational materials on our platform."
     },
@@ -103,7 +99,7 @@ const Help = () => {
     },
     {
       question: "How long do ads stay active?",
-      answer: "Regular ads stay active for 30 days. You can refresh them to extend visibility. Boosted ads have varying durations based on the package you choose (3, 7, or 14 days)."
+      answer: "Regular ads stay active for 30 days. You can refresh them to extend visibility."
     },
     {
       question: "Is there a limit to how many ads I can post?",
