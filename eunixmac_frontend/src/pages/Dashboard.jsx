@@ -77,7 +77,6 @@ import { globalThrottler } from '../utils/requestThrottle';
 // Sub-components
 import ProfileSection from '../components/dashboard/ProfileSection';
 import MyAdsSection from '../components/dashboard/MyAdsSection';
-import BoostSection from '../components/dashboard/BoostSection';
 import MessagesSection from '../components/dashboard/MessagesSection';
 import AnalyticsSection from '../components/dashboard/AnalyticsSection';
 import AgentSection from '../components/dashboard/AgentSection';
@@ -115,12 +114,6 @@ const getDashboardNavItems = (user) => [
     label: 'Messages',
     icon: <Message />,
     badge: user?.unread_messages || 0
-  },
-  {
-    id: 'boost',
-    label: 'Boost Ads',
-    icon: <TrendingUp />,
-    badge: user?.active_boosts || 0
   },
   {
     id: 'profile',
@@ -555,8 +548,6 @@ const Dashboard = () => {
         return <ProfileSection user={dashboardData?.user || user} onRefresh={fetchDashboardData} />;
       case 'my-ads':
         return <MyAdsSection ads={dashboardData?.ads || []} onRefresh={fetchDashboardData} />;
-      case 'boost':
-        return <BoostSection ads={dashboardData?.ads || []} onRefresh={fetchDashboardData} />;
       case 'messages':
         return <MessagesSection conversations={dashboardData?.conversations || []} onRefresh={fetchDashboardData} />;
       case 'analytics':
@@ -1032,22 +1023,6 @@ const OverviewSection = ({ data, onRefresh, setActiveTab }) => {
                 Post New Ad
               </Button>
 
-              <Button
-                variant="outlined"
-                startIcon={<TrendingUp />}
-                fullWidth
-                disabled={!stats.active_ads}
-                onClick={() => setActiveTab('boost')}
-                sx={{
-                  justifyContent: 'flex-start',
-                  py: { xs: 1.5, md: 1.75 },
-                  fontSize: { xs: '0.875rem', md: '0.9rem' },
-                  fontWeight: 500
-                }}
-              >
-                Boost My Ads
-              </Button>
-
               {!user.is_agent && (
                 <Button
                   variant="outlined"
@@ -1248,14 +1223,6 @@ const HelpSupportSection = () => {
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
                   Go to "My Ads" section and click "Post New Ad" or use the main navigation menu.
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, fontSize: { xs: '0.875rem', md: '0.875rem' } }}>
-                  What is ad boosting?
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
-                  Boosting makes your ad more visible to potential buyers by featuring it prominently.
                 </Typography>
               </Box>
               <Box>

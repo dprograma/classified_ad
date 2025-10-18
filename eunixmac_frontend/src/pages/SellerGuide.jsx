@@ -90,11 +90,6 @@ const SellerGuide = () => {
       description: "Fast responses to inquiries show professionalism and keep buyers engaged."
     },
     {
-      icon: <TrendingUp color="primary" />,
-      title: "Boost Popular Items",
-      description: "Use our boost feature for high-demand items to increase visibility and sell faster."
-    },
-    {
       icon: <Verified color="primary" />,
       title: "Build Your Reputation",
       description: "Complete transactions professionally to earn positive reviews and verification badges."
@@ -265,48 +260,6 @@ const SellerGuide = () => {
                 </Grid>
               ))}
             </Grid>
-          </Paper>
-        </Grid>
-
-        {/* Boost Your Ads */}
-        <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 4 }}>
-            <Box display="flex" alignItems="center" gap={2} mb={3}>
-              <TrendingUp color="success" sx={{ fontSize: 32 }} />
-              <Typography variant="h5" fontWeight={600}>
-                Boost Your Ads for Maximum Visibility
-              </Typography>
-            </Box>
-
-            <Typography variant="body1" color="text.secondary" mb={3}>
-              Boosted ads appear at the top of search results and get 3x more views than regular ads.
-            </Typography>
-
-            <Stack spacing={2}>
-              <Box sx={{ p: 2, bgcolor: 'success.light', borderRadius: 2 }}>
-                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                  When to Boost
-                </Typography>
-                <Typography variant="body2">
-                  • High-value items (₦50,000+)
-                  • Items in competitive categories
-                  • When you need to sell quickly
-                  • During peak shopping seasons
-                </Typography>
-              </Box>
-
-              <Box sx={{ p: 2, bgcolor: 'info.light', borderRadius: 2 }}>
-                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
-                  Boost Benefits
-                </Typography>
-                <Typography variant="body2">
-                  • Top placement in search results
-                  • Featured badge on your listing
-                  • 3x more views and inquiries
-                  • Faster selling times
-                </Typography>
-              </Box>
-            </Stack>
           </Paper>
         </Grid>
 

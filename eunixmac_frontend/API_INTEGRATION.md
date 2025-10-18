@@ -63,7 +63,6 @@ const fetchData = async () => {
 - ✅ `AdController.jsx` (Backend) - Enhanced with better validation
 - ✅ `PostAd.jsx` - Migrated to useApi hook with improved error handling
 - ✅ `AdList.jsx` - Migrated to useApi hook and centralized URL handling
-- ✅ `BoostAd.jsx` - Migrated to useApi hook
 
 ### Navigation & UI
 - ✅ `Navbar.jsx` - Uses centralized storage URL generation

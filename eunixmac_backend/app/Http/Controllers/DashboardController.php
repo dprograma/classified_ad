@@ -13,16 +13,12 @@ class DashboardController extends Controller
 
         $ads = $user->ads()
             ->with(['category:id,name', 'images:id,ad_id,image_path'])
-            ->select('id', 'user_id', 'category_id', 'title', 'price', 'created_at', 'status', 'is_boosted', 'boost_expires_at')
+            ->select('id', 'user_id', 'category_id', 'title', 'price', 'created_at', 'status')
             ->latest()
             ->get();
 
         $totalAds = $ads->count();
         $activeAds = $ads->where('status', 'active')->count();
-        $boostedAds = $ads->where('is_boosted', true)
-                          ->filter(function($ad) {
-                              return $ad->boost_expires_at && $ad->boost_expires_at > now();
-                          })->count();
         $messageCount = $user->sentMessages()->count() + $user->receivedMessages()->count();
         $unreadMessages = $user->receivedMessages()->count(); // For now, all messages are considered unread since no read_at column exists
         $reviewCount = $user->reviews()->count();
@@ -36,7 +32,6 @@ class DashboardController extends Controller
             'stats' => [
                 'total_ads' => $totalAds,
                 'active_ads' => $activeAds,
-                'boosted_ads' => $boostedAds,
                 'total_views' => $totalViews,
                 'unread_messages' => $unreadMessages,
                 'ads_count' => $totalAds,

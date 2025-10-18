@@ -11,37 +11,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PaymentController extends Controller
 {
-    public function initiateAdBoost(Request $request, Ad $ad)
-    {
-        $request->validate([
-            'amount' => 'required|numeric|min:100',
-        ]);
-
-        $user = $request->user();
-        $amount = $request->amount;
-
-        // Initiate payment with Paystack
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
-            'Content-Type' => 'application/json',
-        ])->post('https://api.paystack.co/transaction/initialize', [
-            'email' => $user->email,
-            'amount' => $amount * 100, // Paystack expects amount in kobo
-            'callback_url' => env('APP_URL') . '/api/payments/verify',
-            'metadata' => [
-                'ad_id' => $ad->id,
-                'user_id' => $user->id,
-                'type' => 'ad_boost',
-            ],
-        ]);
-
-        if ($response->successful()) {
-            return response()->json($response->json());
-        } else {
-            return response()->json(['message' => 'Payment initiation failed', 'error' => $response->json()], 500);
-        }
-    }
-
     public function verifyPayment(Request $request)
     {
         // This method handles Paystack callbacks (both GET and POST)
@@ -58,17 +27,6 @@ class PaymentController extends Controller
         if ($response->successful() && $response->json()['data']['status'] === 'success') {
             $data = $response->json()['data'];
             $metadata = $data['metadata'];
-
-            // Update ad status and record payment
-            if ($metadata['type'] === 'ad_boost') {
-                $ad = Ad::find($metadata['ad_id']);
-                if ($ad) {
-                    $boostDays = $metadata['boost_days'] ?? 7; // Default to 7 if not specified
-                    $ad->is_boosted = true;
-                    $ad->boost_expires_at = now()->addDays($boostDays);
-                    $ad->save();
-                }
-            }
 
             // Check if payment record already exists (avoid duplicates)
             $existingPayment = Payment::where('reference', $reference)->first();
@@ -102,9 +60,6 @@ class PaymentController extends Controller
         // Filter by type if specified
         if ($type && $type !== 'all') {
             switch ($type) {
-                case 'boost':
-                    $query->whereIn('payable_type', ['ad_boost', 'AdBoost']);
-                    break;
                 case 'materials':
                     $query->where('payable_type', 'educational_material');
                     break;
@@ -122,25 +77,6 @@ class PaymentController extends Controller
 
             // Add description based on payment type
             switch ($payment->payable_type) {
-                case 'ad_boost':
-                case 'AdBoost':
-                    $paymentArray['description'] = 'Ad Boost Payment';
-                    $paymentArray['payable_type'] = 'AdBoost'; // Normalize for frontend
-
-                    // Try to load ad details if payable_id exists
-                    if ($payment->payable_id) {
-                        $ad = \App\Models\Ad::find($payment->payable_id);
-                        if ($ad) {
-                            $paymentArray['ad_details'] = [
-                                'id' => $ad->id,
-                                'title' => $ad->title,
-                                'price' => $ad->price,
-                                'is_boosted' => $ad->is_boosted,
-                                'boost_expires_at' => $ad->boost_expires_at
-                            ];
-                        }
-                    }
-                    break;
                 case 'educational_material':
                     $paymentArray['description'] = 'Educational Material Purchase';
                     $paymentArray['payable_type'] = 'EducationalMaterial'; // Normalize for frontend
@@ -160,10 +96,10 @@ class PaymentController extends Controller
     {
         $user = $request->user();
 
-        // Calculate total spent on boosts and materials
+        // Calculate total spent on materials
         $totalSpent = $user->payments()
             ->where('status', 'success')
-            ->whereIn('payable_type', ['AdBoost', 'ad_boost', 'educational_material'])
+            ->whereIn('payable_type', ['educational_material'])
             ->sum('amount');
 
         // Calculate total earned from affiliate payouts
@@ -174,11 +110,6 @@ class PaymentController extends Controller
 
         // Total transaction count
         $totalTransactions = $user->payments()->count();
-
-        // Count by payment type
-        $boostPayments = $user->payments()
-            ->whereIn('payable_type', ['AdBoost', 'ad_boost'])
-            ->count();
 
         $materialPayments = $user->payments()
             ->where('payable_type', 'educational_material')
@@ -192,7 +123,6 @@ class PaymentController extends Controller
             'total_spent' => (float) $totalSpent,
             'total_earned' => (float) $totalEarned,
             'total_transactions' => $totalTransactions,
-            'boost_payments' => $boostPayments,
             'material_payments' => $materialPayments,
             'affiliate_payments' => $affiliatePayments
         ]);

@@ -453,9 +453,6 @@ const AccountSettingsSection = ({ user, onRefresh }) => {
               <ListItemText primary="• Delete all your messages and conversations" />
             </ListItem>
             <ListItem>
-              <ListItemText primary="• Cancel any active boosts" />
-            </ListItem>
-            <ListItem>
               <ListItemText primary="• Remove you from affiliate program" />
             </ListItem>
           </List>

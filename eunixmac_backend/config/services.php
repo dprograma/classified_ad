@@ -48,7 +48,6 @@ return [
     ],
 
     'throttle' => [
-        'boost-payment' => '5,1', // 5 requests per minute for boost payments
     ],
 
     'paystack' => [

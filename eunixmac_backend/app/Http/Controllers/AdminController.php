@@ -97,10 +97,6 @@ class AdminController extends Controller
             });
         }
 
-        if ($request->filled('boosted')) {
-            $query->where('is_boosted', $request->boosted === 'true' || $request->boosted === true);
-        }
-
         // Sort
         $sortBy = $request->get('sort_by', 'created_at');
         $sortOrder = $request->get('sort_order', 'desc');

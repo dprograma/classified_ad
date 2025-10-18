@@ -37,6 +37,7 @@
       "env": {}
     },
     "context7": {
+      "type": "stdio",
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp", "--api-key", "ctx7sk-968f1c34-d45c-4b90-9642-09cbfd47882c"]
     },

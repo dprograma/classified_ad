@@ -22,8 +22,6 @@ class CreateAdsTable extends Migration
             $table->decimal('price', 12, 2);
             $table->string('location');
             $table->string('status')->default('active');
-            $table->boolean('is_boosted')->default(false);
-            $table->timestamp('boost_expires_at')->nullable();
             $table->timestamps();
         });
     }

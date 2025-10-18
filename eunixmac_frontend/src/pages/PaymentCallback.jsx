@@ -30,7 +30,7 @@ function PaymentCallback() {
     
     if (status === 'success') {
       setStatus('success');
-      setMessage('Payment verified successfully! Your ad has been boosted.');
+      setMessage('Payment verified successfully!');
       setPaymentData({
         ad_id: adId,
         reference: reference
@@ -55,7 +55,7 @@ function PaymentCallback() {
       setStatus('verifying');
       setMessage('Verifying your payment...');
 
-      const response = await callApi('POST', '/ads/boost/verify', {
+      const response = await callApi('POST', '/payments/verify', {
         reference: reference
       });
 
@@ -115,15 +115,8 @@ function PaymentCallback() {
               <Card sx={{ mb: 3, maxWidth: 400, mx: 'auto' }}>
                 <CardContent>
                   <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
-                    <TrendingUp color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">Ad Boost Activated</Typography>
+                    <Typography variant="h6">Payment Confirmed</Typography>
                   </Box>
-                  
-                  {paymentData.boost_expires_at && (
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Boost expires: {new Date(paymentData.boost_expires_at).toLocaleDateString()}
-                    </Typography>
-                  )}
                   
                   {paymentData.amount_paid && (
                     <Typography variant="body2" color="text.secondary">
@@ -140,7 +133,7 @@ function PaymentCallback() {
               onClick={handleContinue}
               sx={{ mr: 2 }}
             >
-              View Your Ad
+              Continue
             </Button>
             <Button 
               variant="outlined" 
