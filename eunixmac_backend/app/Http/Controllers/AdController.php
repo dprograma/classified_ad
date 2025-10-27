@@ -13,7 +13,7 @@ class AdController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Ad::query()->where('status', 'active');
+        $query = Ad::query()->where('status', 'active')->whereNotNull('approved_at');
 
         // Enhanced search functionality
         if ($request->has('search') && !empty($request->search)) {
@@ -162,10 +162,6 @@ class AdController extends Controller
             'custom_fields.*.field_value' => 'required_with:custom_fields|string|max:255',
         ];
 
-        // Add category-specific validation rules
-        $categoryValidationRules = $this->getCategorySpecificValidation($request->category_id);
-        $validationRules = array_merge($validationRules, $categoryValidationRules);
-
         $validatedData = $request->validate($validationRules);
 
         try {
@@ -176,7 +172,7 @@ class AdController extends Controller
                 'description' => $validatedData['description'],
                 'price' => $validatedData['price'],
                 'location' => $validatedData['location'],
-                'status' => 'active',
+                'status' => 'pending_approval',
             ]);
 
             // Handle image uploads with preview detection
@@ -335,63 +331,7 @@ class AdController extends Controller
         return response()->json(null, 204);
     }
 
-    /**
-     * Get category-specific validation rules based on category name
-     */
-    private function getCategorySpecificValidation($categoryId)
-    {
-        if (!$categoryId) return [];
 
-        $category = \App\Models\Category::find($categoryId);
-        if (!$category) return [];
-
-        $categoryName = strtolower($category->name);
-        $validationRules = [];
-
-        // Electronics category
-        if (str_contains($categoryName, 'electronics') || str_contains($categoryName, 'smartphone') || str_contains($categoryName, 'laptop')) {
-            $validationRules = array_merge($validationRules, [
-                'custom_fields.brand.field_value' => 'nullable|string|max:100',
-                'custom_fields.model.field_value' => 'nullable|string|max:100',
-                'custom_fields.condition.field_value' => 'nullable|string|in:New,Like New,Good,Fair,Poor',
-            ]);
-        }
-
-        // Vehicles category
-        if (str_contains($categoryName, 'vehicle') || str_contains($categoryName, 'car') || str_contains($categoryName, 'truck')) {
-            $validationRules = array_merge($validationRules, [
-                'custom_fields.make.field_value' => 'nullable|string|max:100',
-                'custom_fields.model.field_value' => 'nullable|string|max:100',
-                'custom_fields.year.field_value' => 'nullable|numeric|min:1900|max:' . (date('Y') + 1),
-                'custom_fields.mileage.field_value' => 'nullable|numeric|min:0',
-                'custom_fields.fuel_type.field_value' => 'nullable|string|in:Petrol,Diesel,Electric,Hybrid',
-                'custom_fields.transmission.field_value' => 'nullable|string|in:Manual,Automatic',
-            ]);
-        }
-
-        // Real Estate category
-        if (str_contains($categoryName, 'real estate') || str_contains($categoryName, 'apartment') || str_contains($categoryName, 'house')) {
-            $validationRules = array_merge($validationRules, [
-                'custom_fields.property_type.field_value' => 'nullable|string|max:100',
-                'custom_fields.bedrooms.field_value' => 'nullable|numeric|min:0|max:20',
-                'custom_fields.bathrooms.field_value' => 'nullable|numeric|min:0|max:20',
-                'custom_fields.area_sqm.field_value' => 'nullable|numeric|min:1',
-            ]);
-        }
-
-        // Fashion category
-        if (str_contains($categoryName, 'fashion') || str_contains($categoryName, 'clothing') || str_contains($categoryName, 'footwear')) {
-            $validationRules = array_merge($validationRules, [
-                'custom_fields.size.field_value' => 'nullable|string|max:20',
-                'custom_fields.gender.field_value' => 'nullable|string|in:Men,Women,Kids,Unisex',
-                'custom_fields.material.field_value' => 'nullable|string|max:100',
-                'custom_fields.color.field_value' => 'nullable|string|max:50',
-                'custom_fields.condition.field_value' => 'nullable|string|in:New,Like New,Good,Fair,Poor',
-            ]);
-        }
-
-        return $validationRules;
-    }
 
     /**
      * Get search suggestions for autocomplete
@@ -505,11 +445,12 @@ class AdController extends Controller
             return response()->json(['error' => 'Category not found'], 404);
         }
 
-        $categoryName = strtolower($category->name);
+        $parentCategory = $category->parent ?? $category;
+        $categoryName = strtolower($parentCategory->name);
         $fields = [];
 
         // Electronics category fields
-        if (str_contains($categoryName, 'electronics') || str_contains($categoryName, 'smartphone') || str_contains($categoryName, 'laptop')) {
+        if (str_contains($categoryName, 'electronics')) {
             $fields = [
                 ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
                 ['name' => 'model', 'label' => 'Model', 'type' => 'text', 'required' => false],
@@ -519,7 +460,7 @@ class AdController extends Controller
         }
 
         // Vehicles category fields
-        elseif (str_contains($categoryName, 'vehicle') || str_contains($categoryName, 'cars') || str_contains($categoryName, 'truck') || preg_match('/\bcar\b/', $categoryName)) {
+        elseif (str_contains($categoryName, 'vehicles')) {
             $fields = [
                 ['name' => 'make', 'label' => 'Make', 'type' => 'text', 'required' => true],
                 ['name' => 'model', 'label' => 'Model', 'type' => 'text', 'required' => true],
@@ -532,7 +473,7 @@ class AdController extends Controller
         }
 
         // Real Estate category fields
-        elseif (str_contains($categoryName, 'real estate') || str_contains($categoryName, 'apartment') || str_contains($categoryName, 'house')) {
+        elseif (str_contains($categoryName, 'real estate')) {
             $fields = [
                 ['name' => 'property_type', 'label' => 'Property Type', 'type' => 'select', 'options' => ['Apartment', 'House', 'Villa', 'Land', 'Commercial'], 'required' => true],
                 ['name' => 'bedrooms', 'label' => 'Bedrooms', 'type' => 'number', 'required' => false],
@@ -543,7 +484,7 @@ class AdController extends Controller
         }
 
         // Fashion category fields
-        elseif (str_contains($categoryName, 'fashion') || str_contains($categoryName, 'clothing') || str_contains($categoryName, 'footwear')) {
+        elseif (str_contains($categoryName, 'fashion')) {
             $fields = [
                 ['name' => 'size', 'label' => 'Size', 'type' => 'text', 'required' => true],
                 ['name' => 'gender', 'label' => 'Gender', 'type' => 'select', 'options' => ['Men', 'Women', 'Kids', 'Unisex'], 'required' => true],
@@ -553,65 +494,8 @@ class AdController extends Controller
             ];
         }
 
-        // Education Material category fields (MUST be checked before Building Materials)
-        elseif (str_contains($categoryName, 'education') || str_contains($categoryName, 'past questions') || str_contains($categoryName, 'ebooks') || str_contains($categoryName, 'publications')) {
-            $fields = [
-                ['name' => 'material_type', 'label' => 'Material Type', 'type' => 'select', 'options' => ['Past Questions', 'Ebook', 'Publication', 'Study Guide', 'Textbook', 'Course Material', 'Other'], 'required' => true],
-                ['name' => 'subject', 'label' => 'Subject/Topic', 'type' => 'text', 'required' => true],
-                ['name' => 'education_level', 'label' => 'Education Level', 'type' => 'select', 'options' => ['Primary', 'Secondary', 'Undergraduate', 'Postgraduate', 'Professional', 'All Levels'], 'required' => true],
-                ['name' => 'format', 'label' => 'Format', 'type' => 'select', 'options' => ['PDF', 'Physical Copy', 'eBook', 'Audio', 'Video', 'Other'], 'required' => true],
-                ['name' => 'year', 'label' => 'Year/Edition', 'type' => 'text', 'required' => false],
-                ['name' => 'author_publisher', 'label' => 'Author/Publisher', 'type' => 'text', 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition (Physical)', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair', 'Digital Only'], 'required' => false],
-            ];
-        }
-
-        // Building Materials category fields
-        elseif (str_contains($categoryName, 'building')) {
-            $fields = [
-                ['name' => 'material_type', 'label' => 'Material Type', 'type' => 'select', 'options' => ['Cement', 'Blocks', 'Roofing Sheets', 'Tiles', 'Plumbing', 'Electrical'], 'required' => true],
-                ['name' => 'quantity', 'label' => 'Quantity Available', 'type' => 'number', 'required' => true],
-                ['name' => 'unit', 'label' => 'Unit (e.g., bags, pieces)', 'type' => 'text', 'required' => true],
-                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
-            ];
-        }
-
-        // Beauty and Personal Care category fields
-        elseif (str_contains($categoryName, 'beauty') || str_contains($categoryName, 'personal care') || str_contains($categoryName, 'skincare') || str_contains($categoryName, 'makeup') || str_contains($categoryName, 'haircare')) {
-            $fields = [
-                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => true],
-                ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Skincare', 'Haircare', 'Makeup', 'Fragrance', 'Wellness', 'Other'], 'required' => true],
-                ['name' => 'size_volume', 'label' => 'Size/Volume', 'type' => 'text', 'required' => false],
-                ['name' => 'skin_hair_type', 'label' => 'Skin/Hair Type', 'type' => 'select', 'options' => ['All Types', 'Oily', 'Dry', 'Combination', 'Sensitive', 'Normal'], 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used', 'Gently Used'], 'required' => true],
-                ['name' => 'expiry_date', 'label' => 'Expiry Date', 'type' => 'text', 'required' => false],
-            ];
-        }
-
-        // Sports and Outdoors category fields
-        elseif (str_contains($categoryName, 'sports') || str_contains($categoryName, 'outdoor') || str_contains($categoryName, 'fitness')) {
-            $fields = [
-                ['name' => 'sport_type', 'label' => 'Sport Type', 'type' => 'select', 'options' => ['Fitness Equipment', 'Team Sports', 'Outdoor Gear', 'Camping', 'Hiking', 'Cycling', 'Water Sports', 'Other'], 'required' => true],
-                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair'], 'required' => true],
-                ['name' => 'size', 'label' => 'Size (if applicable)', 'type' => 'text', 'required' => false],
-                ['name' => 'material', 'label' => 'Material', 'type' => 'text', 'required' => false],
-            ];
-        }
-
-        // Toys and Games category fields
-        elseif (str_contains($categoryName, 'toys') || str_contains($categoryName, 'games')) {
-            $fields = [
-                ['name' => 'toy_type', 'label' => 'Toy/Game Type', 'type' => 'select', 'options' => ['Action Figures', 'Dolls', 'Board Games', 'Puzzles', 'Outdoor Toys', 'Educational', 'Electronic', 'Other'], 'required' => true],
-                ['name' => 'age_range', 'label' => 'Age Range', 'type' => 'select', 'options' => ['0-2 years', '3-5 years', '6-8 years', '9-12 years', '13+ years', 'All Ages'], 'required' => true],
-                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair'], 'required' => true],
-                ['name' => 'number_of_pieces', 'label' => 'Number of Pieces (if applicable)', 'type' => 'number', 'required' => false],
-            ];
-        }
-
         // Books and Media category fields
-        elseif (str_contains($categoryName, 'books') || str_contains($categoryName, 'media') || str_contains($categoryName, 'fiction') || str_contains($categoryName, 'music') || str_contains($categoryName, 'movies')) {
+        elseif (str_contains($categoryName, 'books and media')) {
             $fields = [
                 ['name' => 'media_type', 'label' => 'Media Type', 'type' => 'select', 'options' => ['Fiction Book', 'Non-Fiction Book', 'Music Album', 'Movie/DVD', 'TV Show', 'Magazine', 'Comic/Manga', 'Other'], 'required' => true],
                 ['name' => 'title', 'label' => 'Title', 'type' => 'text', 'required' => true],
@@ -620,64 +504,6 @@ class AdController extends Controller
                 ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair', 'Acceptable'], 'required' => true],
                 ['name' => 'publication_year', 'label' => 'Publication/Release Year', 'type' => 'number', 'required' => false],
                 ['name' => 'language', 'label' => 'Language', 'type' => 'text', 'required' => false],
-            ];
-        }
-
-        // Health and Wellness category fields
-        elseif (str_contains($categoryName, 'health') || str_contains($categoryName, 'wellness')) {
-            $fields = [
-                ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Supplements', 'Fitness Equipment', 'Healthy Snacks', 'Medical Equipment', 'Monitoring Device', 'Other'], 'required' => true],
-                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used'], 'required' => true],
-                ['name' => 'expiry_date', 'label' => 'Expiry Date (if applicable)', 'type' => 'text', 'required' => false],
-                ['name' => 'quantity', 'label' => 'Quantity/Size', 'type' => 'text', 'required' => false],
-            ];
-        }
-
-        // Baby and Kids category fields
-        elseif (str_contains($categoryName, 'baby') || str_contains($categoryName, 'kids')) {
-            $fields = [
-                ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Strollers', 'Car Seats', 'Toys', 'Clothing', 'Nursery Furniture', 'Feeding', 'Diapering', 'Other'], 'required' => true],
-                ['name' => 'age_range', 'label' => 'Age Range', 'type' => 'select', 'options' => ['0-6 months', '6-12 months', '1-2 years', '3-5 years', '6-8 years', '9-12 years'], 'required' => true],
-                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Good', 'Fair'], 'required' => true],
-                ['name' => 'gender', 'label' => 'Gender (if applicable)', 'type' => 'select', 'options' => ['Boy', 'Girl', 'Unisex'], 'required' => false],
-                ['name' => 'size', 'label' => 'Size (if applicable)', 'type' => 'text', 'required' => false],
-            ];
-        }
-
-        // Pet Care category fields
-        elseif (str_contains($categoryName, 'pet')) {
-            $fields = [
-                ['name' => 'product_type', 'label' => 'Product Type', 'type' => 'select', 'options' => ['Food', 'Toys', 'Grooming', 'Health/Medicine', 'Accessories', 'Housing', 'Training', 'Other'], 'required' => true],
-                ['name' => 'pet_type', 'label' => 'Pet Type', 'type' => 'select', 'options' => ['Dog', 'Cat', 'Bird', 'Fish', 'Small Animals', 'Reptile', 'All Pets'], 'required' => true],
-                ['name' => 'brand', 'label' => 'Brand', 'type' => 'text', 'required' => false],
-                ['name' => 'size_weight', 'label' => 'Size/Weight', 'type' => 'text', 'required' => false],
-                ['name' => 'condition', 'label' => 'Condition', 'type' => 'select', 'options' => ['New', 'Like New', 'Used'], 'required' => true],
-                ['name' => 'expiry_date', 'label' => 'Expiry Date (if applicable)', 'type' => 'text', 'required' => false],
-            ];
-        }
-
-        // Jobs category fields
-        elseif (str_contains($categoryName, 'jobs') || str_contains($categoryName, 'full-time') || str_contains($categoryName, 'part-time') || str_contains($categoryName, 'internship') || str_contains($categoryName, 'freelance')) {
-            $fields = [
-                ['name' => 'job_type', 'label' => 'Job Type', 'type' => 'select', 'options' => ['Full-time', 'Part-time', 'Internship', 'Freelance', 'Contract', 'Temporary'], 'required' => true],
-                ['name' => 'industry', 'label' => 'Industry', 'type' => 'select', 'options' => ['Technology', 'Finance', 'Healthcare', 'Education', 'Retail', 'Hospitality', 'Manufacturing', 'Marketing', 'Sales', 'Other'], 'required' => true],
-                ['name' => 'experience_level', 'label' => 'Experience Level', 'type' => 'select', 'options' => ['Entry Level', 'Junior', 'Mid-Level', 'Senior', 'Executive'], 'required' => true],
-                ['name' => 'salary_range', 'label' => 'Salary Range (Optional)', 'type' => 'text', 'required' => false],
-                ['name' => 'company_name', 'label' => 'Company Name', 'type' => 'text', 'required' => false],
-                ['name' => 'remote_option', 'label' => 'Remote Option', 'type' => 'select', 'options' => ['On-site', 'Remote', 'Hybrid'], 'required' => false],
-            ];
-        }
-
-        // Services category fields
-        elseif (str_contains($categoryName, 'services') || str_contains($categoryName, 'beauty service') || str_contains($categoryName, 'tutoring')) {
-            $fields = [
-                ['name' => 'service_type', 'label' => 'Service Type', 'type' => 'select', 'options' => ['Beauty', 'Pet Care', 'Home Cleaning', 'Tutoring', 'Repair', 'Moving', 'Event Planning', 'Photography', 'Other'], 'required' => true],
-                ['name' => 'experience_years', 'label' => 'Years of Experience', 'type' => 'number', 'required' => false],
-                ['name' => 'pricing_type', 'label' => 'Pricing Type', 'type' => 'select', 'options' => ['Hourly', 'Per Session', 'Fixed Rate', 'Negotiable'], 'required' => true],
-                ['name' => 'availability', 'label' => 'Availability', 'type' => 'select', 'options' => ['Weekdays', 'Weekends', 'Evenings', 'Flexible'], 'required' => false],
-                ['name' => 'service_location', 'label' => 'Service Location', 'type' => 'select', 'options' => ['Client Location', 'Provider Location', 'Both'], 'required' => false],
             ];
         }
 

@@ -110,6 +110,7 @@ class AdminController extends Controller
     public function approveAd(Request $request, Ad $ad)
     {
         $ad->status = 'active';
+        $ad->approved_at = now();
         $ad->save();
         return response()->json($ad);
     }
@@ -139,11 +140,11 @@ class AdminController extends Controller
     }
 
     /**
-     * Get all educational materials with filtering and pagination
+     * Get all books with filtering and pagination
      */
-    public function getMaterials(Request $request)
+    public function getBooks(Request $request)
     {
-        $query = Ad::whereIn('category_id', [83, 84, 85, 86]) // Educational materials categories
+        $query = Ad::where('category_id', 7) // Books and Media
             ->whereNotNull('file_path')
             ->with(['user:id,name,email', 'category:id,name']);
 
@@ -173,34 +174,34 @@ class AdminController extends Controller
         $sortOrder = $request->get('sort_order', 'desc');
         $query->orderBy($sortBy, $sortOrder);
 
-        $materials = $query->paginate($request->get('per_page', 15));
+        $books = $query->paginate($request->get('per_page', 15));
 
-        // Add additional data to each material
-        $materials->getCollection()->transform(function ($material) {
-            $material->file_size = $this->getFileSize($material->file_path);
-            $material->file_type = strtoupper(pathinfo($material->file_path, PATHINFO_EXTENSION));
-            $material->sales_count = Payment::where('payable_id', $material->id)
-                ->where('payable_type', 'educational_material')
+        // Add additional data to each book
+        $books->getCollection()->transform(function ($book) {
+            $book->file_size = $this->getFileSize($book->file_path);
+            $book->file_type = strtoupper(pathinfo($book->file_path, PATHINFO_EXTENSION));
+            $book->sales_count = Payment::where('payable_id', $book->id)
+                ->where('payable_type', 'book')
                 ->where('status', 'success')
                 ->count();
-            $material->total_earnings = Payment::where('payable_id', $material->id)
-                ->where('payable_type', 'educational_material')
+            $book->total_earnings = Payment::where('payable_id', $book->id)
+                ->where('payable_type', 'book')
                 ->where('status', 'success')
                 ->sum('amount');
-            return $material;
+            return $book;
         });
 
-        return response()->json($materials);
+        return response()->json($books);
     }
 
     /**
-     * Get detailed view of a specific educational material
+     * Get detailed view of a specific book
      */
-    public function showMaterial(Ad $ad)
+    public function showBook(Ad $ad)
     {
-        // Verify this is an educational material
-        if (!in_array($ad->category_id, [83, 84, 85, 86]) || !$ad->file_path) {
-            return response()->json(['message' => 'Not an educational material'], 404);
+        // Verify this is a book
+        if ($ad->category_id !== 7 || !$ad->file_path) {
+            return response()->json(['message' => 'Not a book'], 404);
         }
 
         $ad->load(['user:id,name,email,phone_number', 'category:id,name']);
@@ -209,17 +210,17 @@ class AdminController extends Controller
         $ad->file_size = $this->getFileSize($ad->file_path);
         $ad->file_type = strtoupper(pathinfo($ad->file_path, PATHINFO_EXTENSION));
         $ad->sales_count = Payment::where('payable_id', $ad->id)
-            ->where('payable_type', 'educational_material')
+            ->where('payable_type', 'book')
             ->where('status', 'success')
             ->count();
         $ad->total_earnings = Payment::where('payable_id', $ad->id)
-            ->where('payable_type', 'educational_material')
+            ->where('payable_type', 'book')
             ->where('status', 'success')
             ->sum('amount');
 
         // Get recent purchases
         $ad->recent_purchases = Payment::where('payable_id', $ad->id)
-            ->where('payable_type', 'educational_material')
+            ->where('payable_type', 'book')
             ->where('status', 'success')
             ->with('user:id,name,email')
             ->latest()
@@ -230,13 +231,13 @@ class AdminController extends Controller
     }
 
     /**
-     * Approve an educational material
+     * Approve a book
      */
-    public function approveMaterial(Request $request, Ad $ad)
+    public function approveBook(Request $request, Ad $ad)
     {
-        // Verify this is an educational material
-        if (!in_array($ad->category_id, [83, 84, 85, 86]) || !$ad->file_path) {
-            return response()->json(['message' => 'Not an educational material'], 404);
+        // Verify this is a book
+        if ($ad->category_id !== 7 || !$ad->file_path) {
+            return response()->json(['message' => 'Not a book'], 404);
         }
 
         $oldStatus = $ad->status;
@@ -245,35 +246,35 @@ class AdminController extends Controller
         $ad->save();
 
         // Log the approval
-        Log::info('Educational material approved', [
-            'material_id' => $ad->id,
+        Log::info('Book approved', [
+            'book_id' => $ad->id,
             'title' => $ad->title,
             'approved_by' => auth()->user()->name,
             'previous_status' => $oldStatus
         ]);
 
         // TODO: Send notification email to the agent/user
-        // Mail::to($ad->user->email)->send(new MaterialApproved($ad));
+        // Mail::to($ad->user->email)->send(new BookApproved($ad));
 
         return response()->json([
             'success' => true,
-            'message' => 'Educational material approved successfully',
-            'material' => $ad->fresh(['user', 'category'])
+            'message' => 'Book approved successfully',
+            'book' => $ad->fresh(['user', 'category'])
         ]);
     }
 
     /**
-     * Reject an educational material
+     * Reject a book
      */
-    public function rejectMaterial(Request $request, Ad $ad)
+    public function rejectBook(Request $request, Ad $ad)
     {
         $request->validate([
             'rejection_reason' => 'required|string|max:500'
         ]);
 
-        // Verify this is an educational material
-        if (!in_array($ad->category_id, [83, 84, 85, 86]) || !$ad->file_path) {
-            return response()->json(['message' => 'Not an educational material'], 404);
+        // Verify this is a book
+        if ($ad->category_id !== 7 || !$ad->file_path) {
+            return response()->json(['message' => 'Not a book'], 404);
         }
 
         $oldStatus = $ad->status;
@@ -283,8 +284,8 @@ class AdminController extends Controller
         $ad->save();
 
         // Log the rejection
-        Log::info('Educational material rejected', [
-            'material_id' => $ad->id,
+        Log::info('Book rejected', [
+            'book_id' => $ad->id,
             'title' => $ad->title,
             'rejected_by' => auth()->user()->name,
             'previous_status' => $oldStatus,
@@ -292,27 +293,27 @@ class AdminController extends Controller
         ]);
 
         // TODO: Send notification email to the agent/user
-        // Mail::to($ad->user->email)->send(new MaterialRejected($ad));
+        // Mail::to($ad->user->email)->send(new BookRejected($ad));
 
         return response()->json([
             'success' => true,
-            'message' => 'Educational material rejected',
-            'material' => $ad->fresh(['user', 'category'])
+            'message' => 'Book rejected',
+            'book' => $ad->fresh(['user', 'category'])
         ]);
     }
 
     /**
-     * Delete an educational material
+     * Delete a book
      */
-    public function deleteMaterial(Request $request, Ad $ad)
+    public function deleteBook(Request $request, Ad $ad)
     {
         $request->validate([
             'deletion_reason' => 'required|string|max:500'
         ]);
 
-        // Verify this is an educational material
-        if (!in_array($ad->category_id, [83, 84, 85, 86]) || !$ad->file_path) {
-            return response()->json(['message' => 'Not an educational material'], 404);
+        // Verify this is a book
+        if ($ad->category_id !== 7 || !$ad->file_path) {
+            return response()->json(['message' => 'Not a book'], 404);
         }
 
         try {
@@ -325,8 +326,8 @@ class AdminController extends Controller
             }
 
             // Log the deletion before deleting the record
-            Log::info('Educational material deleted by admin', [
-                'material_id' => $ad->id,
+            Log::info('Book deleted by admin', [
+                'book_id' => $ad->id,
                 'title' => $ad->title,
                 'deleted_by' => auth()->user()->name,
                 'reason' => $request->deletion_reason,
@@ -335,52 +336,52 @@ class AdminController extends Controller
 
             // Delete any related payments (set status to refunded if needed)
             Payment::where('payable_id', $ad->id)
-                ->where('payable_type', 'educational_material')
-                ->update(['status' => 'refunded', 'notes' => 'Material deleted by admin: ' . $request->deletion_reason]);
+                ->where('payable_type', 'book')
+                ->update(['status' => 'refunded', 'notes' => 'Book deleted by admin: ' . $request->deletion_reason]);
 
             $ad->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Educational material deleted successfully'
+                'message' => 'Book deleted successfully'
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to delete educational material', [
-                'material_id' => $ad->id,
+            Log::error('Failed to delete book', [
+                'book_id' => $ad->id,
                 'error' => $e->getMessage()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete educational material'
+                'message' => 'Failed to delete book'
             ], 500);
         }
     }
 
     /**
-     * Get educational materials statistics
+     * Get books statistics
      */
-    public function getMaterialsStats()
+    public function getBooksStats()
     {
         $stats = [
-            'total_materials' => Ad::whereIn('category_id', [83, 84, 85, 86])
+            'total_books' => Ad::where('category_id', 7)
                 ->whereNotNull('file_path')->count(),
-            'pending_approval' => Ad::whereIn('category_id', [83, 84, 85, 86])
+            'pending_approval' => Ad::where('category_id', 7)
                 ->whereNotNull('file_path')
                 ->where('status', 'pending_approval')->count(),
-            'approved_materials' => Ad::whereIn('category_id', [83, 84, 85, 86])
+            'approved_books' => Ad::where('category_id', 7)
                 ->whereNotNull('file_path')
                 ->where('status', 'active')->count(),
-            'rejected_materials' => Ad::whereIn('category_id', [83, 84, 85, 86])
+            'rejected_books' => Ad::where('category_id', 7)
                 ->whereNotNull('file_path')
                 ->where('status', 'rejected')->count(),
-            'total_sales' => Payment::where('payable_type', 'educational_material')
+            'total_sales' => Payment::where('payable_type', 'book')
                 ->where('status', 'success')->count(),
-            'total_revenue' => Payment::where('payable_type', 'educational_material')
+            'total_revenue' => Payment::where('payable_type', 'book')
                 ->where('status', 'success')->sum('amount'),
             'top_agents' => $this->getTopAgents(),
-            'materials_by_category' => $this->getMaterialsByCategory(),
+            'books_by_category' => $this->getBooksByCategory(),
             'recent_uploads' => $this->getRecentUploads()
         ];
 
@@ -420,27 +421,27 @@ class AdminController extends Controller
     private function getTopAgents()
     {
         return User::where('is_agent', true)
-            ->withCount(['ads as materials_count' => function ($query) {
-                $query->whereIn('category_id', [83, 84, 85, 86])
+            ->withCount(['ads as books_count' => function ($query) {
+                $query->where('category_id', 7)
                       ->whereNotNull('file_path');
             }])
             ->with(['ads' => function ($query) {
-                $query->whereIn('category_id', [83, 84, 85, 86])
+                $query->where('category_id', 7)
                       ->whereNotNull('file_path');
             }])
-            ->orderBy('materials_count', 'desc')
+            ->orderBy('books_count', 'desc')
             ->take(5)
             ->get()
             ->map(function ($agent) {
                 // Calculate sales count from payments table
-                $materialIds = $agent->ads->pluck('id');
-                $totalSales = Payment::whereIn('payable_id', $materialIds)
-                    ->where('payable_type', 'educational_material')
+                $bookIds = $agent->ads->pluck('id');
+                $totalSales = Payment::whereIn('payable_id', $bookIds)
+                    ->where('payable_type', 'book')
                     ->where('status', 'success')
                     ->count();
 
-                $totalEarnings = Payment::whereIn('payable_id', $materialIds)
-                    ->where('payable_type', 'educational_material')
+                $totalEarnings = Payment::whereIn('payable_id', $bookIds)
+                    ->where('payable_type', 'book')
                     ->where('status', 'success')
                     ->sum('amount');
 
@@ -448,7 +449,7 @@ class AdminController extends Controller
                     'id' => $agent->id,
                     'name' => $agent->name,
                     'email' => $agent->email,
-                    'materials_count' => $agent->materials_count,
+                    'books_count' => $agent->books_count,
                     'total_sales' => $totalSales,
                     'total_earnings' => $totalEarnings
                 ];
@@ -456,11 +457,11 @@ class AdminController extends Controller
     }
 
     /**
-     * Get materials by category breakdown
+     * Get books by category breakdown
      */
-    private function getMaterialsByCategory()
+    private function getBooksByCategory()
     {
-        return Ad::whereIn('category_id', [83, 84, 85, 86])
+        return Ad::where('category_id', 7)
             ->whereNotNull('file_path')
             ->join('categories', 'ads.category_id', '=', 'categories.id')
             ->selectRaw('categories.name as category_name, COUNT(*) as count')
@@ -470,25 +471,25 @@ class AdminController extends Controller
     }
 
     /**
-     * Get recent material uploads
+     * Get recent book uploads
      */
     private function getRecentUploads()
     {
-        return Ad::whereIn('category_id', [83, 84, 85, 86])
+        return Ad::where('category_id', 7)
             ->whereNotNull('file_path')
             ->with(['user:id,name,email', 'category:id,name'])
             ->latest()
             ->take(10)
             ->get()
-            ->map(function ($material) {
+            ->map(function ($book) {
                 return [
-                    'id' => $material->id,
-                    'title' => $material->title,
-                    'status' => $material->status,
-                    'agent_name' => $material->user->name ?? 'Unknown',
-                    'category' => $material->category->name ?? 'Unknown',
-                    'created_at' => $material->created_at,
-                    'file_type' => strtoupper(pathinfo($material->file_path, PATHINFO_EXTENSION)),
+                    'id' => $book->id,
+                    'title' => $book->title,
+                    'status' => $book->status,
+                    'agent_name' => $book->user->name ?? 'Unknown',
+                    'category' => $book->category->name ?? 'Unknown',
+                    'created_at' => $book->created_at,
+                    'file_type' => strtoupper(pathinfo($book->file_path, PATHINFO_EXTENSION)),
                 ];
             });
     }

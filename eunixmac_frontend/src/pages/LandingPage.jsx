@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Container } from '@mui/material';
 import HeroSection from '../components/HeroSection';
 import CategoryGrid from '../components/CategoryGrid';
-import FeaturedAds from '../components/FeaturedAds';
+import TrendingAds from '../components/TrendingAds';
 import HowItWorks from '../components/HowItWorks';
 import Testimonials from '../components/Testimonials';
 import CallToAction from '../components/CallToAction';
@@ -113,7 +113,7 @@ const LandingPage = () => {
                         }
                     }}
                 >
-                    <FeaturedAds />
+                    <TrendingAds />
                 </Container>
             </Box>
             

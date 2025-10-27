@@ -19,7 +19,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AdController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\EducationalMaterialController;
+use App\Http\Controllers\BookController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SocialLoginController;
 use App\Http\Controllers\SupportController;
@@ -91,15 +91,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ads/{ad}/messages', [MessageController::class, 'store']);
     Route::put('/conversations/{conversationId}/read', [MessageController::class, 'markAsRead']);
 
-    Route::get('/educational-materials', [EducationalMaterialController::class, 'index']);
-    Route::get('/educational-materials/{ad}', [EducationalMaterialController::class, 'show']);
-    Route::post('/educational-materials/{ad}/pay', [EducationalMaterialController::class, 'initiatePayment']);
-    Route::get('/educational-materials/{ad}/download', [EducationalMaterialController::class, 'download']);
+    Route::get('/books', [BookController::class, 'index']);
+    Route::get('/books/{ad}', [BookController::class, 'show']);
+    Route::post('/books/{ad}/pay', [BookController::class, 'initiatePayment']);
+    Route::get('/books/{ad}/download', [BookController::class, 'download']);
 
     Route::middleware('can:agent')->group(function () {
-        Route::post('/educational-materials', [EducationalMaterialController::class, 'store']);
-        Route::put('/educational-materials/{ad}', [EducationalMaterialController::class, 'update']);
-        Route::delete('/educational-materials/{ad}', [EducationalMaterialController::class, 'destroy']);
+        Route::post('/books', [BookController::class, 'store']);
+        Route::put('/books/{ad}', [BookController::class, 'update']);
+        Route::delete('/books/{ad}', [BookController::class, 'destroy']);
     });
 
     // Admin routes
@@ -143,13 +143,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/admin/dashboard-stats', [AdminController::class, 'getDashboardStats']);
 
-        // Educational materials management
-        Route::get('/admin/materials', [AdminController::class, 'getMaterials']);
-        Route::get('/admin/materials/{ad}', [AdminController::class, 'showMaterial']);
-        Route::put('/admin/materials/{ad}/approve', [AdminController::class, 'approveMaterial']);
-        Route::put('/admin/materials/{ad}/reject', [AdminController::class, 'rejectMaterial']);
-        Route::delete('/admin/materials/{ad}', [AdminController::class, 'deleteMaterial']);
-        Route::get('/admin/materials-stats', [AdminController::class, 'getMaterialsStats']);
+        // Books management
+        Route::get('/admin/books', [AdminController::class, 'getBooks']);
+        Route::get('/admin/books/{ad}', [AdminController::class, 'showBook']);
+        Route::put('/admin/books/{ad}/approve', [AdminController::class, 'approveBook']);
+        Route::put('/admin/books/{ad}/reject', [AdminController::class, 'rejectBook']);
+        Route::delete('/admin/books/{ad}', [AdminController::class, 'deleteBook']);
+        Route::get('/admin/books-stats', [AdminController::class, 'getBooksStats']);
 
     });
 });

@@ -41,32 +41,32 @@ import useApi from '../../hooks/useApi';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 
-const EducationalMaterialsSection = ({ materials, onRefresh }) => {
+const BooksSection = ({ books, onRefresh }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [selectedBook, setSelectedBook] = useState(null);
   const { callApi, loading } = useApi();
   const navigate = useNavigate();
 
-  const handleViewMaterial = (material) => {
-    navigate(`/educational-materials/${material.id}`);
+  const handleViewBook = (book) => {
+    navigate(`/books/${book.id}`);
   };
 
-  const handleEditMaterial = (material) => {
-    navigate(`/educational-materials/${material.id}/edit`);
+  const handleEditBook = (book) => {
+    navigate(`/books/${book.id}/edit`);
   };
 
-  const handleDeleteMaterial = async () => {
-    if (!selectedMaterial) return;
+  const handleDeleteBook = async () => {
+    if (!selectedBook) return;
 
     try {
-      await callApi('DELETE', `/educational-materials/${selectedMaterial.id}`);
-      toast.success('Material deleted successfully');
+      await callApi('DELETE', `/books/${selectedBook.id}`);
+      toast.success('Book deleted successfully');
       setDeleteDialogOpen(false);
-      setSelectedMaterial(null);
+      setSelectedBook(null);
       if (onRefresh) onRefresh();
     } catch (error) {
-      console.error('Error deleting material:', error);
-      toast.error(error.message || 'Failed to delete material');
+      console.error('Error deleting book:', error);
+      toast.error(error.message || 'Failed to delete book');
     }
   };
 
@@ -102,12 +102,12 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
     }
   };
 
-  const materialStats = {
-    total: materials?.length || 0,
-    active: materials?.filter(m => m.status === 'active').length || 0,
-    pending: materials?.filter(m => m.status === 'pending').length || 0,
-    total_sales: materials?.reduce((sum, m) => sum + (m.sales_count || 0), 0) || 0,
-    total_earnings: materials?.reduce((sum, m) => sum + (m.total_earnings || 0), 0) || 0
+  const bookStats = {
+    total: books?.length || 0,
+    active: books?.filter(m => m.status === 'active').length || 0,
+    pending: books?.filter(m => m.status === 'pending').length || 0,
+    total_sales: books?.reduce((sum, m) => sum + (m.sales_count || 0), 0) || 0,
+    total_earnings: books?.reduce((sum, m) => sum + (m.total_earnings || 0), 0) || 0
   };
 
   return (
@@ -115,19 +115,19 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-            My Educational Materials
+            My Books
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Manage your uploaded educational materials and track sales
+            Manage your uploaded books and track sales
           </Typography>
         </Box>
         <Button
           variant="contained"
           startIcon={<Add />}
-          href="/educational-materials/upload"
+          href="/books/upload"
           size="large"
         >
-          Upload Material
+          Upload Book
         </Button>
       </Box>
 
@@ -139,23 +139,23 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
       >
         <EnhancedStatCard
           icon={School}
-          value={materialStats.total}
-          label="Total Materials"
+          value={bookStats.total}
+          label="Total Books"
           color="#3b82f6"
           size="medium"
         />
 
         <EnhancedStatCard
           icon={CheckCircle}
-          value={materialStats.active}
-          label="Active Materials"
+          value={bookStats.active}
+          label="Active Books"
           color="#10b981"
           size="medium"
         />
 
         <EnhancedStatCard
           icon={Schedule}
-          value={materialStats.pending}
+          value={bookStats.pending}
           label="Pending Review"
           color="#f59e0b"
           size="medium"
@@ -163,7 +163,7 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
 
         <EnhancedStatCard
           icon={Analytics}
-          value={materialStats.total_sales}
+          value={bookStats.total_sales}
           label="Total Sales"
           color="#8b5cf6"
           size="medium"
@@ -171,30 +171,30 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
 
         <EnhancedStatCard
           icon={AttachMoney}
-          value={`₦${materialStats.total_earnings.toLocaleString()}`}
+          value={`₦${bookStats.total_earnings.toLocaleString()}`}
           label="Total Earnings"
           color="#059669"
           size="medium"
         />
       </StatCardsContainer>
 
-      {/* Materials Table */}
-      {materials?.length === 0 ? (
+      {/* Books Table */}
+      {books?.length === 0 ? (
         <Card>
           <CardContent sx={{ textAlign: 'center', py: 6 }}>
             <CloudUpload sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              No materials uploaded yet
+              No books uploaded yet
             </Typography>
             <Typography variant="body2" color="text.secondary" mb={3}>
-              Start by uploading your first educational material to earn from sales.
+              Start by uploading your first book to earn from sales.
             </Typography>
             <Button 
               variant="contained" 
               startIcon={<Add />} 
-              href="/educational-materials/upload"
+              href="/books/upload"
             >
-              Upload Your First Material
+              Upload Your First Book
             </Button>
           </CardContent>
         </Card>
@@ -204,7 +204,7 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Material Details</TableCell>
+                  <TableCell>Book Details</TableCell>
                   <TableCell>Type</TableCell>
                   <TableCell>Price</TableCell>
                   <TableCell>Sales</TableCell>
@@ -214,70 +214,70 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {materials.map((material) => (
-                  <TableRow key={material.id} hover>
+                {books.map((book) => (
+                  <TableRow key={book.id} hover>
                     <TableCell>
                       <Box>
                         <Typography variant="body1" fontWeight="bold">
-                          {material.title}
+                          {book.title}
                         </Typography>
                         <Typography variant="body2" color="text.secondary" noWrap sx={{ maxWidth: 200 }}>
-                          {material.description}
+                          {book.description}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {material.file_type} • {material.file_size}
+                          {book.file_type} • {book.file_size}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={material.category || 'General'}
+                        label={book.category || 'General'}
                         size="small"
                         variant="outlined"
                       />
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight="bold">
-                        ₦{material.price?.toLocaleString()}
+                        ₦{book.price?.toLocaleString()}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Box>
                         <Typography variant="body2" fontWeight="bold">
-                          {material.sales_count || 0} sales
+                          {book.sales_count || 0} sales
                         </Typography>
                         <Typography variant="caption" color="success.main">
-                          ₦{material.total_earnings?.toLocaleString() || 0}
+                          ₦{book.total_earnings?.toLocaleString() || 0}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={material.status || 'pending'}
-                        color={getStatusColor(material.status)}
+                        label={book.status || 'pending'}
+                        color={getStatusColor(book.status)}
                         size="small"
-                        icon={getStatusIcon(material.status)}
+                        icon={getStatusIcon(book.status)}
                       />
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {material.created_at ? format(new Date(material.created_at), 'MMM dd, yyyy') : 'N/A'}
+                        {book.created_at ? format(new Date(book.created_at), 'MMM dd, yyyy') : 'N/A'}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Stack direction="row" spacing={1}>
                         <IconButton
                           size="small"
-                          onClick={() => handleViewMaterial(material)}
-                          title="View Material"
+                          onClick={() => handleViewBook(book)}
+                          title="View Book"
                         >
                           <Visibility />
                         </IconButton>
 
                         <IconButton
                           size="small"
-                          onClick={() => handleEditMaterial(material)}
-                          title="Edit Material"
+                          onClick={() => handleEditBook(book)}
+                          title="Edit Book"
                         >
                           <Edit />
                         </IconButton>
@@ -285,11 +285,11 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
                         <IconButton
                           size="small"
                           onClick={() => {
-                            setSelectedMaterial(material);
+                            setSelectedBook(book);
                             setDeleteDialogOpen(true);
                           }}
                           color="error"
-                          title="Delete Material"
+                          title="Delete Book"
                         >
                           <Delete />
                         </IconButton>
@@ -313,7 +313,7 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
             <Typography variant="body2">
               <strong>Accepted formats:</strong> PDF, DOC, DOCX, PPT, PPTX<br/>
               <strong>Maximum file size:</strong> 10MB<br/>
-              <strong>Content policy:</strong> Only educational materials are allowed. All uploads are reviewed before approval.
+              <strong>Content policy:</strong> Only books are allowed. All uploads are reviewed before approval.
             </Typography>
           </Alert>
         </CardContent>
@@ -321,15 +321,15 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Educational Material</DialogTitle>
+        <DialogTitle>Delete Book</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{selectedMaterial?.title}"? This action cannot be undone and will also remove it from the marketplace.
+            Are you sure you want to delete "{selectedBook?.title}"? This action cannot be undone and will also remove it from the marketplace.
           </Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteMaterial} color="error" disabled={loading}>
+          <Button onClick={handleDeleteBook} color="error" disabled={loading}>
             Delete
           </Button>
         </DialogActions>
@@ -338,4 +338,4 @@ const EducationalMaterialsSection = ({ materials, onRefresh }) => {
   );
 };
 
-export default EducationalMaterialsSection;
+export default BooksSection;

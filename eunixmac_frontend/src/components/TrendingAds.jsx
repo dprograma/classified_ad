@@ -4,7 +4,7 @@ import { FavoriteBorder, Visibility, LocationOn, Favorite } from '@mui/icons-mat
 import { useNavigate } from 'react-router-dom';
 import useSlowApi from '../hooks/useSlowApi';
 
-const FeaturedAds = () => {
+const TrendingAds = () => {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [favorites, setFavorites] = useState(new Set());
   const [ads, setAds] = useState([]);
@@ -22,12 +22,12 @@ const FeaturedAds = () => {
   }, []);
 
   useEffect(() => {
-    fetchFeaturedAds();
+    fetchTrendingAds();
   }, []);
 
-  const fetchFeaturedAds = async () => {
+  const fetchTrendingAds = async () => {
     // Check cache first
-    const cacheKey = 'featured_ads';
+    const cacheKey = 'trending_ads';
     const cachedAds = sessionStorage.getItem(cacheKey);
     const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
     const now = Date.now();
@@ -40,13 +40,13 @@ const FeaturedAds = () => {
         setLoading(false);
         return;
       } catch (parseError) {
-        console.warn('Failed to parse cached featured ads:', parseError);
+        console.warn('Failed to parse cached trending ads:', parseError);
         // Continue to fetch from API
       }
     }
 
     try {
-      const data = await callApi('GET', '/ads?limit=8');
+      const data = await callApi('GET', '/ads?sort_by=created_at&sort_order=desc&limit=8');
       if (data && data.data && Array.isArray(data.data)) {
         setAds(data.data);
       } else if (data && Array.isArray(data)) {
@@ -56,7 +56,7 @@ const FeaturedAds = () => {
       }
       
     } catch (error) {
-      console.error('Error fetching featured ads:', error);
+      console.error('Error fetching trending ads:', error);
       setAds([]);
     } finally {
       setLoading(false);
@@ -100,7 +100,7 @@ const FeaturedAds = () => {
   return (
     <Box
       component="section"
-      aria-labelledby="featured-ads-heading"
+      aria-labelledby="trending-ads-heading"
       sx={{
         width: '100%',
         padding: {
@@ -112,7 +112,7 @@ const FeaturedAds = () => {
       }}
     >
       <Typography 
-        id="featured-ads-heading"
+        id="trending-ads-heading"
         variant="h2" 
         component="h2" 
         sx={{ 
@@ -137,7 +137,7 @@ const FeaturedAds = () => {
           WebkitTextFillColor: 'transparent',
         }}
       >
-        Featured Ads
+        Trending Ads
       </Typography>
 
       {loading ? (
@@ -171,7 +171,7 @@ const FeaturedAds = () => {
               fontWeight: 600,
             }}
           >
-            No featured ads at the moment
+            No trending ads at the moment
           </Typography>
           <Typography 
             variant="body1" 
@@ -181,7 +181,7 @@ const FeaturedAds = () => {
               lineHeight: 1.6
             }}
           >
-            Check back later for featured ads from our community
+            Check back later for trending ads from our community
           </Typography>
         </Box>
       ) : null}
@@ -574,4 +574,4 @@ const FeaturedAds = () => {
   );
 };
 
-export default FeaturedAds;
+export default TrendingAds;

@@ -32,6 +32,8 @@ function PostAd() {
   const [images, setImages] = useState([]);
   const [imagePreview, setImagePreview] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [subCategories, setSubCategories] = useState([]);
+  const [selectedParentCategory, setSelectedParentCategory] = useState('');
   const [categoryFields, setCategoryFields] = useState([]);
   const { callApi, loading } = useApi();
   const [errors, setErrors] = useState({});
@@ -69,6 +71,13 @@ function PostAd() {
   useEffect(() => {
     fetchCategoryFields();
   }, [formData.category_id]);
+
+  const handleParentCategoryChange = (parentId) => {
+    setSelectedParentCategory(parentId);
+    const parent = categories.find(cat => cat.id === parentId);
+    setSubCategories(parent ? parent.children : []);
+    handleInputChange('category_id', ''); // Reset sub-category
+  };
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -179,7 +188,7 @@ function PostAd() {
     
     // Add images
     images.forEach((image, index) => {
-      submitData.append(`images`, image);
+      submitData.append(`images[]`, image);
     });
 
     try {
@@ -297,8 +306,8 @@ function PostAd() {
       <Container maxWidth="md">
         <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <Alert severity="success" sx={{ width: '100%', mb: 3 }}>
-            <Typography variant="h6">Ad Posted Successfully!</Typography>
-            <Typography>Your ad has been posted and is now live on the platform.</Typography>
+            <Typography variant="h6">Ad Submitted Successfully!</Typography>
+            <Typography>Your ad has been submitted and is pending review. It will be live once approved.</Typography>
           </Alert>
           <Button variant="contained" onClick={() => setSubmitSuccess(false)}>
             Post Another Ad
@@ -356,50 +365,52 @@ function PostAd() {
                 >
                   <InputLabel>Category</InputLabel>
                   <Select
-                    value={formData.category_id}
+                    value={selectedParentCategory}
                     label="Category"
-                    onChange={(e) => handleInputChange('category_id', e.target.value)}
-                    MenuProps={{
-                      PaperProps: {
-                        style: {
-                          maxHeight: '300px',
-                          width: 'auto',
-                          marginTop: '8px'
-                        },
-                      },
-                    }}
-                    sx={{
-                      width: '100%',
-                      minWidth: '250px',
-                      '& .MuiInputBase-root': {
-                        width: '100%'
-                      },
-                      '& .MuiSelect-select': {
-                        padding: '16.5px 14px',
-                        width: 'auto',
-                        minWidth: 'calc(100% - 28px)'
-                      }
-                    }}
+                    onChange={(e) => handleParentCategoryChange(e.target.value)}
                   >
                     {categories.map((category) => (
                       <MenuItem 
                         key={category.id} 
                         value={category.id}
-                        sx={{
-                          whiteSpace: 'normal', // Allow text to wrap in menu items
-                          padding: '12px 16px', // Add more padding for better touch targets
-                          '&:hover': {
-                            backgroundColor: 'rgba(0, 0, 0, 0.04)' // Subtle hover effect
-                          }
-                        }}
                       >
                         {category.name}
                       </MenuItem>
                     ))}
                   </Select>
-                  {errors.category_id && <FormHelperText>{errors.category_id}</FormHelperText>}
                 </FormControl>
               </Grid>
+
+              {subCategories.length > 0 && (
+                <Grid item xs={12} md={6}>
+                  <FormControl 
+                    fullWidth 
+                    required 
+                    error={!!errors.category_id}
+                    sx={{ 
+                      width: '100%',
+                      minWidth: '250px'
+                    }}
+                  >
+                    <InputLabel>Sub-Category</InputLabel>
+                    <Select
+                      value={formData.category_id}
+                      label="Sub-Category"
+                      onChange={(e) => handleInputChange('category_id', e.target.value)}
+                    >
+                      {subCategories.map((category) => (
+                        <MenuItem 
+                          key={category.id} 
+                          value={category.id}
+                        >
+                          {category.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.category_id && <FormHelperText>{errors.category_id}</FormHelperText>}
+                  </FormControl>
+                </Grid>
+              )}
               
               <Grid item xs={12}>
                 <TextField

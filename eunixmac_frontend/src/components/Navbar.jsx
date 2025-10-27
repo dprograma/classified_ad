@@ -246,7 +246,7 @@ function Navbar() {
               lineHeight: 1,
             }}
           >
-            Classified Ads
+            Eunixma
           </Typography>
         </LogoBox>
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', flexGrow: 1, mx: 2 }}>
@@ -383,6 +383,15 @@ function Navbar() {
                   <ListItemText primary="Settings" />
                 </ModernMenuItem>
 
+                {user?.is_admin && (
+                  <ModernMenuItem onClick={() => { navigate('/dashboard?tab=admin-ads'); handleClose(); }}>
+                    <ListItemIcon>
+                      <DashboardIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Ads Management" />
+                  </ModernMenuItem>
+                )}
+
                 <LogoutMenuItem onClick={handleLogout}>
                   <ListItemIcon>
                     <LogoutIcon />
@@ -434,6 +443,11 @@ function Navbar() {
                 <ListItem component={Link} to="/settings" onClick={handleDrawerToggle}>
                   <ListItemText primary="Settings" />
                 </ListItem>
+                {user?.is_admin && (
+                  <ListItem component={Link} to="/dashboard?tab=admin-ads" onClick={handleDrawerToggle}>
+                    <ListItemText primary="Ads Management" />
+                  </ListItem>
+                )}
                 <ListItem onClick={handleLogout}>
                   <ListItemText primary="Logout" />
                 </ListItem>

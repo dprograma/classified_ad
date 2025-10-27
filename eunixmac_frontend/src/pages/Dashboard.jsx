@@ -80,14 +80,15 @@ import MyAdsSection from '../components/dashboard/MyAdsSection';
 import MessagesSection from '../components/dashboard/MessagesSection';
 import AnalyticsSection from '../components/dashboard/AnalyticsSection';
 import AgentSection from '../components/dashboard/AgentSection';
-import AffiliateSection from '../components/dashboard/AffiliateSection';
-import EducationalMaterialsSection from '../components/dashboard/EducationalMaterialsSection';
-import PaymentHistorySection from '../components/dashboard/PaymentHistorySection';
-import AccountSettingsSection from '../components/dashboard/AccountSettingsSection';
+import AffiliateSection from "../components/dashboard/AffiliateSection";
+import BooksSection from "../components/dashboard/BooksSection";
+import PaymentHistorySection from "../components/dashboard/PaymentHistorySection";
+import AccountSettingsSection from "../components/dashboard/AccountSettingsSection";
 
 // Admin components
-import AdminMaterialsManagement from '../pages/AdminMaterialsManagement';
-import AdminSupportManagement from '../pages/AdminSupportManagement';
+import AdminBooksManagement from './AdminBooksManagement';
+import AdminSupportManagement from './AdminSupportManagement';
+import AdminAdsManagement from './AdminAdsManagement';
 
 // Common components
 import StatCard from '../components/common/StatCard';
@@ -125,13 +126,13 @@ const getDashboardNavItems = (user) => [
     id: 'agent',
     label: 'Agent Center',
     icon: <BusinessCenter />,
-    badge: user?.pending_materials || 0
+    badge: user?.pending_books || 0
   }] : []),
   ...(user?.is_agent ? [{
-    id: 'educational-materials',
-    label: 'My Materials',
+    id: 'books',
+    label: 'My Books',
     icon: <School />,
-    badge: user?.materials_count || 0
+    badge: user?.books_count || 0
   }] : []),
   ...(user?.is_affiliate ? [{
     id: 'affiliate',
@@ -156,11 +157,18 @@ const getDashboardNavItems = (user) => [
 // Admin navigation items for admin users
 const getAdminNavItems = (user) => user?.is_admin ? [
   {
-    id: 'admin-materials',
-    label: 'Admin Materials',
+    id: 'admin-ads',
+    label: 'Ads Management',
+    icon: <Store />,
+    badge: null,
+    description: 'Approve or reject ads'
+  },
+  {
+    id: 'admin-books',
+    label: 'Admin Books',
     icon: <LibraryBooks />,
     badge: null,
-    description: 'Manage educational materials'
+    description: 'Manage books'
   },
   {
     id: 'admin-support',
@@ -553,9 +561,9 @@ const Dashboard = () => {
       case 'analytics':
         return <AnalyticsSection stats={dashboardData?.analytics || {}} />;
       case 'agent':
-        return <AgentSection materials={dashboardData?.materials || []} onRefresh={fetchDashboardData} />;
-      case 'educational-materials':
-        return <EducationalMaterialsSection materials={dashboardData?.materials || []} onRefresh={fetchDashboardData} />;
+        return <AgentSection books={dashboardData?.books || []} onRefresh={fetchDashboardData} />;
+      case 'books':
+        return <BooksSection books={dashboardData?.books || []} onRefresh={fetchDashboardData} />;
       case 'affiliate':
         return <AffiliateSection affiliateData={dashboardData?.affiliate || {}} onRefresh={fetchDashboardData} />;
       case 'payments':
@@ -564,8 +572,10 @@ const Dashboard = () => {
         return <AccountSettingsSection user={dashboardData?.user || user} onRefresh={fetchDashboardData} />;
       case 'help':
         return <HelpSupportSection />;
-      case 'admin-materials':
-        return <AdminMaterialsManagement />;
+      case 'admin-ads':
+        return <AdminAdsManagement />;
+      case 'admin-books':
+        return <AdminBooksManagement />;
       case 'admin-support':
         return <AdminSupportManagement />;
       default:

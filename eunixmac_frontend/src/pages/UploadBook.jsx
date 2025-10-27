@@ -52,16 +52,14 @@ const UploadBox = styled(Box)(({ theme }) => ({
   }
 }));
 
-const steps = ['Upload File', 'Material Details', 'Pricing & Settings', 'Review & Submit'];
+const steps = ['Upload File', 'Book Details', 'Pricing & Settings', 'Review & Submit'];
 
-const materialCategories = [
-  'Past Questions',
-  'Textbooks',
-  'Research Papers',
-  'Study Guides',
-  'Presentations',
-  'Worksheets',
-  'Other Educational Material'
+const bookCategories = [
+  'Fiction Books',
+  'Non-Fiction Books',
+  'Music',
+  'Movies',
+  'TV Shows'
 ];
 
 const subjectAreas = [
@@ -94,13 +92,13 @@ const educationLevels = [
   'Professional Certification'
 ];
 
-function UploadEducationalMaterial() {
+function UploadBook() {
   const [activeStep, setActiveStep] = useState(0);
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [dragging, setDragging] = useState(false);
   
-  const [materialData, setMaterialData] = useState({
+  const [bookData, setBookData] = useState({
     title: '',
     description: '',
     category: '',
@@ -166,7 +164,7 @@ function UploadEducationalMaterial() {
   };
 
   const handleInputChange = (field, value) => {
-    setMaterialData(prev => ({ ...prev, [field]: value }));
+    setBookData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleNext = () => {
@@ -176,14 +174,14 @@ function UploadEducationalMaterial() {
     }
     
     if (activeStep === 1) {
-      if (!materialData.title || !materialData.description || !materialData.category) {
+      if (!bookData.title || !bookData.description || !bookData.category) {
         toast.error('Please fill in all required fields');
         return;
       }
     }
     
     if (activeStep === 2) {
-      if (!materialData.price || parseFloat(materialData.price) <= 0) {
+      if (!bookData.price || parseFloat(bookData.price) <= 0) {
         toast.error('Please set a valid price');
         return;
       }
@@ -201,19 +199,19 @@ function UploadEducationalMaterial() {
       const formData = new FormData();
       formData.append('file', selectedFile);
       
-      // Add all material data
-      Object.keys(materialData).forEach(key => {
-        formData.append(key, materialData[key]);
+      // Add all book data
+      Object.keys(bookData).forEach(key => {
+        formData.append(key, bookData[key]);
       });
 
-      const response = await callApi('POST', '/educational-materials', formData, {
+      const response = await callApi('POST', '/books', formData, {
         'Content-Type': 'multipart/form-data'
       });
 
-      toast.success('Educational material uploaded successfully! It will be reviewed before being published.');
-      navigate('/dashboard?tab=educational-materials');
+      toast.success('Book uploaded successfully! It will be reviewed before being published.');
+      navigate('/dashboard?tab=books');
     } catch (error) {
-      toast.error(error.message || 'Failed to upload material. Please try again.');
+      toast.error(error.message || 'Failed to upload book. Please try again.');
     }
   };
 
@@ -223,7 +221,7 @@ function UploadEducationalMaterial() {
         return (
           <Box>
             <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-              Upload Your Educational Material
+              Upload Your Book
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
               Select a file to upload. Supported formats: PDF, DOC, DOCX, PPT, PPTX
@@ -301,18 +299,18 @@ function UploadEducationalMaterial() {
         return (
           <Box>
             <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-              Material Details
+              Book Details
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Provide detailed information about your educational material
+              Provide detailed information about your book
             </Typography>
 
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <TextField
-                  label="Material Title *"
+                  label="Book Title *"
                   fullWidth
-                  value={materialData.title}
+                  value={bookData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="e.g., WAEC Mathematics Past Questions 2020-2023"
                 />
@@ -324,9 +322,9 @@ function UploadEducationalMaterial() {
                   fullWidth
                   multiline
                   rows={4}
-                  value={materialData.description}
+                  value={bookData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Provide a detailed description of the material, what it covers, and who it's for..."
+                  placeholder="Provide a detailed description of the book, what it covers, and who it's for..."
                 />
               </Grid>
 
@@ -334,11 +332,11 @@ function UploadEducationalMaterial() {
                 <FormControl fullWidth>
                   <InputLabel>Category *</InputLabel>
                   <Select
-                    value={materialData.category}
+                    value={bookData.category}
                     label="Category *"
                     onChange={(e) => handleInputChange('category', e.target.value)}
                   >
-                    {materialCategories.map((category) => (
+                    {bookCategories.map((category) => (
                       <MenuItem key={category} value={category}>
                         {category}
                       </MenuItem>
@@ -351,7 +349,7 @@ function UploadEducationalMaterial() {
                 <FormControl fullWidth>
                   <InputLabel>Subject Area</InputLabel>
                   <Select
-                    value={materialData.subject_area}
+                    value={bookData.subject_area}
                     label="Subject Area"
                     onChange={(e) => handleInputChange('subject_area', e.target.value)}
                   >
@@ -368,7 +366,7 @@ function UploadEducationalMaterial() {
                 <FormControl fullWidth>
                   <InputLabel>Education Level</InputLabel>
                   <Select
-                    value={materialData.education_level}
+                    value={bookData.education_level}
                     label="Education Level"
                     onChange={(e) => handleInputChange('education_level', e.target.value)}
                   >
@@ -385,10 +383,10 @@ function UploadEducationalMaterial() {
                 <TextField
                   label="Tags (comma-separated)"
                   fullWidth
-                  value={materialData.tags}
+                  value={bookData.tags}
                   onChange={(e) => handleInputChange('tags', e.target.value)}
                   placeholder="e.g., mathematics, algebra, geometry, exam prep"
-                  helperText="Add relevant tags to help users find your material"
+                  helperText="Add relevant tags to help users find your book"
                 />
               </Grid>
 
@@ -397,7 +395,7 @@ function UploadEducationalMaterial() {
                   label="Year Published"
                   type="number"
                   fullWidth
-                  value={materialData.year_published}
+                  value={bookData.year_published}
                   onChange={(e) => handleInputChange('year_published', e.target.value)}
                 />
               </Grid>
@@ -408,7 +406,7 @@ function UploadEducationalMaterial() {
                   fullWidth
                   multiline
                   rows={3}
-                  value={materialData.preview_text}
+                  value={bookData.preview_text}
                   onChange={(e) => handleInputChange('preview_text', e.target.value)}
                   placeholder="A brief preview or sample of the content to help potential buyers..."
                 />
@@ -424,7 +422,7 @@ function UploadEducationalMaterial() {
               Pricing & Settings
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Set your pricing and additional settings for the material
+              Set your pricing and additional settings for the book
             </Typography>
 
             <Grid container spacing={3}>
@@ -433,7 +431,7 @@ function UploadEducationalMaterial() {
                   label="Price (₦) *"
                   type="number"
                   fullWidth
-                  value={materialData.price}
+                  value={bookData.price}
                   onChange={(e) => handleInputChange('price', e.target.value)}
                   placeholder="0.00"
                   InputProps={{
@@ -449,7 +447,7 @@ function UploadEducationalMaterial() {
                 <FormControl fullWidth>
                   <InputLabel>Language</InputLabel>
                   <Select
-                    value={materialData.language}
+                    value={bookData.language}
                     label="Language"
                     onChange={(e) => handleInputChange('language', e.target.value)}
                   >
@@ -468,9 +466,9 @@ function UploadEducationalMaterial() {
                   fullWidth
                   multiline
                   rows={2}
-                  value={materialData.author_info}
+                  value={bookData.author_info}
                   onChange={(e) => handleInputChange('author_info', e.target.value)}
-                  placeholder="Brief information about the author or source of this material..."
+                  placeholder="Brief information about the author or source of this book..."
                 />
               </Grid>
             </Grid>
@@ -483,17 +481,17 @@ function UploadEducationalMaterial() {
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={4}>
                     <Typography variant="body2" color="text.secondary">Sale Price</Typography>
-                    <Typography variant="h6">₦{materialData.price ? parseFloat(materialData.price).toLocaleString() : '0'}</Typography>
+                    <Typography variant="h6">₦{bookData.price ? parseFloat(bookData.price).toLocaleString() : '0'}</Typography>
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <Typography variant="body2" color="text.secondary">Your Earnings (70%)</Typography>
                     <Typography variant="h6" color="success.main">
-                      ₦{materialData.price ? (parseFloat(materialData.price) * 0.7).toLocaleString() : '0'}
+                      ₦{bookData.price ? (parseFloat(bookData.price) * 0.7).toLocaleString() : '0'}
                     </Typography>
                   </Grid>
                   <Grid item xs={12} sm={4}>
                     <Typography variant="body2" color="text.secondary">Platform Fee (30%)</Typography>
-                    <Typography variant="h6">₦{materialData.price ? (parseFloat(materialData.price) * 0.3).toLocaleString() : '0'}</Typography>
+                    <Typography variant="h6">₦{bookData.price ? (parseFloat(bookData.price) * 0.3).toLocaleString() : '0'}</Typography>
                   </Grid>
                 </Grid>
               </CardContent>
@@ -508,7 +506,7 @@ function UploadEducationalMaterial() {
               Review & Submit
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-              Review your material details before submitting for approval
+              Review your book details before submitting for approval
             </Typography>
 
             <Grid container spacing={3}>
@@ -542,24 +540,24 @@ function UploadEducationalMaterial() {
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
                       <School sx={{ mr: 1, verticalAlign: 'middle' }} />
-                      Material Details
+                      Book Details
                     </Typography>
                     <Stack spacing={1}>
                       <Box>
                         <Typography variant="body2" color="text.secondary">Title:</Typography>
-                        <Typography variant="body1">{materialData.title}</Typography>
+                        <Typography variant="body1">{bookData.title}</Typography>
                       </Box>
                       <Box>
                         <Typography variant="body2" color="text.secondary">Category:</Typography>
-                        <Typography variant="body1">{materialData.category}</Typography>
+                        <Typography variant="body1">{bookData.category}</Typography>
                       </Box>
                       <Box>
                         <Typography variant="body2" color="text.secondary">Subject:</Typography>
-                        <Typography variant="body1">{materialData.subject_area}</Typography>
+                        <Typography variant="body1">{bookData.subject_area}</Typography>
                       </Box>
                       <Box>
                         <Typography variant="body2" color="text.secondary">Level:</Typography>
-                        <Typography variant="body1">{materialData.education_level}</Typography>
+                        <Typography variant="body1">{bookData.education_level}</Typography>
                       </Box>
                     </Stack>
                   </CardContent>
@@ -576,15 +574,15 @@ function UploadEducationalMaterial() {
                     <Grid container spacing={3}>
                       <Grid item xs={12} sm={4}>
                         <Typography variant="body2" color="text.secondary">Sale Price:</Typography>
-                        <Typography variant="h6">₦{parseFloat(materialData.price).toLocaleString()}</Typography>
+                        <Typography variant="h6">₦{parseFloat(bookData.price).toLocaleString()}</Typography>
                       </Grid>
                       <Grid item xs={12} sm={4}>
                         <Typography variant="body2" color="text.secondary">Your Earnings:</Typography>
-                        <Typography variant="h6" color="success.main">₦{(parseFloat(materialData.price) * 0.7).toLocaleString()}</Typography>
+                        <Typography variant="h6" color="success.main">₦{(parseFloat(bookData.price) * 0.7).toLocaleString()}</Typography>
                       </Grid>
                       <Grid item xs={12} sm={4}>
                         <Typography variant="body2" color="text.secondary">Platform Fee:</Typography>
-                        <Typography variant="h6">₦{(parseFloat(materialData.price) * 0.3).toLocaleString()}</Typography>
+                        <Typography variant="h6">₦{(parseFloat(bookData.price) * 0.3).toLocaleString()}</Typography>
                       </Grid>
                     </Grid>
                   </CardContent>
@@ -594,8 +592,8 @@ function UploadEducationalMaterial() {
 
             <Alert severity="warning" sx={{ mt: 3 }}>
               <Typography variant="body2">
-                <strong>Review Process:</strong> Your material will be reviewed by our team within 2-3 business days. 
-                You'll be notified via email once the review is complete. Materials must comply with our content guidelines 
+                <strong>Review Process:</strong> Your book will be reviewed by our team within 2-3 business days. 
+                You'll be notified via email once the review is complete. Books must comply with our content guidelines 
                 to be approved for sale.
               </Typography>
             </Alert>
@@ -646,4 +644,4 @@ function UploadEducationalMaterial() {
   );
 }
 
-export default UploadEducationalMaterial;
+export default UploadBook;

@@ -24,10 +24,10 @@ import {
 import useApi from '../hooks/useApi';
 import { toast } from 'react-toastify';
 
-const MaterialEdit = () => {
+const BookEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [material, setMaterial] = useState(null);
+  const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -41,23 +41,23 @@ const MaterialEdit = () => {
   const { callApi } = useApi();
 
   useEffect(() => {
-    fetchMaterial();
+    fetchBook();
   }, [id]);
 
-  const fetchMaterial = async () => {
+  const fetchBook = async () => {
     try {
       setLoading(true);
-      const data = await callApi('GET', `/educational-materials/${id}`);
-      setMaterial(data);
+      const data = await callApi('GET', `/books/${id}`);
+      setBook(data);
       setFormData({
         title: data.title || '',
         description: data.description || '',
         price: data.price?.toString() || ''
       });
     } catch (error) {
-      console.error('Error fetching material:', error);
-      setError(error.message || 'Failed to load material');
-      toast.error('Failed to load material details');
+      console.error('Error fetching book:', error);
+      setError(error.message || 'Failed to load book');
+      toast.error('Failed to load book details');
     } finally {
       setLoading(false);
     }
@@ -140,17 +140,17 @@ const MaterialEdit = () => {
         updateData.append('preview_image', newPreviewImage);
       }
 
-      await callApi('PUT', `/educational-materials/${id}`, updateData, {
+      await callApi('PUT', `/books/${id}`, updateData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      toast.success('Material updated successfully');
-      navigate(`/educational-materials/${id}`);
+      toast.success('Book updated successfully');
+      navigate(`/books/${id}`);
     } catch (error) {
-      console.error('Error updating material:', error);
-      toast.error(error.message || 'Failed to update material');
+      console.error('Error updating book:', error);
+      toast.error(error.message || 'Failed to update book');
     } finally {
       setSaving(false);
     }
@@ -164,18 +164,18 @@ const MaterialEdit = () => {
     );
   }
 
-  if (error || !material) {
+  if (error || !book) {
     return (
       <Box p={3}>
         <Alert severity="error">
-          {error || 'Material not found'}
+          {error || 'Book not found'}
         </Alert>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/dashboard?tab=educational-materials')}
+          onClick={() => navigate('/dashboard?tab=books')}
           sx={{ mt: 2 }}
         >
-          Back to My Materials
+          Back to My Books
         </Button>
       </Box>
     );
@@ -187,17 +187,17 @@ const MaterialEdit = () => {
       <Box mb={3}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate(`/educational-materials/${id}`)}
+          onClick={() => navigate(`/books/${id}`)}
           sx={{ mb: 2 }}
         >
-          Back to Material
+          Back to Book
         </Button>
 
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-          Edit Material
+          Edit Book
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Update your educational material details
+          Update your book details
         </Typography>
       </Box>
 
@@ -215,7 +215,7 @@ const MaterialEdit = () => {
                     onChange={handleInputChange}
                     fullWidth
                     required
-                    helperText="Give your material a clear, descriptive title"
+                    helperText="Give your book a clear, descriptive title"
                   />
 
                   <TextField
@@ -227,7 +227,7 @@ const MaterialEdit = () => {
                     multiline
                     rows={4}
                     required
-                    helperText="Describe what students will learn from this material"
+                    helperText="Describe what students will learn from this book"
                   />
 
                   <TextField
@@ -242,7 +242,7 @@ const MaterialEdit = () => {
                     InputProps={{
                       startAdornment: <InputAdornment position="start">₦</InputAdornment>,
                     }}
-                    helperText="Set a fair price for your educational material"
+                    helperText="Set a fair price for your book"
                   />
                 </Stack>
               </CardContent>
@@ -260,10 +260,10 @@ const MaterialEdit = () => {
                   </Typography>
                   <Stack spacing={1}>
                     <Typography variant="body2" color="text.secondary">
-                      Type: {material.file_type}
+                      Type: {book.file_type}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Size: {material.file_size}
+                      Size: {book.file_size}
                     </Typography>
                   </Stack>
                 </CardContent>
@@ -344,14 +344,14 @@ const MaterialEdit = () => {
                 disabled={saving}
                 fullWidth
               >
-                {saving ? 'Updating...' : 'Update Material'}
+                {saving ? 'Updating...' : 'Update Book'}
               </Button>
 
               {/* Warning for new file */}
               {newFile && (
                 <Alert severity="warning">
                   <Typography variant="body2">
-                    Uploading a new file will change your material's status to "Pending Approval"
+                    Uploading a new file will change your book's status to "Pending Approval"
                     and it will need to be reviewed again before going live.
                   </Typography>
                 </Alert>
@@ -364,4 +364,4 @@ const MaterialEdit = () => {
   );
 };
 
-export default MaterialEdit;
+export default BookEdit;
