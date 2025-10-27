@@ -32,13 +32,14 @@ import AgentProgram from './pages/AgentProgram';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import CookiePolicy from './pages/CookiePolicy';
-import UploadEducationalMaterial from './pages/UploadEducationalMaterial';
-import MaterialView from './pages/MaterialView';
-import MaterialEdit from './pages/MaterialEdit';
+import UploadBook from './pages/UploadBook';
+import BookView from './pages/BookView';
+import BookEdit from './pages/BookEdit';
 import Categories from './pages/Categories';
 import AdDetail from './pages/AdDetail';
 import AdminSupportManagement from './pages/AdminSupportManagement';
-import AdminMaterialsManagement from './pages/AdminMaterialsManagement';
+import AdminBooksManagement from './pages/AdminBooksManagement';
+import AdminAdsManagement from './pages/AdminAdsManagement';
 
 
 function App() {
@@ -82,26 +83,26 @@ function App() {
                   }
                 />
                 <Route
-                  path="/educational-materials/upload"
+                  path="/books/upload"
                   element={
                     <PrivateRoute>
-                      <UploadEducationalMaterial />
+                      <UploadBook />
                     </PrivateRoute>
                   }
                 />
                 <Route
-                  path="/educational-materials/:id"
+                  path="/books/:id"
                   element={
                     <PrivateRoute>
-                      <MaterialView />
+                      <BookView />
                     </PrivateRoute>
                   }
                 />
                 <Route
-                  path="/educational-materials/:id/edit"
+                  path="/books/:id/edit"
                   element={
                     <PrivateRoute>
-                      <MaterialEdit />
+                      <BookEdit />
                     </PrivateRoute>
                   }
                 />
@@ -147,13 +148,14 @@ function App() {
                   }
                 />
                 <Route
-                  path="/admin/materials"
+                  path="/admin/books"
                   element={
                     <PrivateRoute>
-                      <AdminMaterialsManagement />
+                      <AdminBooksManagement />
                     </PrivateRoute>
                   }
                 />
+
               </Routes>
             </Box>
             <Footer />

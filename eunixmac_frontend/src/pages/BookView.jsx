@@ -29,27 +29,27 @@ import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import { API_CONFIG } from '../config/api';
 
-const MaterialView = () => {
+const BookView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [material, setMaterial] = useState(null);
+  const [book, setBook] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { callApi } = useApi();
 
   useEffect(() => {
-    fetchMaterial();
+    fetchBook();
   }, [id]);
 
-  const fetchMaterial = async () => {
+  const fetchBook = async () => {
     try {
       setLoading(true);
-      const data = await callApi('GET', `/educational-materials/${id}`);
-      setMaterial(data);
+      const data = await callApi('GET', `/books/${id}`);
+      setBook(data);
     } catch (error) {
-      console.error('Error fetching material:', error);
-      setError(error.message || 'Failed to load material');
-      toast.error('Failed to load material details');
+      console.error('Error fetching book:', error);
+      setError(error.message || 'Failed to load book');
+      toast.error('Failed to load book details');
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,7 @@ const MaterialView = () => {
       }
 
       // Use direct fetch for blob download
-      const response = await fetch(`${API_CONFIG.BASE_URL}/educational-materials/${id}/download`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/books/${id}/download`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -82,9 +82,9 @@ const MaterialView = () => {
       const link = document.createElement('a');
       link.href = url;
 
-      // Get filename from Content-Disposition header or fallback to material title
+      // Get filename from Content-Disposition header or fallback to book title
       const contentDisposition = response.headers.get('Content-Disposition');
-      let filename = `${material.title}.pdf`;
+      let filename = `${book.title}.pdf`;
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
         if (filenameMatch) {
@@ -100,8 +100,8 @@ const MaterialView = () => {
 
       toast.success('Download started successfully');
     } catch (error) {
-      console.error('Error downloading material:', error);
-      toast.error('Failed to download material');
+      console.error('Error downloading book:', error);
+      toast.error('Failed to download book');
     }
   };
 
@@ -145,18 +145,18 @@ const MaterialView = () => {
     );
   }
 
-  if (error || !material) {
+  if (error || !book) {
     return (
       <Box p={3}>
         <Alert severity="error">
-          {error || 'Material not found'}
+          {error || 'Book not found'}
         </Alert>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/dashboard?tab=educational-materials')}
+          onClick={() => navigate('/dashboard?tab=books')}
           sx={{ mt: 2 }}
         >
-          Back to My Materials
+          Back to My Books
         </Button>
       </Box>
     );
@@ -168,30 +168,30 @@ const MaterialView = () => {
       <Box mb={3}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/dashboard?tab=educational-materials')}
+          onClick={() => navigate('/dashboard?tab=books')}
           sx={{ mb: 2 }}
         >
-          Back to My Materials
+          Back to My Books
         </Button>
 
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-          {material.title}
+          {book.title}
         </Typography>
 
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           <Chip
-            label={material.category}
+            label={book.category}
             size="small"
             variant="outlined"
           />
           <Chip
-            label={material.status || 'pending'}
-            color={getStatusColor(material.status)}
+            label={book.status || 'pending'}
+            color={getStatusColor(book.status)}
             size="small"
-            icon={getStatusIcon(material.status)}
+            icon={getStatusIcon(book.status)}
           />
           <Chip
-            label={`₦${material.price?.toLocaleString()}`}
+            label={`₦${book.price?.toLocaleString()}`}
             color="primary"
             size="small"
           />
@@ -207,7 +207,7 @@ const MaterialView = () => {
                 Description
               </Typography>
               <Typography variant="body1" sx={{ mb: 3, lineHeight: 1.7 }}>
-                {material.description}
+                {book.description}
               </Typography>
 
               <Divider sx={{ my: 3 }} />
@@ -221,7 +221,7 @@ const MaterialView = () => {
                     File Type
                   </Typography>
                   <Typography variant="body1" fontWeight="bold">
-                    {material.file_type}
+                    {book.file_type}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
@@ -229,7 +229,7 @@ const MaterialView = () => {
                     File Size
                   </Typography>
                   <Typography variant="body1" fontWeight="bold">
-                    {material.file_size}
+                    {book.file_size}
                   </Typography>
                 </Grid>
               </Grid>
@@ -252,17 +252,17 @@ const MaterialView = () => {
                     startIcon={<Download />}
                     fullWidth
                     onClick={handleDownload}
-                    disabled={material.status !== 'active' && material.status !== 'approved'}
+                    disabled={book.status !== 'active' && book.status !== 'approved'}
                   >
                     Download File
                   </Button>
 
                   <Button
                     variant="outlined"
-                    href={`/educational-materials/${material.id}/edit`}
+                    href={`/books/${book.id}/edit`}
                     fullWidth
                   >
-                    Edit Material
+                    Edit Book
                   </Button>
                 </Stack>
               </CardContent>
@@ -280,7 +280,7 @@ const MaterialView = () => {
                       Total Sales
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {material.sales_count || 0}
+                      {book.sales_count || 0}
                     </Typography>
                   </Box>
 
@@ -289,7 +289,7 @@ const MaterialView = () => {
                       Total Earnings
                     </Typography>
                     <Typography variant="body1" fontWeight="bold" color="success.main">
-                      ₦{material.total_earnings?.toLocaleString() || 0}
+                      ₦{book.total_earnings?.toLocaleString() || 0}
                     </Typography>
                   </Box>
 
@@ -298,7 +298,7 @@ const MaterialView = () => {
                       Uploaded
                     </Typography>
                     <Typography variant="body1">
-                      {material.created_at ? format(new Date(material.created_at), 'MMM dd, yyyy') : 'N/A'}
+                      {book.created_at ? format(new Date(book.created_at), 'MMM dd, yyyy') : 'N/A'}
                     </Typography>
                   </Box>
                 </Stack>
@@ -306,18 +306,18 @@ const MaterialView = () => {
             </Card>
 
             {/* Status Info */}
-            {material.status === 'pending_approval' && (
+            {book.status === 'pending_approval' && (
               <Alert severity="info">
                 <Typography variant="body2">
-                  Your material is currently under review. You'll be notified once it's approved.
+                  Your book is currently under review. You'll be notified once it's approved.
                 </Typography>
               </Alert>
             )}
 
-            {material.status === 'rejected' && (
+            {book.status === 'rejected' && (
               <Alert severity="error">
                 <Typography variant="body2">
-                  This material was rejected. Please review our guidelines and resubmit.
+                  This book was rejected. Please review our guidelines and resubmit.
                 </Typography>
               </Alert>
             )}
@@ -328,4 +328,4 @@ const MaterialView = () => {
   );
 };
 
-export default MaterialView;
+export default BookView;

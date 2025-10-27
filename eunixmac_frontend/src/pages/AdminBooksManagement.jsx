@@ -65,10 +65,10 @@ import { toast } from 'react-toastify';
 import EnhancedStatCard from '../components/common/EnhancedStatCard';
 import StatCardsContainer from '../components/common/StatCardsContainer';
 
-const AdminMaterialsManagement = () => {
-  const [materials, setMaterials] = useState([]);
+const AdminBooksManagement = () => {
+  const [books, setBooks] = useState([]);
   const [statistics, setStatistics] = useState({});
-  const [selectedMaterials, setSelectedMaterials] = useState([]);
+  const [selectedBooks, setSelectedBooks] = useState([]);
   const [filters, setFilters] = useState({
     status: '',
     category_id: '',
@@ -77,10 +77,10 @@ const AdminMaterialsManagement = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(15);
   const [totalCount, setTotalCount] = useState(0);
-  const [selectedMaterial, setSelectedMaterial] = useState(null);
-  const [showMaterialDialog, setShowMaterialDialog] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [showBookDialog, setShowBookDialog] = useState(false);
   const [actionMenu, setActionMenu] = useState(null);
-  const [approvalDialog, setApprovalDialog] = useState({ open: false, type: '', material: null });
+  const [approvalDialog, setApprovalDialog] = useState({ open: false, type: '', book: null });
   const [rejectionReason, setRejectionReason] = useState('');
   const [deletionReason, setDeletionReason] = useState('');
   const { callApi, loading } = useApi();
@@ -93,18 +93,20 @@ const AdminMaterialsManagement = () => {
   };
 
   const categories = [
-    { id: 83, name: 'Educational Material' },
-    { id: 84, name: 'Past Questions' },
-    { id: 85, name: 'Publications' },
-    { id: 86, name: 'Ebooks' }
+    { id: 7, name: 'Books and Media' },
+    { id: 8, name: 'Fiction Books' },
+    { id: 9, name: 'Non-Fiction Books' },
+    { id: 10, name: 'Music' },
+    { id: 11, name: 'Movies' },
+    { id: 12, name: 'TV Shows' }
   ];
 
   useEffect(() => {
-    fetchMaterials();
+    fetchBooks();
     fetchStatistics();
   }, [page, rowsPerPage, filters]);
 
-  const fetchMaterials = async () => {
+  const fetchBooks = async () => {
     try {
       const params = new URLSearchParams({
         page: page + 1,
@@ -112,17 +114,17 @@ const AdminMaterialsManagement = () => {
         ...filters
       });
 
-      const response = await callApi('GET', `/admin/materials?${params}`);
-      setMaterials(response.data);
+      const response = await callApi('GET', `/admin/books?${params}`);
+      setBooks(response.data);
       setTotalCount(response.total);
     } catch (error) {
-      toast.error('Failed to load materials');
+      toast.error('Failed to load books');
     }
   };
 
   const fetchStatistics = async () => {
     try {
-      const response = await callApi('GET', '/admin/materials-stats');
+      const response = await callApi('GET', '/admin/books-stats');
       setStatistics(response);
     } catch (error) {
       toast.error('Failed to load statistics');
@@ -137,91 +139,91 @@ const AdminMaterialsManagement = () => {
     setPage(0);
   };
 
-  const handleMaterialSelect = (materialId) => {
-    setSelectedMaterials(prev =>
-      prev.includes(materialId)
-        ? prev.filter(id => id !== materialId)
-        : [...prev, materialId]
+  const handleBookSelect = (bookId) => {
+    setSelectedBooks(prev =>
+      prev.includes(bookId)
+        ? prev.filter(id => id !== bookId)
+        : [...prev, bookId]
     );
   };
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
-      setSelectedMaterials(materials.map(material => material.id));
+      setSelectedBooks(books.map(book => book.id));
     } else {
-      setSelectedMaterials([]);
+      setSelectedBooks([]);
     }
   };
 
-  const handleViewMaterial = async (materialId) => {
+  const handleViewBook = async (bookId) => {
     try {
-      const response = await callApi('GET', `/admin/materials/${materialId}`);
-      setSelectedMaterial(response);
-      setShowMaterialDialog(true);
+      const response = await callApi('GET', `/admin/books/${bookId}`);
+      setSelectedBook(response);
+      setShowBookDialog(true);
     } catch (error) {
-      toast.error('Failed to load material details');
+      toast.error('Failed to load book details');
     }
   };
 
-  const handleApproveMaterial = async (materialId) => {
+  const handleApproveBook = async (bookId) => {
     try {
-      await callApi('PUT', `/admin/materials/${materialId}/approve`);
-      toast.success('Material approved successfully');
-      fetchMaterials();
+      await callApi('PUT', `/admin/books/${bookId}/approve`);
+      toast.success('Book approved successfully');
+      fetchBooks();
       fetchStatistics();
-      if (selectedMaterial && selectedMaterial.id === materialId) {
-        handleViewMaterial(materialId);
+      if (selectedBook && selectedBook.id === bookId) {
+        handleViewBook(bookId);
       }
     } catch (error) {
-      toast.error('Failed to approve material');
+      toast.error('Failed to approve book');
     }
   };
 
-  const handleRejectMaterial = async () => {
+  const handleRejectBook = async () => {
     if (!rejectionReason.trim()) {
       toast.error('Please provide a rejection reason');
       return;
     }
 
     try {
-      await callApi('PUT', `/admin/materials/${approvalDialog.material.id}/reject`, {
+      await callApi('PUT', `/admin/books/${approvalDialog.book.id}/reject`, {
         rejection_reason: rejectionReason
       });
-      toast.success('Material rejected');
+      toast.success('Book rejected');
       setRejectionReason('');
-      setApprovalDialog({ open: false, type: '', material: null });
-      fetchMaterials();
+      setApprovalDialog({ open: false, type: '', book: null });
+      fetchBooks();
       fetchStatistics();
     } catch (error) {
-      toast.error('Failed to reject material');
+      toast.error('Failed to reject book');
     }
   };
 
-  const handleDeleteMaterial = async () => {
+  const handleDeleteBook = async () => {
     if (!deletionReason.trim()) {
       toast.error('Please provide a deletion reason');
       return;
     }
 
     try {
-      await callApi('DELETE', `/admin/materials/${approvalDialog.material.id}`, {
+      await callApi('DELETE', `/admin/books/${approvalDialog.book.id}`, {
         deletion_reason: deletionReason
       });
-      toast.success('Material deleted successfully');
+      toast.success('Book deleted successfully');
       setDeletionReason('');
-      setApprovalDialog({ open: false, type: '', material: null });
-      fetchMaterials();
+      setApprovalDialog({ open: false, type: '', book: null });
+      fetchBooks();
       fetchStatistics();
-      setShowMaterialDialog(false);
+      setShowBookDialog(false);
     } catch (error) {
-      toast.error('Failed to delete material');
+      toast.error('Failed to delete book');
     }
   };
 
   const getTimeAgo = (date) => {
     const now = new Date();
-    const materialDate = new Date(date);
-    const diffMs = now - materialDate;
+    const bookDate = new Date(date);
+    const diffMs = now - bookDate;
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
 
@@ -240,13 +242,13 @@ const AdminMaterialsManagement = () => {
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" fontWeight="bold">
-          Educational Materials Management
+          Books Management
         </Typography>
         <Button
           variant="outlined"
           startIcon={<Refresh />}
           onClick={() => {
-            fetchMaterials();
+            fetchBooks();
             fetchStatistics();
           }}
         >
@@ -262,8 +264,8 @@ const AdminMaterialsManagement = () => {
       >
         <EnhancedStatCard
           icon={School}
-          value={statistics.total_materials || 0}
-          label="Total Materials"
+          value={statistics.total_books || 0}
+          label="Total Books"
           color="#3b82f6"
           size="medium"
         />
@@ -286,8 +288,8 @@ const AdminMaterialsManagement = () => {
 
         <EnhancedStatCard
           icon={CheckCircle}
-          value={statistics.approved_materials || 0}
-          label="Active Materials"
+          value={statistics.approved_books || 0}
+          label="Active Books"
           color="#10b981"
           size="medium"
         />
@@ -300,7 +302,7 @@ const AdminMaterialsManagement = () => {
             <TextField
               fullWidth
               size="small"
-              placeholder="Search materials..."
+              placeholder="Search books..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               InputProps={{
@@ -356,7 +358,7 @@ const AdminMaterialsManagement = () => {
         </Grid>
       </Paper>
 
-      {/* Materials Table */}
+      {/* Books Table */}
       <Paper>
         <TableContainer>
           <Table>
@@ -364,12 +366,12 @@ const AdminMaterialsManagement = () => {
               <TableRow>
                 <TableCell padding="checkbox">
                   <Checkbox
-                    indeterminate={selectedMaterials.length > 0 && selectedMaterials.length < materials.length}
-                    checked={materials.length > 0 && selectedMaterials.length === materials.length}
+                    indeterminate={selectedBooks.length > 0 && selectedBooks.length < books.length}
+                    checked={books.length > 0 && selectedBooks.length === books.length}
                     onChange={handleSelectAll}
                   />
                 </TableCell>
-                <TableCell>Material</TableCell>
+                <TableCell>Book</TableCell>
                 <TableCell>Agent</TableCell>
                 <TableCell>Category</TableCell>
                 <TableCell>Status</TableCell>
@@ -387,21 +389,21 @@ const AdminMaterialsManagement = () => {
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
-              ) : materials.length === 0 ? (
+              ) : books.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} align="center">
                     <Typography variant="body2" color="text.secondary">
-                      No materials found
+                      No books found
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                materials.map((material) => (
-                  <TableRow key={material.id} hover>
+                books.map((book) => (
+                  <TableRow key={book.id} hover>
                     <TableCell padding="checkbox">
                       <Checkbox
-                        checked={selectedMaterials.includes(material.id)}
-                        onChange={() => handleMaterialSelect(material.id)}
+                        checked={selectedBooks.includes(book.id)}
+                        onChange={() => handleBookSelect(book.id)}
                       />
                     </TableCell>
                     <TableCell>
@@ -414,80 +416,80 @@ const AdminMaterialsManagement = () => {
                         </Avatar>
                         <Box>
                           <Typography variant="body2" fontWeight="bold" noWrap sx={{ maxWidth: 200 }}>
-                            {material.title}
+                            {book.title}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            ID: {material.id}
+                            ID: {book.id}
                           </Typography>
                         </Box>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {material.user?.name}
+                        {book.user?.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {material.user?.email}
+                        {book.user?.email}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={material.category?.name}
+                        label={book.category?.name}
                         size="small"
                         variant="outlined"
                       />
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={material.status.replace('_', ' ')}
+                        label={book.status.replace('_', ' ')}
                         size="small"
-                        color={statusColors[material.status]}
+                        color={statusColors[book.status]}
                       />
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" fontWeight="bold">
-                        ₦{material.price.toLocaleString()}
+                        ₦{book.price.toLocaleString()}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Box>
                         <Typography variant="body2">
-                          {material.sales_count} sales
+                          {book.sales_count} sales
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          ₦{material.total_earnings.toLocaleString()}
+                          ₦{book.total_earnings.toLocaleString()}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Box>
                         <Typography variant="body2">
-                          {material.file_type}
+                          {book.file_type}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {material.file_size}
+                          {book.file_size}
                         </Typography>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {getTimeAgo(material.created_at)}
+                        {getTimeAgo(book.created_at)}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Box display="flex" gap={1}>
                         <IconButton
                           size="small"
-                          onClick={() => handleViewMaterial(material.id)}
+                          onClick={() => handleViewBook(book.id)}
                         >
                           <Visibility />
                         </IconButton>
-                        {material.status === 'pending_approval' && (
+                        {book.status === 'pending_approval' && (
                           <>
                             <IconButton
                               size="small"
                               color="success"
-                              onClick={() => handleApproveMaterial(material.id)}
+                              onClick={() => handleApproveBook(book.id)}
                             >
                               <ThumbUp />
                             </IconButton>
@@ -497,7 +499,7 @@ const AdminMaterialsManagement = () => {
                               onClick={() => setApprovalDialog({
                                 open: true,
                                 type: 'reject',
-                                material: material
+                                book: book
                               })}
                             >
                               <ThumbDown />
@@ -510,7 +512,7 @@ const AdminMaterialsManagement = () => {
                           onClick={() => setApprovalDialog({
                             open: true,
                             type: 'delete',
-                            material: material
+                            book: book
                           })}
                         >
                           <Delete />
@@ -536,24 +538,24 @@ const AdminMaterialsManagement = () => {
         />
       </Paper>
 
-      {/* Material Detail Dialog */}
+      {/* Book Detail Dialog */}
       <Dialog
-        open={showMaterialDialog}
-        onClose={() => setShowMaterialDialog(false)}
+        open={showBookDialog}
+        onClose={() => setShowBookDialog(false)}
         maxWidth="lg"
         fullWidth
       >
-        {selectedMaterial && (
+        {selectedBook && (
           <>
             <DialogTitle>
               <Box display="flex" justifyContent="space-between" alignItems="center">
                 <Typography variant="h6">
-                  {selectedMaterial.title}
+                  {selectedBook.title}
                 </Typography>
                 <Box display="flex" gap={1}>
                   <Chip
-                    label={selectedMaterial.status.replace('_', ' ')}
-                    color={statusColors[selectedMaterial.status]}
+                    label={selectedBook.status.replace('_', ' ')}
+                    color={statusColors[selectedBook.status]}
                   />
                 </Box>
               </Box>
@@ -563,7 +565,7 @@ const AdminMaterialsManagement = () => {
                 <Grid item xs={12} md={8}>
                   <Paper sx={{ p: 3, mb: 2 }}>
                     <Typography variant="h6" gutterBottom>
-                      Material Details
+                      Book Details
                     </Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={12}>
@@ -571,39 +573,39 @@ const AdminMaterialsManagement = () => {
                           <strong>Description:</strong>
                         </Typography>
                         <Typography variant="body2" paragraph>
-                          {selectedMaterial.description}
+                          {selectedBook.description}
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="body2">
-                          <strong>Category:</strong> {selectedMaterial.category?.name}
+                          <strong>Category:</strong> {selectedBook.category?.name}
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="body2">
-                          <strong>Price:</strong> ₦{selectedMaterial.price.toLocaleString()}
+                          <strong>Price:</strong> ₦{selectedBook.price.toLocaleString()}
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="body2">
-                          <strong>File Type:</strong> {selectedMaterial.file_type}
+                          <strong>File Type:</strong> {selectedBook.file_type}
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="body2">
-                          <strong>File Size:</strong> {selectedMaterial.file_size}
+                          <strong>File Size:</strong> {selectedBook.file_size}
                         </Typography>
                       </Grid>
                     </Grid>
                   </Paper>
 
                   {/* Recent Purchases */}
-                  {selectedMaterial.recent_purchases?.length > 0 && (
+                  {selectedBook.recent_purchases?.length > 0 && (
                     <Paper sx={{ p: 3 }}>
                       <Typography variant="h6" gutterBottom>
                         Recent Purchases
                       </Typography>
-                      {selectedMaterial.recent_purchases.map((purchase, index) => (
+                      {selectedBook.recent_purchases.map((purchase, index) => (
                         <Box key={index} display="flex" justifyContent="space-between" alignItems="center" py={1}>
                           <Typography variant="body2">
                             {purchase.user?.name} ({purchase.user?.email})
@@ -625,14 +627,14 @@ const AdminMaterialsManagement = () => {
                     </Typography>
                     <Box>
                       <Typography variant="body2">
-                        <strong>Name:</strong> {selectedMaterial.user?.name}
+                        <strong>Name:</strong> {selectedBook.user?.name}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Email:</strong> {selectedMaterial.user?.email}
+                        <strong>Email:</strong> {selectedBook.user?.email}
                       </Typography>
-                      {selectedMaterial.user?.phone_number && (
+                      {selectedBook.user?.phone_number && (
                         <Typography variant="body2">
-                          <strong>Phone:</strong> {selectedMaterial.user?.phone_number}
+                          <strong>Phone:</strong> {selectedBook.user?.phone_number}
                         </Typography>
                       )}
                     </Box>
@@ -645,10 +647,10 @@ const AdminMaterialsManagement = () => {
                     </Typography>
                     <Box>
                       <Typography variant="body2">
-                        <strong>Sales:</strong> {selectedMaterial.sales_count}
+                        <strong>Sales:</strong> {selectedBook.sales_count}
                       </Typography>
                       <Typography variant="body2">
-                        <strong>Total Earnings:</strong> ₦{selectedMaterial.total_earnings.toLocaleString()}
+                        <strong>Total Earnings:</strong> ₦{selectedBook.total_earnings.toLocaleString()}
                       </Typography>
                     </Box>
                   </Paper>
@@ -659,15 +661,15 @@ const AdminMaterialsManagement = () => {
                       Actions
                     </Typography>
                     <Stack spacing={2}>
-                      {selectedMaterial.status === 'pending_approval' && (
+                      {selectedBook.status === 'pending_approval' && (
                         <>
                           <Button
                             variant="contained"
                             color="success"
                             startIcon={<CheckCircle />}
-                            onClick={() => handleApproveMaterial(selectedMaterial.id)}
+                            onClick={() => handleApproveBook(selectedBook.id)}
                           >
-                            Approve Material
+                            Approve Book
                           </Button>
                           <Button
                             variant="outlined"
@@ -676,10 +678,10 @@ const AdminMaterialsManagement = () => {
                             onClick={() => setApprovalDialog({
                               open: true,
                               type: 'reject',
-                              material: selectedMaterial
+                              book: selectedBook
                             })}
                           >
-                            Reject Material
+                            Reject Book
                           </Button>
                         </>
                       )}
@@ -690,10 +692,10 @@ const AdminMaterialsManagement = () => {
                         onClick={() => setApprovalDialog({
                           open: true,
                           type: 'delete',
-                          material: selectedMaterial
+                          book: selectedBook
                         })}
                       >
-                        Delete Material
+                        Delete Book
                       </Button>
                     </Stack>
                   </Paper>
@@ -701,7 +703,7 @@ const AdminMaterialsManagement = () => {
               </Grid>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setShowMaterialDialog(false)}>
+              <Button onClick={() => setShowBookDialog(false)}>
                 Close
               </Button>
             </DialogActions>
@@ -712,18 +714,18 @@ const AdminMaterialsManagement = () => {
       {/* Rejection/Deletion Dialog */}
       <Dialog
         open={approvalDialog.open}
-        onClose={() => setApprovalDialog({ open: false, type: '', material: null })}
+        onClose={() => setApprovalDialog({ open: false, type: '', book: null })}
         maxWidth="sm"
         fullWidth
       >
         <DialogTitle>
-          {approvalDialog.type === 'reject' ? 'Reject Material' : 'Delete Material'}
+          {approvalDialog.type === 'reject' ? 'Reject Book' : 'Delete Book'}
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" paragraph>
             {approvalDialog.type === 'reject'
-              ? 'Please provide a reason for rejecting this material:'
-              : 'Please provide a reason for deleting this material:'}
+              ? 'Please provide a reason for rejecting this book:'
+              : 'Please provide a reason for deleting this book:'}
           </Typography>
           <TextField
             fullWidth
@@ -743,12 +745,12 @@ const AdminMaterialsManagement = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setApprovalDialog({ open: false, type: '', material: null })}>
+          <Button onClick={() => setApprovalDialog({ open: false, type: '', book: null })}>
             Cancel
           </Button>
           <Button
             color="error"
-            onClick={approvalDialog.type === 'reject' ? handleRejectMaterial : handleDeleteMaterial}
+            onClick={approvalDialog.type === 'reject' ? handleRejectBook : handleDeleteBook}
             disabled={approvalDialog.type === 'reject' ? !rejectionReason.trim() : !deletionReason.trim()}
           >
             {approvalDialog.type === 'reject' ? 'Reject' : 'Delete'}
@@ -759,4 +761,4 @@ const AdminMaterialsManagement = () => {
   );
 };
 
-export default AdminMaterialsManagement;
+export default AdminBooksManagement;

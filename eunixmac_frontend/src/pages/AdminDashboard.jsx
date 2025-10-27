@@ -7,6 +7,7 @@ import ResourceUtilization from '../components/admin/ResourceUtilization';
 import QuickActions from '../components/admin/QuickActions';
 import useApi from '../hooks/useApi';
 import DateRangePicker from '../components/ui/DateRangePicker';
+import AdApproval from '../components/admin/AdApproval';
 
 function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -87,6 +88,11 @@ function AdminDashboard() {
           />
         </Grid>
       </Grid>
+
+      <Grid item xs={12}>
+        <AdApproval />
+      </Grid>
+
       <Grid container spacing={{ xs: 2, md: 3 }} sx={{ mt: { xs: 2, md: 6 } }}>
         <Grid item xs={12} lg={8}>
           <ActivityChart />

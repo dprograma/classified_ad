@@ -9,12 +9,12 @@ use App\Models\Payment;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 
-class EducationalMaterialController extends Controller
+class BookController extends Controller
 {
     public function index(Request $request)
     {
-        $materials = $request->user()->ads()
-            ->whereIn('category_id', [83, 84, 85, 86]) // Education Material, Past Questions, Ebooks, Publications
+        $books = $request->user()->ads()
+            ->where('category_id', 7) // Books and Media
             ->whereNotNull('file_path')
             ->with(['category:id,name'])
             ->orderBy('created_at', 'desc')
@@ -34,32 +34,32 @@ class EducationalMaterialController extends Controller
                     'file_type' => strtoupper(pathinfo($ad->file_path, PATHINFO_EXTENSION)),
                     'file_size' => $this->getFileSize($ad->file_path),
                     'sales_count' => \App\Models\Payment::where('payable_id', $ad->id)
-                        ->where('payable_type', 'educational_material')
+                        ->where('payable_type', 'book')
                         ->where('status', 'success')
                         ->count(),
                     'total_earnings' => (float) \App\Models\Payment::where('payable_id', $ad->id)
-                        ->where('payable_type', 'educational_material')
+                        ->where('payable_type', 'book')
                         ->where('status', 'success')
                         ->sum('amount'),
                 ];
             });
 
-        return response()->json($materials);
+        return response()->json($books);
     }
 
     public function show(Request $request, Ad $ad)
     {
-        // Check if user owns this material or has paid for it
+        // Check if user owns this book or has paid for it
         $user = $request->user();
         $canView = $ad->user_id === $user->id ||
                    \App\Models\Payment::where('user_id', $user->id)
                        ->where('payable_id', $ad->id)
-                       ->where('payable_type', 'educational_material')
+                       ->where('payable_type', 'book')
                        ->where('status', 'success')
                        ->exists();
 
         if (!$canView) {
-            return response()->json(['message' => 'Unauthorized to view this material.'], 403);
+            return response()->json(['message' => 'Unauthorized to view this book.'], 403);
         }
 
         return response()->json([
@@ -76,11 +76,11 @@ class EducationalMaterialController extends Controller
             'file_type' => strtoupper(pathinfo($ad->file_path, PATHINFO_EXTENSION)),
             'file_size' => $this->getFileSize($ad->file_path),
             'sales_count' => \App\Models\Payment::where('payable_id', $ad->id)
-                ->where('payable_type', 'educational_material')
+                ->where('payable_type', 'book')
                 ->where('status', 'success')
                 ->count(),
             'total_earnings' => (float) \App\Models\Payment::where('payable_id', $ad->id)
-                ->where('payable_type', 'educational_material')
+                ->where('payable_type', 'book')
                 ->where('status', 'success')
                 ->sum('amount'),
         ]);
@@ -88,9 +88,9 @@ class EducationalMaterialController extends Controller
 
     public function update(Request $request, Ad $ad)
     {
-        // Check if user owns this material
+        // Check if user owns this book
         if ($ad->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Unauthorized to edit this material.'], 403);
+            return response()->json(['message' => 'Unauthorized to edit this book.'], 403);
         }
 
         $request->validate([
@@ -108,7 +108,7 @@ class EducationalMaterialController extends Controller
             if ($ad->file_path) {
                 \Storage::disk('public')->delete($ad->file_path);
             }
-            $updateData['file_path'] = $request->file('file')->store('educational_materials', 'public');
+            $updateData['file_path'] = $request->file('file')->store('books', 'public');
             $updateData['status'] = 'pending_approval'; // Re-approval required for new file
         }
 
@@ -117,22 +117,22 @@ class EducationalMaterialController extends Controller
             if ($ad->preview_image_path) {
                 \Storage::disk('public')->delete($ad->preview_image_path);
             }
-            $updateData['preview_image_path'] = $request->file('preview_image')->store('educational_materials/previews', 'public');
+            $updateData['preview_image_path'] = $request->file('preview_image')->store('books/previews', 'public');
         }
 
         $ad->update($updateData);
 
         return response()->json([
-            'message' => 'Educational material updated successfully.',
-            'material' => $ad->fresh()
+            'message' => 'Book updated successfully.',
+            'book' => $ad->fresh()
         ]);
     }
 
     public function destroy(Request $request, Ad $ad)
     {
-        // Check if user owns this material
+        // Check if user owns this book
         if ($ad->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Unauthorized to delete this material.'], 403);
+            return response()->json(['message' => 'Unauthorized to delete this book.'], 403);
         }
 
         // Delete associated files
@@ -145,7 +145,7 @@ class EducationalMaterialController extends Controller
 
         $ad->delete();
 
-        return response()->json(['message' => 'Educational material deleted successfully.']);
+        return response()->json(['message' => 'Book deleted successfully.']);
     }
 
     private function getFileSize($filePath)
@@ -191,14 +191,14 @@ class EducationalMaterialController extends Controller
             'language' => 'nullable|string|max:100',
         ]);
 
-        $file_path = $request->file('file')->store('educational_materials', 'public');
+        $file_path = $request->file('file')->store('books', 'public');
         $preview_image_path = null;
         if ($request->hasFile('preview_image')) {
-            $preview_image_path = $request->file('preview_image')->store('educational_materials/previews', 'public');
+            $preview_image_path = $request->file('preview_image')->store('books/previews', 'public');
         }
 
         // Find the appropriate category ID based on category name
-        $categoryId = $this->getCategoryIdByName($request->input('category', 'Educational Material'));
+        $categoryId = $this->getCategoryIdByName($request->input('category', 'Book'));
 
         $ad = Ad::create([
             'user_id' => $request->user()->id,
@@ -206,7 +206,7 @@ class EducationalMaterialController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'price' => $request->price,
-            'location' => 'N/A', // Educational materials don't have a physical location
+            'location' => 'N/A', // Books don't have a physical location
             'status' => 'pending_approval', // Admin review required
             'file_path' => $file_path,
             'preview_image_path' => $preview_image_path,
@@ -221,8 +221,8 @@ class EducationalMaterialController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Educational material uploaded successfully and is pending approval.',
-            'material' => $ad
+            'message' => 'Book uploaded successfully and is pending approval.',
+            'book' => $ad
         ], 201);
     }
 
@@ -230,30 +230,28 @@ class EducationalMaterialController extends Controller
     {
         // Map category names to IDs based on your categories
         $categoryMap = [
-            'Past Questions' => 84,
-            'Textbooks' => 83,
-            'Research Papers' => 85,
-            'Study Guides' => 86,
-            'Presentations' => 85,
-            'Worksheets' => 86,
-            'Other Educational Material' => 83,
-            'Educational Material' => 83, // Default
+            'Fiction Books' => 8,
+            'Non-Fiction Books' => 9,
+            'Music' => 10,
+            'Movies' => 11,
+            'TV Shows' => 12,
+            'Book' => 7, // Default
         ];
 
-        return $categoryMap[$categoryName] ?? 83; // Default to Educational Material category
+        return $categoryMap[$categoryName] ?? 7; // Default to Books and Media category
     }
 
     public function download(Request $request, Ad $ad)
     {
-        // Check if the user has paid for this educational material
+        // Check if the user has paid for this book
         $hasPaid = Payment::where('user_id', $request->user()->id)
                             ->where('payable_id', $ad->id)
-                            ->where('payable_type', 'educational_material')
+                            ->where('payable_type', 'book')
                             ->where('status', 'success')
                             ->exists();
 
         if (!$hasPaid && $ad->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Payment required to download this material.'], 403);
+            return response()->json(['message' => 'Payment required to download this book.'], 403);
         }
 
         // Check if file exists before attempting download
@@ -264,7 +262,7 @@ class EducationalMaterialController extends Controller
         try {
             return \Storage::disk('public')->download($ad->file_path, $ad->title . '.' . pathinfo($ad->file_path, PATHINFO_EXTENSION));
         } catch (\Exception $e) {
-            \Log::error('File download error for material ' . $ad->id . ': ' . $e->getMessage());
+            \Log::error('File download error for book ' . $ad->id . ': ' . $e->getMessage());
             return response()->json(['message' => 'Download failed. Please try again later.'], 500);
         }
     }
@@ -284,7 +282,7 @@ class EducationalMaterialController extends Controller
             'metadata' => [
                 'ad_id' => $ad->id,
                 'user_id' => $user->id,
-                'type' => 'educational_material',
+                'type' => 'book',
             ],
         ]);
 
