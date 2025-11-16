@@ -122,6 +122,14 @@ class AdminController extends Controller
         return response()->json($ad);
     }
 
+    public function disapproveAd(Request $request, Ad $ad)
+    {
+        $ad->status = 'pending_approval';
+        $ad->approved_at = null;
+        $ad->save();
+        return response()->json($ad);
+    }
+
     public function getDashboardStats()
     {
         $totalUsers = User::count();

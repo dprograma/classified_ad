@@ -57,6 +57,7 @@ function EnhancedAdList({ initialSearchParams = {} }) {
       });
 
       const queryString = params.toString() ? `?${params.toString()}` : '';
+      console.log('Fetching ads with query:', queryString, 'Search params:', searchParams);
       
       // Check cache first
       const cacheKey = `ads_${queryString}`;
@@ -66,6 +67,7 @@ function EnhancedAdList({ initialSearchParams = {} }) {
       
       // Use cache if it's less than 2 minutes old
       if (cachedData && cacheTimestamp && (now - parseInt(cacheTimestamp)) < 120000) {
+        console.log('Using cached data for:', queryString);
         const parsed = JSON.parse(cachedData);
         setAds(parsed.data || []);
         setSearchMetadata(parsed.search_metadata || {});
@@ -73,8 +75,10 @@ function EnhancedAdList({ initialSearchParams = {} }) {
         return;
       }
 
+      console.log('Making API call to: /ads' + queryString);
       const response = await callApi('GET', `/ads${queryString}`);
       
+      console.log('API response - Total ads found:', response.data?.length || 0);
       setAds(response.data || []);
       setSearchMetadata(response.search_metadata || {});
       setCurrentPage(response.current_page || 1);
@@ -101,16 +105,22 @@ function EnhancedAdList({ initialSearchParams = {} }) {
   // Initialize search when initialSearchParams changes
   useEffect(() => {
     const initializeSearch = async () => {
+      // Create a stable key from params to detect changes
+      const paramsKey = JSON.stringify(initialSearchParams);
+      console.log('EnhancedAdList initializing with params:', initialSearchParams, 'Key:', paramsKey);
+      
       if (Object.keys(initialSearchParams).length > 0) {
         setCurrentFilters(initialSearchParams);
         await fetchAds(initialSearchParams, 1);
       } else {
+        console.log('No initial search params, fetching all ads');
         await fetchAds();
       }
     };
     
     initializeSearch();
-  }, [JSON.stringify(initialSearchParams)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(initialSearchParams)]); // Use stringified version to detect actual changes
 
   const handleSearch = (searchParams) => {
     setCurrentFilters(searchParams);

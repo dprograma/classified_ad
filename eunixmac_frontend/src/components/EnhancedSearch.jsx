@@ -95,10 +95,13 @@ const EnhancedSearch = ({ onSearch, onFiltersChange }) => {
 
   const fetchCategories = async () => {
     try {
-      const data = await callApi('GET', '/categories');
-      setCategories(data);
+      const response = await callApi('GET', '/categories');
+      // Handle API response structure - data might be in response.data
+      const categoriesData = response?.data || response;
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setCategories([]); // Set empty array on error
     }
   };
 
