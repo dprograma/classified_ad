@@ -41,10 +41,12 @@ function PostAd() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const data = await callApi('GET', '/categories');
-      setCategories(data);
+      const response = await callApi('GET', '/categories');
+      // Backend returns { success: true, data: [...] }
+      setCategories(response.data || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setCategories([]); // Set empty array on error
     }
   }, [callApi]);
 
@@ -74,8 +76,8 @@ function PostAd() {
 
   const handleParentCategoryChange = (parentId) => {
     setSelectedParentCategory(parentId);
-    const parent = categories.find(cat => cat.id === parentId);
-    setSubCategories(parent ? parent.children : []);
+    const parent = Array.isArray(categories) ? categories.find(cat => cat.id === parentId) : null;
+    setSubCategories(parent && parent.children ? parent.children : []);
     handleInputChange('category_id', ''); // Reset sub-category
   };
 
@@ -369,7 +371,7 @@ function PostAd() {
                     label="Category"
                     onChange={(e) => handleParentCategoryChange(e.target.value)}
                   >
-                    {categories.map((category) => (
+                    {Array.isArray(categories) && categories.map((category) => (
                       <MenuItem 
                         key={category.id} 
                         value={category.id}

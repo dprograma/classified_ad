@@ -13,6 +13,7 @@ class AdController extends Controller
 {
     public function index(Request $request)
     {
+        \Log::info('Ad search request:', $request->all());
         $query = Ad::query()->where('status', 'active')->whereNotNull('approved_at');
 
         // Enhanced search functionality
@@ -27,9 +28,63 @@ class AdController extends Controller
             });
         }
 
-        // Category filtering
-        if ($request->has('category_id') && !empty($request->category_id)) {
-            $query->where('category_id', $request->input('category_id'));
+        // Category and sub-category filtering
+        if ($request->has('subcategory') && !empty($request->subcategory) && $request->has('category_id') && !empty($request->category_id)) {
+            $subCategoryName = $request->input('subcategory');
+            $parentCategoryId = $request->input('category_id');
+
+            // Find the subcategory by name and parent_id
+            $subCategory = \App\Models\Category::where('name', $subCategoryName)
+                ->where('parent_id', $parentCategoryId)
+                ->first();
+
+            if ($subCategory) {
+                // Filter by the specific subcategory
+                $query->where('category_id', $subCategory->id);
+                \Log::info("Filtering by subcategory: {$subCategory->name} (ID: {$subCategory->id})");
+            } else {
+                // If subcategory not found, apply a filter that returns no results
+                \Log::warning("Subcategory '{$subCategoryName}' not found for parent category ID: {$parentCategoryId}");
+                $query->whereRaw('1 = 0');
+            }
+        } elseif ($request->has('category_id') && !empty($request->category_id)) {
+            $categoryId = $request->input('category_id');
+
+            // Check if this is a parent category
+            $category = \App\Models\Category::find($categoryId);
+
+            if ($category) {
+                if ($category->parent_id === null) {
+                    // This is a parent category - get ads from parent and all children
+                    $childIds = \App\Models\Category::where('parent_id', $categoryId)->pluck('id')->toArray();
+
+                    // Also check for duplicate parent categories with the same name
+                    $duplicateParents = \App\Models\Category::where('name', $category->name)
+                        ->whereNull('parent_id')
+                        ->where('id', '!=', $categoryId)
+                        ->pluck('id')
+                        ->toArray();
+
+                    if (!empty($duplicateParents)) {
+                        \Log::info("Found duplicate parent categories for '{$category->name}': " . implode(', ', $duplicateParents));
+                        // Get children of duplicate parent categories too
+                        $duplicateChildIds = \App\Models\Category::whereIn('parent_id', $duplicateParents)->pluck('id')->toArray();
+                        $childIds = array_merge($childIds, $duplicateChildIds);
+                    }
+
+                    $allCategoryIds = array_unique(array_merge([$categoryId], $duplicateParents, $childIds));
+                    \Log::info("Filtering by parent category '{$category->name}' (ID: {$categoryId}) and children: " . implode(', ', $allCategoryIds));
+                    $query->whereIn('category_id', $allCategoryIds);
+                } else {
+                    // This is a child category - filter by this specific category only
+                    \Log::info("Filtering by child category: {$category->name} (ID: {$categoryId})");
+                    $query->where('category_id', $categoryId);
+                }
+            } else {
+                // Category not found
+                \Log::warning("Category ID {$categoryId} not found");
+                $query->whereRaw('1 = 0');
+            }
         }
 
         // Location filtering with multiple options

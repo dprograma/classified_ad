@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Container,
   Typography,
@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import useApi from '../hooks/useApi';
 import EnhancedAdList from '../components/EnhancedAdList';
 
-// Updated categories that match the CategoryGrid component
+// Updated categories that match the backend CategorySeeder
 const categories = [
   { 
     name: 'Vehicles', 
@@ -38,23 +38,17 @@ const categories = [
     id: 'vehicles', 
     color: '#FF6B35',
     bgColor: 'rgba(255, 107, 53, 0.1)',
-    description: 'Cars, trucks, motorcycles and auto parts'
+    description: 'Cars, trucks, motorcycles and auto parts',
+    subcategories: ['Cars', 'Trucks/ heavy duty equipment', 'Motorcycles', 'buses/ minibus', 'vehicle spare part']
   },
   { 
-    name: 'Property', 
+    name: 'Real Estate', 
     icon: <Home />, 
-    id: 'property', 
+    id: 'real-estate', 
     color: '#4ECDC4',
     bgColor: 'rgba(78, 205, 196, 0.1)',
-    description: 'Houses, apartments, lands and commercial properties'
-  },
-  { 
-    name: 'Mobile', 
-    icon: <PhoneAndroid />, 
-    id: 'mobile', 
-    color: '#45B7D1',
-    bgColor: 'rgba(69, 183, 209, 0.1)',
-    description: 'Smartphones, tablets and accessories'
+    description: 'Houses, apartments, lands and commercial properties',
+    subcategories: ['Apartments for Rent', 'Houses for Sale', 'Commercial Properties', 'Land for Sale']
   },
   { 
     name: 'Electronics', 
@@ -62,23 +56,26 @@ const categories = [
     id: 'electronics', 
     color: '#8B5CF6',
     bgColor: 'rgba(139, 92, 246, 0.1)',
-    description: 'Laptops, TVs, cameras and gadgets'
+    description: 'Smartphones, laptops, tablets and gadgets',
+    subcategories: ['Smartphones', 'Laptops', 'Tablets', 'Smartwatches', 'Gaming Consoles']
   },
   { 
-    name: 'Furniture', 
+    name: 'Home and Kitchen', 
     icon: <Chair />, 
-    id: 'furniture', 
+    id: 'home-and-kitchen', 
     color: '#F59E0B',
     bgColor: 'rgba(245, 158, 11, 0.1)',
-    description: 'Home furniture and appliances'
+    description: 'Furniture, decor, and kitchen appliances',
+    subcategories: ['Furniture', 'Decor', 'Kitchen Appliances', 'Bed and Bath', 'Outdoor Living']
   },
   { 
-    name: 'Beauty', 
+    name: 'Beauty and Personal Care', 
     icon: <Face />, 
     id: 'beauty', 
     color: '#EC4899',
     bgColor: 'rgba(236, 72, 153, 0.1)',
-    description: 'Health, beauty and personal care'
+    description: 'Skincare, haircare, makeup and wellness',
+    subcategories: ['Skincare', 'Haircare', 'Makeup', 'Fragrances', 'Wellness and Health']
   },
   { 
     name: 'Fashion', 
@@ -86,7 +83,8 @@ const categories = [
     id: 'fashion', 
     color: '#10B981',
     bgColor: 'rgba(16, 185, 129, 0.1)',
-    description: 'Clothing, shoes, bags and accessories'
+    description: 'Clothing, shoes, bags and accessories',
+    subcategories: ["Men's Clothing", "Women's Clothing", "Kids' Clothing", 'Footwear', 'Accessories']
   },
   { 
     name: 'Pets', 
@@ -94,7 +92,8 @@ const categories = [
     id: 'pets', 
     color: '#F97316',
     bgColor: 'rgba(249, 115, 22, 0.1)',
-    description: 'Pets, pet supplies and veterinary services'
+    description: 'Dogs, cats, and pet supplies',
+    subcategories: ['Dogs', 'Cats', 'Other Pets', 'Pet Supplies']
   },
   { 
     name: 'Services', 
@@ -102,15 +101,26 @@ const categories = [
     id: 'services', 
     color: '#6366F1',
     bgColor: 'rgba(99, 102, 241, 0.1)',
-    description: 'Professional services and business equipment'
+    description: 'Professional services and business equipment',
+    subcategories: ['Beauty and Wellness', 'Pet Services', 'Home Services', 'Tutoring and Lessons']
   },
   { 
-    name: 'Gaming', 
+    name: 'Sports and Outdoors', 
     icon: <SportsEsports />, 
-    id: 'gaming', 
+    id: 'sports', 
     color: '#EF4444',
     bgColor: 'rgba(239, 68, 68, 0.1)',
-    description: 'Video games, consoles and gaming accessories'
+    description: 'Fitness equipment and outdoor gear',
+    subcategories: ['Fitness Equipment', 'Team Sports', 'Outdoor Gear', 'Camping and Hiking', 'Cycling']
+  },
+  { 
+    name: 'Jobs', 
+    icon: <Work />, 
+    id: 'jobs', 
+    color: '#8B5CF6',
+    bgColor: 'rgba(139, 92, 246, 0.1)',
+    description: 'Full-time, part-time, and freelance opportunities',
+    subcategories: ['Full-time Jobs', 'Part-time Jobs', 'Internships', 'Freelance Work']
   }
 ];
 
@@ -118,9 +128,12 @@ const Categories = () => {
   const [categoriesWithCount, setCategoriesWithCount] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const { callApi } = useApi();
   const navigate = useNavigate();
+
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
 
   useEffect(() => {
     fetchCategoriesWithCount();
@@ -129,77 +142,83 @@ const Categories = () => {
   const fetchCategoriesWithCount = async () => {
     try {
       setLoading(true);
-      
-      // Try to fetch backend categories first to get the real mapping
-      let backendCategories = [];
-      try {
-        const categoriesResponse = await callApi('GET', '/categories');
-        backendCategories = categoriesResponse?.data || categoriesResponse || [];
-      } catch (categoriesError) {
-        console.warn('Could not fetch backend categories:', categoriesError);
-      }
-      
-      // Create a mapping between our frontend categories and backend categories
-      const categoryMapping = {};
-      if (backendCategories.length > 0) {
-        categories.forEach(frontendCategory => {
-          // Try to match by name (case insensitive) or slug
-          const backendMatch = backendCategories.find(backendCat => 
-            backendCat.name?.toLowerCase().includes(frontendCategory.name.toLowerCase()) ||
-            backendCat.slug === frontendCategory.id ||
-            frontendCategory.id.includes(backendCat.name?.toLowerCase()) ||
-            backendCat.name?.toLowerCase().includes(frontendCategory.id)
-          );
-          if (backendMatch) {
-            categoryMapping[frontendCategory.id] = backendMatch.id;
-          }
-        });
-      }
-      
-      // First get all ads to count by category
-      const allAdsResponse = await callApi('GET', '/ads?per_page=1000'); // Get a large number to count all
-      const allAds = allAdsResponse?.data || [];
-      
-      // Count ads per category using various possible identifiers
-      const categoryCounts = {};
-      allAds.forEach(ad => {
-        // Try different ways to get the category identifier
-        const possibleIds = [
-          ad.category_id,
-          ad.category?.id,
-          ad.category?.slug,
-          ad.category?.name?.toLowerCase()
-        ].filter(Boolean);
-        
-        possibleIds.forEach(id => {
-          if (id) {
-            categoryCounts[id] = (categoryCounts[id] || 0) + 1;
-          }
-        });
-      });
+      setError(null);
 
-      // Map counts to our categories using both frontend IDs and mapped backend IDs
+      // Fetch backend categories with counts
+      const categoriesResponse = await callApi('GET', '/categories');
+
+      if (!categoriesResponse || !categoriesResponse.success) {
+        throw new Error(categoriesResponse?.message || 'Failed to fetch categories');
+      }
+
+      const backendCategories = categoriesResponse?.data || [];
+
+      console.log('Backend categories received:', backendCategories);
+
+      if (backendCategories.length === 0) {
+        console.warn('No categories returned from backend');
+        setError('No categories available at the moment');
+        setCategoriesWithCount(categories.map(cat => ({ ...cat, count: '0', children: [] })));
+        return;
+      }
+
+      // Create a mapping between frontend display categories and backend categories
       const categoriesWithRealCount = categories.map(category => {
-        let count = categoryCounts[category.id] || 0;
-        
-        // Also try the mapped backend ID if available
-        const mappedId = categoryMapping[category.id];
-        if (mappedId && categoryCounts[mappedId]) {
-          count = Math.max(count, categoryCounts[mappedId]);
+        console.log(`Trying to match frontend category "${category.name}" (id: ${category.id})`);
+
+        // Find all matching backend categories by name (case insensitive)
+        const allMatches = backendCategories.filter(backendCat =>
+          backendCat.name?.toLowerCase() === category.name.toLowerCase()
+        );
+
+        if (allMatches.length > 0) {
+          console.log(`  ✓ Found ${allMatches.length} match(es) for "${category.name}"`);
+
+          // Aggregate counts from all matching categories
+          const totalCount = allMatches.reduce((sum, cat) => sum + (cat.ads_count || 0), 0);
+
+          // Collect all children from all matching parent categories
+          // Use a Map to deduplicate children by name while keeping the most relevant one
+          const childrenMap = new Map();
+          allMatches.forEach(parentCat => {
+            (parentCat.children || []).forEach(child => {
+              const childName = child.name.toLowerCase();
+              if (!childrenMap.has(childName) || child.ads_count > (childrenMap.get(childName).ads_count || 0)) {
+                childrenMap.set(childName, child);
+              }
+            });
+          });
+
+          const uniqueChildren = Array.from(childrenMap.values());
+
+          console.log(`  Total count: ${totalCount}, Children: ${uniqueChildren.length}`);
+
+          return {
+            ...category,
+            count: totalCount.toLocaleString(),
+            backendId: allMatches[0].id, // Use first match as primary
+            backendName: allMatches[0].name,
+            children: uniqueChildren,
+            multipleMatches: allMatches.map(m => m.id) // Store all IDs for filtering
+          };
         }
-        
+
+        console.log(`  ✗ No match found for "${category.name}"`);
         return {
           ...category,
-          count: count.toLocaleString(),
-          mappedId: mappedId // Store for navigation
+          count: '0',
+          backendId: null,
+          backendName: null,
+          children: []
         };
       });
-      
+
       setCategoriesWithCount(categoriesWithRealCount);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setError(error.message || 'Failed to load categories. Please try again later.');
       // Fallback to categories with zero counts
-      setCategoriesWithCount(categories.map(cat => ({ ...cat, count: '0' })));
+      setCategoriesWithCount(categories.map(cat => ({ ...cat, count: '0', children: [] })));
     } finally {
       setLoading(false);
     }
@@ -207,6 +226,12 @@ const Categories = () => {
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
+    setSelectedSubCategory(null); // Reset sub-category when a new category is selected
+  };
+
+  const handleSubCategoryClick = (subcategory) => {
+    // subcategory can be either a string (from hardcoded subcategories) or an object (from backend children)
+    setSelectedSubCategory(subcategory);
   };
 
   const handleSearch = (e) => {
@@ -218,15 +243,76 @@ const Categories = () => {
 
   const handleBackToCategories = () => {
     setSelectedCategory(null);
+    setSelectedSubCategory(null);
   };
 
   const filteredCategories = categoriesWithCount.filter(category =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    category.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    category.subcategories?.some(sub => sub.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  useEffect(() => {
+    console.log('Selected category:', selectedCategory);
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    console.log('Selected sub-category:', selectedSubCategory);
+  }, [selectedSubCategory]);
+
+  const searchParams = useMemo(() => {
+    if (!selectedCategory) {
+      return {};
+    }
+
+    const params = {};
+
+    // When a subcategory is selected, we still search by parent category ID
+    // but add the subcategory name to filter results
+    if (selectedSubCategory) {
+      // Always use parent category ID for the main filter
+      if (selectedCategory.multipleMatches && selectedCategory.multipleMatches.length > 0) {
+        params.category_id = selectedCategory.multipleMatches[0];
+      } else if (selectedCategory.backendId) {
+        params.category_id = selectedCategory.backendId;
+      } else {
+        params.category_id = selectedCategory.id;
+      }
+
+      // Add subcategory name to filter ads
+      let subcategoryName = '';
+      if (typeof selectedSubCategory === 'object' && selectedSubCategory.name) {
+        subcategoryName = selectedSubCategory.name;
+      } else if (typeof selectedSubCategory === 'string') {
+        subcategoryName = selectedSubCategory;
+      }
+
+      if (subcategoryName) {
+        // Use the subcategory parameter that the backend expects
+        params.subcategory = subcategoryName;
+        console.log('Filtering by parent category:', params.category_id, 'with subcategory:', subcategoryName);
+      }
+    } else {
+      // No subcategory selected, show ads from this parent category AND all its children
+      if (selectedCategory.multipleMatches && selectedCategory.multipleMatches.length > 1) {
+        params.category_id = selectedCategory.multipleMatches[0];
+        console.log('Using first of multiple matches:', selectedCategory.multipleMatches[0], 'All matches:', selectedCategory.multipleMatches);
+      } else if (selectedCategory.backendId) {
+        params.category_id = selectedCategory.backendId;
+        console.log('Using parent category ID:', params.category_id, '- Will show all ads from parent + children');
+      } else {
+        params.category_id = selectedCategory.id;
+        console.log('Using frontend category ID as fallback:', params.category_id);
+      }
+    }
+
+    console.log('Final search params:', params);
+    return params;
+  }, [selectedCategory, selectedSubCategory]);
 
   // If a category is selected, show the ads for that category
   if (selectedCategory) {
+
     return (
       <Container maxWidth="xl" sx={{ py: 2 }}>
         <Box sx={{ mb: 3 }}>
@@ -245,7 +331,7 @@ const Categories = () => {
             <Typography variant="h6">Back to Categories</Typography>
           </Box>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
             <Box
               sx={{
                 width: 60,
@@ -263,19 +349,63 @@ const Categories = () => {
               })}
             </Box>
             
-            <Box>
+            {/* <Box>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
                 {selectedCategory.name}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                {selectedCategory.description}
+                {selectedCategory.children && selectedCategory.children.length > 0 
+                  ? selectedCategory.children.map(c => c.name).join(', ')
+                  : selectedCategory.subcategories.join(', ')
+                }
               </Typography>
-            </Box>
+            </Box> */}
+          </Box>
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+            {selectedCategory.children && selectedCategory.children.length > 0
+              ? selectedCategory.children.map(child => {
+                  const isSelected = (typeof selectedSubCategory === 'object' && selectedSubCategory?.id === child.id) ||
+                                   (typeof selectedSubCategory === 'string' && selectedSubCategory === child.name);
+
+                  return (
+                    <Chip
+                      key={child.id || child.name}
+                      label={child.name}
+                      onClick={() => handleSubCategoryClick(child)}
+                      color={isSelected ? 'primary' : 'default'}
+                      sx={{
+                        cursor: 'pointer',
+                        '&:hover': {
+                          backgroundColor: isSelected ? undefined : 'rgba(0, 0, 0, 0.08)'
+                        }
+                      }}
+                    />
+                  );
+                })
+              : selectedCategory.subcategories.map(subcategory => (
+                  <Chip
+                    key={subcategory}
+                    label={subcategory}
+                    onClick={() => handleSubCategoryClick(subcategory)}
+                    color={selectedSubCategory === subcategory ? 'primary' : 'default'}
+                  />
+                ))
+            }
+            {selectedSubCategory && (
+              <Chip
+                label="Clear Filter"
+                onClick={() => setSelectedSubCategory(null)}
+                variant="outlined"
+                color="secondary"
+              />
+            )}
           </Box>
         </Box>
 
         <EnhancedAdList 
-          initialSearchParams={{ category_id: selectedCategory.mappedId || selectedCategory.id }}
+          key={JSON.stringify(searchParams)}
+          initialSearchParams={searchParams}
         />
       </Container>
     );
@@ -362,18 +492,49 @@ const Categories = () => {
           {category.name}
         </Typography>
         
-        {/* Description */}
-        <Typography 
-          variant="body2" 
-          color="text.secondary"
-          sx={{ 
-            mb: 2,
-            lineHeight: 1.4,
-            fontSize: '0.85rem'
-          }}
-        >
-          {category.description}
-        </Typography>
+        {/* Subcategories */}
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5, mb: 2 }}>
+          {category.children && category.children.length > 0
+            ? category.children.slice(0, 3).map((child) => (
+                <Chip
+                  key={child.id}
+                  label={child.name}
+                  size="small"
+                  sx={{
+                    backgroundColor: `${category.color}20`,
+                    color: category.color,
+                    fontWeight: 500,
+                    fontSize: '0.7rem'
+                  }}
+                />
+              ))
+            : category.subcategories?.slice(0, 3).map((subcategory, index) => (
+                <Chip
+                  key={index}
+                  label={subcategory}
+                  size="small"
+                  sx={{
+                    backgroundColor: `${category.color}20`,
+                    color: category.color,
+                    fontWeight: 500,
+                    fontSize: '0.7rem'
+                  }}
+                />
+              ))
+          }
+          {category.children && category.children.length > 3 && (
+            <Chip
+              label={`+${category.children.length - 3} more`}
+              size="small"
+              sx={{
+                backgroundColor: `${category.color}10`,
+                color: category.color,
+                fontWeight: 500,
+                fontSize: '0.7rem'
+              }}
+            />
+          )}
+        </Box>
         
         {/* Count Badge */}
         <Chip
@@ -478,6 +639,13 @@ const Categories = () => {
           </IconButton>
         </Paper>
       </Box>
+
+      {/* Error Display */}
+      {error && (
+        <Alert severity="warning" sx={{ mb: 3, borderRadius: 3 }}>
+          {error}
+        </Alert>
+      )}
 
       {loading ? (
         <Grid container spacing={3}>

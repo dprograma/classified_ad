@@ -10,11 +10,12 @@ function CategoryList() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await callApi('GET', '/categories');
-        setCategories(data);
+        const response = await callApi('GET', '/categories');
+        // Backend returns { success: true, data: [...] }
+        setCategories(response.data || []);
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Error handling is done by useApi hook
+        setCategories([]); // Set empty array on error
       }
     };
     fetchCategories();
@@ -26,7 +27,7 @@ function CategoryList() {
         Categories
       </Typography>
       <List>
-        {categories.map((category) => (
+        {Array.isArray(categories) && categories.map((category) => (
           <ListItem key={category.id} component={Link} to={`/categories/${category.id}`}>
             <ListItemText primary={category.name} />
           </ListItem>

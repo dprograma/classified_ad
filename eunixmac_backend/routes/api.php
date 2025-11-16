@@ -128,6 +128,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/ads', [AdminController::class, 'getAds']);
         Route::put('/admin/ads/{ad}/approve', [AdminController::class, 'approveAd']);
         Route::put('/admin/ads/{ad}/reject', [AdminController::class, 'rejectAd']);
+        Route::put('/admin/ads/{ad}/disapprove', [AdminController::class, 'disapproveAd']);
         Route::put('/admin/ads/{ad}/status', [AdminController::class, 'updateAdStatus']);
         Route::delete('/admin/ads/{ad}', [AdminController::class, 'deleteAd']);
 
