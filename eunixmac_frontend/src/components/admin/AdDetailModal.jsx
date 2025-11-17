@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography, Box, Paper, Grid, Chip
 } from '@mui/material';
+import { getStorageUrl } from '../../config/api';
 
 const AdDetailModal = ({ ad, open, onClose }) => {
   console.log(ad);
@@ -23,7 +24,7 @@ const AdDetailModal = ({ ad, open, onClose }) => {
             {ad.images && ad.images.length > 0 ? (
               <Paper elevation={0} sx={{ p: 1, border: '1px solid #eee' }}>
                 <img 
-                  src={ad.preview_image || 'https://via.placeholder.com/300'} 
+                  src={ad.preview_image ? getStorageUrl(ad.preview_image) : 'https://via.placeholder.com/300'} 
                   alt={ad.title} 
                   style={{ width: '100%', height: 'auto', borderRadius: '4px' }} 
                 />

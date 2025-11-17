@@ -218,7 +218,7 @@ function EnhancedAdList({ initialSearchParams = {} }) {
                 <CardMedia
                   component="img"
                   height="200"
-                  image={ad.preview_image || getStorageUrl(ad.images[0]?.image_path)}
+                  image={getStorageUrl(ad.preview_image) || getStorageUrl(ad.images[0]?.image_path)}
                   alt={ad.title}
                   sx={{
                     objectFit: 'cover',
