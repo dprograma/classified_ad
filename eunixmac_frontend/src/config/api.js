@@ -18,6 +18,11 @@ export const getApiUrl = (endpoint) => {
 
 export const getStorageUrl = (path) => {
   if (!path) return null;
+  // If path already includes 'storage/', use it as is
+  if (path.startsWith('storage/')) {
+    return `${API_CONFIG.SERVER_URL}/${path}`;
+  }
+  // Otherwise, prepend /storage/
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   return `${API_CONFIG.SERVER_URL}/storage${cleanPath}`;
 };

@@ -3,6 +3,7 @@ import { Card, CardContent, Typography, CardMedia, Box, Chip, IconButton, Button
 import { FavoriteBorder, Visibility, LocationOn, Favorite } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import useSlowApi from '../hooks/useSlowApi';
+import { getStorageUrl } from '../config/api';
 
 const FeaturedAds = () => {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -265,7 +266,7 @@ const FeaturedAds = () => {
               <CardMedia
                 component="img"
                 height={windowWidth < 480 ? "160" : windowWidth < 768 ? "180" : "200"}
-                image={ad.preview_image || '/placeholder-image.jpg'}
+                image={ad.preview_image ? getStorageUrl(ad.preview_image) : '/placeholder-image.jpg'}
                 alt={ad.title}
                 onError={(e) => {
                   // If image fails to load, use a fallback
