@@ -293,8 +293,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
-            // To prevent user enumeration, we can return a success message even if the user doesn't exist.
-            return response()->json(['message' => 'If your email address exists in our system, you will receive a password reset link.']);
+            return response()->json(['message' => 'The email address you entered is not registered in our system.'], 404);
         }
 
         // Create a new token
@@ -303,7 +302,7 @@ class AuthController extends Controller
         // Send the custom notification
         $user->notify(new \App\Notifications\CustomResetPassword($token));
 
-        return response()->json(['message' => 'Password reset email sent.']);
+        return response()->json(['message' => 'Password reset link has been sent to your email. Please check your inbox.']);
     }
 
     public function resetPassword(Request $request)
