@@ -92,5 +92,16 @@ class RouteServiceProvider extends ServiceProvider
                     ], 429);
                 });
         });
+
+        // Rate limiting for social login
+        RateLimiter::for('social-login', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip())
+                ->response(function () {
+                    return response()->json([
+                        'message' => 'Too many social login attempts. Please try again later.',
+                        'retry_after' => 60
+                    ], 429);
+                });
+        });
     }
 }

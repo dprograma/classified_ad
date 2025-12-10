@@ -67,7 +67,8 @@ import {
   Close as CloseIcon,
   AdminPanelSettings,
   Support,
-  LibraryBooks
+  LibraryBooks,
+  MailOutline
 } from '@mui/icons-material';
 import { useAuth } from '../AuthContext';
 import useApi from '../hooks/useApi';
@@ -89,6 +90,8 @@ import AccountSettingsSection from "../components/dashboard/AccountSettingsSecti
 import AdminBooksManagement from './AdminBooksManagement';
 import AdminSupportManagement from './AdminSupportManagement';
 import AdminAdsManagement from './AdminAdsManagement';
+import AdminNewsManagement from './AdminNewsManagement';
+import AdminNewsletterManagement from './AdminNewsletterManagement';
 
 // Common components
 import StatCard from '../components/common/StatCard';
@@ -169,6 +172,20 @@ const getAdminNavItems = (user) => user?.is_admin ? [
     icon: <LibraryBooks />,
     badge: null,
     description: 'Manage books'
+  },
+  {
+    id: 'admin-news',
+    label: 'News Management',
+    icon: <Notifications />,
+    badge: null,
+    description: 'Create and manage news articles'
+  },
+  {
+    id: 'admin-newsletter',
+    label: 'Newsletter',
+    icon: <MailOutline />,
+    badge: null,
+    description: 'Manage newsletter subscriptions'
   },
   {
     id: 'admin-support',
@@ -576,6 +593,10 @@ const Dashboard = () => {
         return <AdminAdsManagement />;
       case 'admin-books':
         return <AdminBooksManagement />;
+      case 'admin-news':
+        return <AdminNewsManagement />;
+      case 'admin-newsletter':
+        return <AdminNewsletterManagement />;
       case 'admin-support':
         return <AdminSupportManagement />;
       default:

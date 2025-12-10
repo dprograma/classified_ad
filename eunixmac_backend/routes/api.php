@@ -25,6 +25,8 @@ use App\Http\Controllers\SocialLoginController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\AdminSupportController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\NewsletterController;
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:registration');
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
@@ -33,32 +35,28 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:au
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:password-reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:password-reset');
 
-Route::get('/auth/{provider}/redirect', [SocialLoginController::class, 'redirect']);
-Route::get('/auth/{provider}/callback', [SocialLoginController::class, 'callback']);
+Route::get('/auth/{provider}/redirect', [SocialLoginController::class, 'redirect'])->middleware('throttle:social-login');
+Route::get('/auth/{provider}/callback', [SocialLoginController::class, 'callback'])->middleware('throttle:social-login');
 
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category}', [CategoryController::class, 'show']);
 Route::get('/categories/{categoryId}/fields', [AdController::class, 'getCategoryFields']);
 Route::get('/categories/{categoryId}/filters', [AdController::class, 'getCategoryFilters']);
 
-Route::post('/newsletter/subscribe', function (Request $request) {
-    $request->validate([
-        'email' => 'required|email|max:255'
-    ]);
-    
-    // For now, just return success. In production, you'd save to a database
-    // or integrate with a newsletter service like Mailchimp
-    \Log::info('Newsletter subscription request:', ['email' => $request->email]);
-    
-    return response()->json([
-        'success' => true,
-        'message' => 'Successfully subscribed to newsletter!'
-    ]);
-});
+// Newsletter subscription routes (public)
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe']);
+Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe']);
+Route::get('/newsletter/verify/{token}', [NewsletterController::class, 'verify']);
 
 Route::get('/ads', [AdController::class, 'index']);
 Route::get('/ads/search/suggestions', [AdController::class, 'getSearchSuggestions']);
 Route::get('/ads/{ad}', [AdController::class, 'show']);
+
+// Public news routes
+Route::get('/news', [NewsController::class, 'index']);
+Route::get('/news/latest', [NewsController::class, 'latest']);
+Route::get('/news/search', [NewsController::class, 'search']);
+Route::get('/news/{identifier}', [NewsController::class, 'show']);
 
 Route::match(['get', 'post'], '/payments/verify', [PaymentController::class, 'verifyPayment']); // Public route for Paystack callback
 
@@ -151,6 +149,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/admin/books/{ad}/reject', [AdminController::class, 'rejectBook']);
         Route::delete('/admin/books/{ad}', [AdminController::class, 'deleteBook']);
         Route::get('/admin/books-stats', [AdminController::class, 'getBooksStats']);
+
+        // News management
+        Route::get('/admin/news', [NewsController::class, 'index']);
+        Route::post('/admin/news', [NewsController::class, 'store']);
+        Route::get('/admin/news/statistics', [NewsController::class, 'statistics']);
+        Route::put('/admin/news/{news}', [NewsController::class, 'update']);
+        Route::delete('/admin/news/{news}', [NewsController::class, 'destroy']);
+
+        // Newsletter management
+        Route::get('/admin/newsletter', [NewsletterController::class, 'index']);
+        Route::get('/admin/newsletter/statistics', [NewsletterController::class, 'statistics']);
+        Route::get('/admin/newsletter/export', [NewsletterController::class, 'export']);
+        Route::delete('/admin/newsletter/{id}', [NewsletterController::class, 'destroy']);
 
     });
 });

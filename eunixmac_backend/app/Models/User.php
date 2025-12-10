@@ -100,6 +100,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_verified',
         'referral_code',
         'referred_by',
+        'provider',
+        'provider_id',
+        'provider_token',
     ];
 
     /**
@@ -109,6 +112,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $hidden = [
         'password',
+        'provider_token',
     ];
 
     /**

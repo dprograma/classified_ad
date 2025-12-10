@@ -263,13 +263,30 @@ function Navbar() {
             </IconButton>
           </SearchBar>
         </Box>
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
+          <Button
+            color="inherit"
+            component={Link}
+            to="/news"
+            sx={{
+              fontWeight: 600,
+              fontSize: '1rem',
+              px: 2,
+              py: 1,
+              borderRadius: 8,
+              transition: 'all 0.2s',
+              '&:hover': {
+                backgroundColor: 'rgba(108, 71, 255, 0.08)',
+              },
+            }}
+          >
+            News
+          </Button>
           <Button
             variant="contained"
             color="secondary"
             onClick={handlePostAdClick}
             sx={{
-              mr: 2,
               px: 3,
               py: 1.2,
               borderRadius: 8,
@@ -428,6 +445,9 @@ function Navbar() {
           <List>
             <ListItem component={Link} to="/" onClick={handleDrawerToggle}>
               <ListItemText primary="Home" />
+            </ListItem>
+            <ListItem component={Link} to="/news" onClick={handleDrawerToggle}>
+              <ListItemText primary="News" />
             </ListItem>
             <ListItem component={Link} to="/post-ad" onClick={handleDrawerToggle}>
               <ListItemText primary="Post Ad" />
