@@ -46,7 +46,7 @@ class SocialLoginController extends Controller
                 $url = "https://www.facebook.com/v18.0/dialog/oauth?" . http_build_query([
                     'client_id' => $clientId,
                     'redirect_uri' => urldecode($redirectUri),
-                    'scope' => 'email,public_profile',
+                    'scope' => 'public_profile', // Only request public_profile until email is approved
                     'response_type' => 'code',
                     'state' => $state,
                 ]);
