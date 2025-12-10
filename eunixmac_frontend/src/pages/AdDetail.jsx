@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Typography, Box, Card, CardContent, CardMedia, Chip, Stack, Button, TextField, Container, CircularProgress } from '@mui/material';
 import useApi from '../hooks/useApi';
+import { getStorageUrl } from '../config/api';
 
 function AdDetail() {
   const { id } = useParams();
@@ -192,7 +193,7 @@ function AdDetail() {
           <CardMedia
             component="img"
             height="400"
-            image={ad.images[0].image_path?.startsWith('http') ? ad.images[0].image_path : `${import.meta.env.VITE_API_URL?.replace('/api', '') || 'https://eunixma.com.ng'}/storage/${ad.images[0].image_path}`}
+            image={getStorageUrl(ad.images[0].image_path)}
             alt={ad.title}
             onError={(e) => {
               e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop&auto=format';

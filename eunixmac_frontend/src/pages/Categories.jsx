@@ -9,7 +9,8 @@ import {
   InputBase,
   Paper,
   Skeleton,
-  Alert
+  Alert,
+  Pagination
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -24,201 +25,119 @@ import {
   Work,
   SportsEsports,
   TrendingUp,
-  ArrowBack
+  ArrowBack,
+  Category as CategoryIcon
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import useApi from '../hooks/useApi';
 import EnhancedAdList from '../components/EnhancedAdList';
 
-// Updated categories that match the backend CategorySeeder
-const categories = [
-  { 
-    name: 'Vehicles', 
-    icon: <DirectionsCar />, 
-    id: 'vehicles', 
-    color: '#FF6B35',
-    bgColor: 'rgba(255, 107, 53, 0.1)',
-    description: 'Cars, trucks, motorcycles and auto parts',
-    subcategories: ['Cars', 'Trucks/ heavy duty equipment', 'Motorcycles', 'buses/ minibus', 'vehicle spare part']
-  },
-  { 
-    name: 'Real Estate', 
-    icon: <Home />, 
-    id: 'real-estate', 
-    color: '#4ECDC4',
-    bgColor: 'rgba(78, 205, 196, 0.1)',
-    description: 'Houses, apartments, lands and commercial properties',
-    subcategories: ['Apartments for Rent', 'Houses for Sale', 'Commercial Properties', 'Land for Sale']
-  },
-  { 
-    name: 'Electronics', 
-    icon: <Laptop />, 
-    id: 'electronics', 
-    color: '#8B5CF6',
-    bgColor: 'rgba(139, 92, 246, 0.1)',
-    description: 'Smartphones, laptops, tablets and gadgets',
-    subcategories: ['Smartphones', 'Laptops', 'Tablets', 'Smartwatches', 'Gaming Consoles']
-  },
-  { 
-    name: 'Home and Kitchen', 
-    icon: <Chair />, 
-    id: 'home-and-kitchen', 
-    color: '#F59E0B',
-    bgColor: 'rgba(245, 158, 11, 0.1)',
-    description: 'Furniture, decor, and kitchen appliances',
-    subcategories: ['Furniture', 'Decor', 'Kitchen Appliances', 'Bed and Bath', 'Outdoor Living']
-  },
-  { 
-    name: 'Beauty and Personal Care', 
-    icon: <Face />, 
-    id: 'beauty', 
-    color: '#EC4899',
-    bgColor: 'rgba(236, 72, 153, 0.1)',
-    description: 'Skincare, haircare, makeup and wellness',
-    subcategories: ['Skincare', 'Haircare', 'Makeup', 'Fragrances', 'Wellness and Health']
-  },
-  { 
-    name: 'Fashion', 
-    icon: <Checkroom />, 
-    id: 'fashion', 
-    color: '#10B981',
-    bgColor: 'rgba(16, 185, 129, 0.1)',
-    description: 'Clothing, shoes, bags and accessories',
-    subcategories: ["Men's Clothing", "Women's Clothing", "Kids' Clothing", 'Footwear', 'Accessories']
-  },
-  { 
-    name: 'Pets', 
-    icon: <Pets />, 
-    id: 'pets', 
-    color: '#F97316',
-    bgColor: 'rgba(249, 115, 22, 0.1)',
-    description: 'Dogs, cats, and pet supplies',
-    subcategories: ['Dogs', 'Cats', 'Other Pets', 'Pet Supplies']
-  },
-  { 
-    name: 'Services', 
-    icon: <Work />, 
-    id: 'services', 
-    color: '#6366F1',
-    bgColor: 'rgba(99, 102, 241, 0.1)',
-    description: 'Professional services and business equipment',
-    subcategories: ['Beauty and Wellness', 'Pet Services', 'Home Services', 'Tutoring and Lessons']
-  },
-  { 
-    name: 'Sports and Outdoors', 
-    icon: <SportsEsports />, 
-    id: 'sports', 
-    color: '#EF4444',
-    bgColor: 'rgba(239, 68, 68, 0.1)',
-    description: 'Fitness equipment and outdoor gear',
-    subcategories: ['Fitness Equipment', 'Team Sports', 'Outdoor Gear', 'Camping and Hiking', 'Cycling']
-  },
-  { 
-    name: 'Jobs', 
-    icon: <Work />, 
-    id: 'jobs', 
-    color: '#8B5CF6',
-    bgColor: 'rgba(139, 92, 246, 0.1)',
-    description: 'Full-time, part-time, and freelance opportunities',
-    subcategories: ['Full-time Jobs', 'Part-time Jobs', 'Internships', 'Freelance Work']
-  }
+// Icon mapping for categories (fallback icons)
+const iconMapping = {
+  'vehicles': DirectionsCar,
+  'real estate': Home,
+  'electronics': Laptop,
+  'home': Chair,
+  'beauty': Face,
+  'fashion': Checkroom,
+  'pets': Pets,
+  'services': Work,
+  'sports': SportsEsports,
+  'jobs': Work,
+};
+
+// Color palette for categories
+const colorPalette = [
+  { color: '#FF6B35', bgColor: 'rgba(255, 107, 53, 0.1)' },
+  { color: '#4ECDC4', bgColor: 'rgba(78, 205, 196, 0.1)' },
+  { color: '#8B5CF6', bgColor: 'rgba(139, 92, 246, 0.1)' },
+  { color: '#F59E0B', bgColor: 'rgba(245, 158, 11, 0.1)' },
+  { color: '#EC4899', bgColor: 'rgba(236, 72, 153, 0.1)' },
+  { color: '#10B981', bgColor: 'rgba(16, 185, 129, 0.1)' },
+  { color: '#F97316', bgColor: 'rgba(249, 115, 22, 0.1)' },
+  { color: '#6366F1', bgColor: 'rgba(99, 102, 241, 0.1)' },
+  { color: '#EF4444', bgColor: 'rgba(239, 68, 68, 0.1)' },
+  { color: '#06B6D4', bgColor: 'rgba(6, 182, 212, 0.1)' },
 ];
 
+const getIconForCategory = (categoryName) => {
+  const name = categoryName?.toLowerCase() || '';
+  for (const [key, Icon] of Object.entries(iconMapping)) {
+    if (name.includes(key)) {
+      return Icon;
+    }
+  }
+  return CategoryIcon; // Default icon
+};
+
 const Categories = () => {
-  const [categoriesWithCount, setCategoriesWithCount] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+  const [page, setPage] = useState(1);
+  const categoriesPerPage = 12;
+
   const { callApi } = useApi();
   const navigate = useNavigate();
 
-  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
-
   useEffect(() => {
-    fetchCategoriesWithCount();
+    fetchCategories();
   }, []);
 
-  const fetchCategoriesWithCount = async () => {
+  const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch backend categories with counts
-      const categoriesResponse = await callApi('GET', '/categories');
+      const response = await callApi('GET', '/categories');
 
-      if (!categoriesResponse || !categoriesResponse.success) {
-        throw new Error(categoriesResponse?.message || 'Failed to fetch categories');
+      if (!response || !response.success) {
+        throw new Error(response?.message || 'Failed to fetch categories');
       }
 
-      const backendCategories = categoriesResponse?.data || [];
-
-      console.log('Backend categories received:', backendCategories);
+      const backendCategories = response?.data || [];
 
       if (backendCategories.length === 0) {
-        console.warn('No categories returned from backend');
         setError('No categories available at the moment');
-        setCategoriesWithCount(categories.map(cat => ({ ...cat, count: '0', children: [] })));
+        setCategories([]);
         return;
       }
 
-      // Create a mapping between frontend display categories and backend categories
-      const categoriesWithRealCount = categories.map(category => {
-        console.log(`Trying to match frontend category "${category.name}" (id: ${category.id})`);
-
-        // Find all matching backend categories by name (case insensitive)
-        const allMatches = backendCategories.filter(backendCat =>
-          backendCat.name?.toLowerCase() === category.name.toLowerCase()
-        );
-
-        if (allMatches.length > 0) {
-          console.log(`  ✓ Found ${allMatches.length} match(es) for "${category.name}"`);
-
-          // Aggregate counts from all matching categories
-          const totalCount = allMatches.reduce((sum, cat) => sum + (cat.ads_count || 0), 0);
-
-          // Collect all children from all matching parent categories
-          // Use a Map to deduplicate children by name while keeping the most relevant one
-          const childrenMap = new Map();
-          allMatches.forEach(parentCat => {
-            (parentCat.children || []).forEach(child => {
-              const childName = child.name.toLowerCase();
-              if (!childrenMap.has(childName) || child.ads_count > (childrenMap.get(childName).ads_count || 0)) {
-                childrenMap.set(childName, child);
-              }
-            });
-          });
-
-          const uniqueChildren = Array.from(childrenMap.values());
-
-          console.log(`  Total count: ${totalCount}, Children: ${uniqueChildren.length}`);
-
-          return {
-            ...category,
-            count: totalCount.toLocaleString(),
-            backendId: allMatches[0].id, // Use first match as primary
-            backendName: allMatches[0].name,
-            children: uniqueChildren,
-            multipleMatches: allMatches.map(m => m.id) // Store all IDs for filtering
-          };
+      // Remove duplicates by name, keeping the one with most children
+      const uniqueCategories = {};
+      backendCategories.forEach(cat => {
+        if (!uniqueCategories[cat.name] ||
+            (cat.children && uniqueCategories[cat.name].children &&
+             cat.children.length > uniqueCategories[cat.name].children.length)) {
+          uniqueCategories[cat.name] = cat;
+        } else if (!uniqueCategories[cat.name]) {
+          uniqueCategories[cat.name] = cat;
         }
+      });
 
-        console.log(`  ✗ No match found for "${category.name}"`);
+      const deduplicatedCategories = Object.values(uniqueCategories);
+
+      // Enhance categories with UI properties
+      const enhancedCategories = deduplicatedCategories.map((category, index) => {
+        const colorSet = colorPalette[index % colorPalette.length];
+        const IconComponent = getIconForCategory(category.name);
+
         return {
           ...category,
-          count: '0',
-          backendId: null,
-          backendName: null,
-          children: []
+          icon: IconComponent,
+          color: colorSet.color,
+          bgColor: colorSet.bgColor,
         };
       });
 
-      setCategoriesWithCount(categoriesWithRealCount);
+      setCategories(enhancedCategories);
     } catch (error) {
       console.error('Error fetching categories:', error);
       setError(error.message || 'Failed to load categories. Please try again later.');
-      // Fallback to categories with zero counts
-      setCategoriesWithCount(categories.map(cat => ({ ...cat, count: '0', children: [] })));
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -226,11 +145,10 @@ const Categories = () => {
 
   const handleCategoryClick = (category) => {
     setSelectedCategory(category);
-    setSelectedSubCategory(null); // Reset sub-category when a new category is selected
+    setSelectedSubCategory(null);
   };
 
   const handleSubCategoryClick = (subcategory) => {
-    // subcategory can be either a string (from hardcoded subcategories) or an object (from backend children)
     setSelectedSubCategory(subcategory);
   };
 
@@ -246,81 +164,50 @@ const Categories = () => {
     setSelectedSubCategory(null);
   };
 
-  const filteredCategories = categoriesWithCount.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.subcategories?.some(sub => sub.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredCategories = useMemo(() => {
+    return categories.filter(category =>
+      category.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [categories, searchTerm]);
 
-  useEffect(() => {
-    console.log('Selected category:', selectedCategory);
-  }, [selectedCategory]);
+  // Pagination
+  const totalPages = Math.ceil(filteredCategories.length / categoriesPerPage);
+  const paginatedCategories = useMemo(() => {
+    const startIndex = (page - 1) * categoriesPerPage;
+    return filteredCategories.slice(startIndex, startIndex + categoriesPerPage);
+  }, [filteredCategories, page, categoriesPerPage]);
 
-  useEffect(() => {
-    console.log('Selected sub-category:', selectedSubCategory);
-  }, [selectedSubCategory]);
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const searchParams = useMemo(() => {
-    if (!selectedCategory) {
-      return {};
-    }
+    if (!selectedCategory) return {};
 
     const params = {};
 
-    // When a subcategory is selected, we still search by parent category ID
-    // but add the subcategory name to filter results
     if (selectedSubCategory) {
-      // Always use parent category ID for the main filter
-      if (selectedCategory.multipleMatches && selectedCategory.multipleMatches.length > 0) {
-        params.category_id = selectedCategory.multipleMatches[0];
-      } else if (selectedCategory.backendId) {
-        params.category_id = selectedCategory.backendId;
-      } else {
-        params.category_id = selectedCategory.id;
-      }
-
-      // Add subcategory name to filter ads
-      let subcategoryName = '';
-      if (typeof selectedSubCategory === 'object' && selectedSubCategory.name) {
-        subcategoryName = selectedSubCategory.name;
-      } else if (typeof selectedSubCategory === 'string') {
-        subcategoryName = selectedSubCategory;
-      }
-
-      if (subcategoryName) {
-        // Use the subcategory parameter that the backend expects
-        params.subcategory = subcategoryName;
-        console.log('Filtering by parent category:', params.category_id, 'with subcategory:', subcategoryName);
-      }
+      // Use subcategory ID for filtering
+      params.category_id = selectedSubCategory.id;
     } else {
-      // No subcategory selected, show ads from this parent category AND all its children
-      if (selectedCategory.multipleMatches && selectedCategory.multipleMatches.length > 1) {
-        params.category_id = selectedCategory.multipleMatches[0];
-        console.log('Using first of multiple matches:', selectedCategory.multipleMatches[0], 'All matches:', selectedCategory.multipleMatches);
-      } else if (selectedCategory.backendId) {
-        params.category_id = selectedCategory.backendId;
-        console.log('Using parent category ID:', params.category_id, '- Will show all ads from parent + children');
-      } else {
-        params.category_id = selectedCategory.id;
-        console.log('Using frontend category ID as fallback:', params.category_id);
-      }
+      // Use parent category ID
+      params.category_id = selectedCategory.id;
     }
 
-    console.log('Final search params:', params);
     return params;
   }, [selectedCategory, selectedSubCategory]);
 
   // If a category is selected, show the ads for that category
   if (selectedCategory) {
-
     return (
       <Container maxWidth="xl" sx={{ py: 2 }}>
         <Box sx={{ mb: 3 }}>
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 2, 
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
               mb: 2,
               cursor: 'pointer',
               '&:hover': { color: 'primary.main' }
@@ -330,7 +217,7 @@ const Categories = () => {
             <ArrowBack />
             <Typography variant="h6">Back to Categories</Typography>
           </Box>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
             <Box
               sx={{
@@ -344,66 +231,54 @@ const Categories = () => {
                 color: selectedCategory.color,
               }}
             >
-              {React.cloneElement(selectedCategory.icon, {
+              {React.createElement(selectedCategory.icon, {
                 sx: { fontSize: 30, color: selectedCategory.color }
               })}
             </Box>
-            
-            {/* <Box>
+
+            <Box>
               <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
                 {selectedCategory.name}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                {selectedCategory.children && selectedCategory.children.length > 0 
-                  ? selectedCategory.children.map(c => c.name).join(', ')
-                  : selectedCategory.subcategories.join(', ')
-                }
+                {selectedCategory.ads_count || 0} ads available
               </Typography>
-            </Box> */}
+            </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-            {selectedCategory.children && selectedCategory.children.length > 0
-              ? selectedCategory.children.map(child => {
-                  const isSelected = (typeof selectedSubCategory === 'object' && selectedSubCategory?.id === child.id) ||
-                                   (typeof selectedSubCategory === 'string' && selectedSubCategory === child.name);
-
-                  return (
-                    <Chip
-                      key={child.id || child.name}
-                      label={child.name}
-                      onClick={() => handleSubCategoryClick(child)}
-                      color={isSelected ? 'primary' : 'default'}
-                      sx={{
-                        cursor: 'pointer',
-                        '&:hover': {
-                          backgroundColor: isSelected ? undefined : 'rgba(0, 0, 0, 0.08)'
-                        }
-                      }}
-                    />
-                  );
-                })
-              : selectedCategory.subcategories.map(subcategory => (
+          {/* Subcategories */}
+          {selectedCategory.children && selectedCategory.children.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+              {selectedCategory.children.map(child => {
+                const isSelected = selectedSubCategory?.id === child.id;
+                return (
                   <Chip
-                    key={subcategory}
-                    label={subcategory}
-                    onClick={() => handleSubCategoryClick(subcategory)}
-                    color={selectedSubCategory === subcategory ? 'primary' : 'default'}
+                    key={child.id}
+                    label={`${child.name} (${child.ads_count || 0})`}
+                    onClick={() => handleSubCategoryClick(child)}
+                    color={isSelected ? 'primary' : 'default'}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: isSelected ? undefined : 'rgba(0, 0, 0, 0.08)'
+                      }
+                    }}
                   />
-                ))
-            }
-            {selectedSubCategory && (
-              <Chip
-                label="Clear Filter"
-                onClick={() => setSelectedSubCategory(null)}
-                variant="outlined"
-                color="secondary"
-              />
-            )}
-          </Box>
+                );
+              })}
+              {selectedSubCategory && (
+                <Chip
+                  label="Clear Filter"
+                  onClick={() => setSelectedSubCategory(null)}
+                  variant="outlined"
+                  color="secondary"
+                />
+              )}
+            </Box>
+          )}
         </Box>
 
-        <EnhancedAdList 
+        <EnhancedAdList
           key={JSON.stringify(searchParams)}
           initialSearchParams={searchParams}
         />
@@ -431,13 +306,13 @@ const Categories = () => {
           position: 'relative',
           overflow: 'hidden',
           minHeight: '140px',
-          
+
           '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: '0 12px 32px rgba(0, 0, 0, 0.12)',
             background: 'rgba(255, 255, 255, 0.95)',
           },
-          
+
           '&::before': {
             content: '""',
             position: 'absolute',
@@ -448,7 +323,7 @@ const Categories = () => {
             background: category.color,
             transition: 'height 0.3s ease',
           },
-          
+
           '&:hover::before': {
             height: '6px',
           }
@@ -467,22 +342,17 @@ const Categories = () => {
             color: category.color,
             mb: 2,
             transition: 'all 0.3s ease',
-            
-            '& svg': {
-              fontSize: 28,
-              transition: 'transform 0.3s ease',
-            }
           }}
         >
-          {React.cloneElement(category.icon, {
+          {React.createElement(category.icon, {
             sx: { fontSize: 28, color: category.color }
           })}
         </Box>
-        
+
         {/* Category Name */}
-        <Typography 
-          variant="h6" 
-          sx={{ 
+        <Typography
+          variant="h6"
+          sx={{
             fontWeight: 600,
             color: 'text.primary',
             mb: 1,
@@ -491,55 +361,42 @@ const Categories = () => {
         >
           {category.name}
         </Typography>
-        
+
         {/* Subcategories */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5, mb: 2 }}>
-          {category.children && category.children.length > 0
-            ? category.children.slice(0, 3).map((child) => (
-                <Chip
-                  key={child.id}
-                  label={child.name}
-                  size="small"
-                  sx={{
-                    backgroundColor: `${category.color}20`,
-                    color: category.color,
-                    fontWeight: 500,
-                    fontSize: '0.7rem'
-                  }}
-                />
-              ))
-            : category.subcategories?.slice(0, 3).map((subcategory, index) => (
-                <Chip
-                  key={index}
-                  label={subcategory}
-                  size="small"
-                  sx={{
-                    backgroundColor: `${category.color}20`,
-                    color: category.color,
-                    fontWeight: 500,
-                    fontSize: '0.7rem'
-                  }}
-                />
-              ))
-          }
-          {category.children && category.children.length > 3 && (
-            <Chip
-              label={`+${category.children.length - 3} more`}
-              size="small"
-              sx={{
-                backgroundColor: `${category.color}10`,
-                color: category.color,
-                fontWeight: 500,
-                fontSize: '0.7rem'
-              }}
-            />
-          )}
-        </Box>
-        
+        {category.children && category.children.length > 0 && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 0.5, mb: 2 }}>
+            {category.children.slice(0, 3).map((child) => (
+              <Chip
+                key={child.id}
+                label={child.name}
+                size="small"
+                sx={{
+                  backgroundColor: `${category.color}20`,
+                  color: category.color,
+                  fontWeight: 500,
+                  fontSize: '0.7rem'
+                }}
+              />
+            ))}
+            {category.children.length > 3 && (
+              <Chip
+                label={`+${category.children.length - 3} more`}
+                size="small"
+                sx={{
+                  backgroundColor: `${category.color}10`,
+                  color: category.color,
+                  fontWeight: 500,
+                  fontSize: '0.7rem'
+                }}
+              />
+            )}
+          </Box>
+        )}
+
         {/* Count Badge */}
         <Chip
           size="small"
-          label={`${category.count} ads`}
+          label={`${category.ads_count || 0} ads`}
           sx={{
             height: 22,
             fontSize: '0.75rem',
@@ -552,30 +409,6 @@ const Categories = () => {
             }
           }}
         />
-        
-        {/* Trending indicator for top categories */}
-        {['mobile', 'electronics', 'vehicles'].includes(category.id) && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              color: '#10B981',
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              background: 'rgba(16, 185, 129, 0.15)',
-              px: 0.8,
-              py: 0.4,
-              borderRadius: '6px'
-            }}
-          >
-            <TrendingUp sx={{ fontSize: 14 }} />
-            HOT
-          </Box>
-        )}
       </Box>
     );
   };
@@ -584,11 +417,11 @@ const Categories = () => {
     <Container maxWidth="lg" sx={{ py: 2 }}>
       {/* Header */}
       <Box textAlign="center" mb={3}>
-        <Typography 
-          variant="h3" 
-          component="h1" 
-          gutterBottom 
-          sx={{ 
+        <Typography
+          variant="h3"
+          component="h1"
+          gutterBottom
+          sx={{
             fontWeight: 700,
             background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
             backgroundClip: 'text',
@@ -621,24 +454,34 @@ const Categories = () => {
             sx={{ ml: 2, flex: 1, fontSize: '1rem' }}
             placeholder="Search categories..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(1); // Reset to first page on search
+            }}
           />
-          <IconButton 
-            type="submit" 
-            sx={{ 
+          <IconButton
+            type="submit"
+            sx={{
               p: '8px',
               background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
               color: 'white',
               '&:hover': {
                 background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
               }
-            }} 
+            }}
             aria-label="search"
           >
             <SearchIcon />
           </IconButton>
         </Paper>
       </Box>
+
+      {/* Stats */}
+      {!loading && !error && (
+        <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ mb: 2 }}>
+          Showing {paginatedCategories.length} of {filteredCategories.length} categories
+        </Typography>
+      )}
 
       {/* Error Display */}
       {error && (
@@ -649,7 +492,7 @@ const Categories = () => {
 
       {loading ? (
         <Grid container spacing={3}>
-          {[...Array(10)].map((_, index) => (
+          {[...Array(12)].map((_, index) => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
               <Box sx={{ p: 3, textAlign: 'center' }}>
                 <Skeleton variant="rectangular" width={60} height={60} sx={{ mx: 'auto', mb: 2, borderRadius: 2 }} />
@@ -660,26 +503,43 @@ const Categories = () => {
             </Grid>
           ))}
         </Grid>
-      ) : filteredCategories.length === 0 ? (
+      ) : paginatedCategories.length === 0 ? (
         <Alert severity="info" sx={{ mt: 4, borderRadius: 3 }}>
           No categories found matching your search.
         </Alert>
       ) : (
-        <Grid container spacing={3}>
-          {filteredCategories.map((category) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
-              {renderCategoryItem(category)}
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <Grid container spacing={3}>
+            {paginatedCategories.map((category) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={category.id}>
+                {renderCategoryItem(category)}
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+              />
+            </Box>
+          )}
+        </>
       )}
 
       {/* Help Section */}
-      <Box 
-        textAlign="center" 
-        sx={{ 
-          mt: 4, 
-          py: 3, 
+      <Box
+        textAlign="center"
+        sx={{
+          mt: 4,
+          py: 3,
           background: 'linear-gradient(135deg, rgba(108, 71, 255, 0.05) 0%, rgba(0, 198, 174, 0.05) 100%)',
           borderRadius: 3,
           border: '1px solid rgba(108, 71, 255, 0.1)'
@@ -709,7 +569,7 @@ const Categories = () => {
             fontSize: '1rem',
             cursor: 'pointer',
             transition: 'all 0.3s ease',
-            
+
             '&:hover': {
               background: 'primary.main',
               color: 'white',

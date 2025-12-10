@@ -40,6 +40,8 @@ import AdDetail from './pages/AdDetail';
 import AdminSupportManagement from './pages/AdminSupportManagement';
 import AdminBooksManagement from './pages/AdminBooksManagement';
 import AdminAdsManagement from './pages/AdminAdsManagement';
+import News from './pages/News';
+import NewsDetail from './pages/NewsDetail';
 
 
 function App() {
@@ -73,6 +75,8 @@ function App() {
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/safety" element={<BuyerSafety />} />
                 <Route path="/categories" element={<Categories />} />
+                <Route path="/news" element={<News />} />
+                <Route path="/news/:slug" element={<NewsDetail />} />
                 <Route path="/ads/:id" element={<AdDetail />} />
                 <Route
                   path="/ads/:id/edit"

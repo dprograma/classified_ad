@@ -6,6 +6,7 @@ import { useAuth } from '../AuthContext';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import SocialLoginButtons from '../components/SocialLoginButtons';
 import useApi from '../hooks/useApi';
+import { toast } from 'react-toastify';
 
 const slideInAnimation = keyframes`
   from {
@@ -99,30 +100,60 @@ function Login() {
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
     const error = params.get('error');
+    const isSocialLogin = params.get('social') === 'true';
 
-    if (error) {
-      const errorMessages = {
-        'provider_error': 'Authentication failed. Please try again.',
-        'account_exists': 'An account with this email already exists. Please log in normally.',
-        'invalid_provider': 'Invalid authentication provider.',
-      };
-      // Use toast from useApi hook or create a simple alert
-      alert(errorMessages[error] || 'Authentication failed. Please try again.');
-      // Clean up URL
-      window.history.replaceState({}, document.title, '/login');
-    } else if (token) {
+    const handleSocialLoginCallback = async () => {
       try {
-        // Assuming the token is a JWT, we can decode it to get user info
-        // In a real app, you'd probably want to make another API call to get user details
-        const user = JSON.parse(atob(token.split('.')[1]));
-        login(user, token);
+        // Store token temporarily
+        localStorage.setItem('token', token);
+
+        // Fetch user data using the token
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/user`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const userData = await response.json();
+
+        // Login with user data and token
+        login(userData, token);
+
+        // Clean up URL
+        window.history.replaceState({}, document.title, '/');
+
+        // Navigate to destination
         navigate(from, { replace: true });
       } catch (error) {
-        console.error('Failed to parse authentication token:', error);
-        alert('Authentication failed. Please try again.');
+        console.error('Social login callback error:', error);
+        localStorage.removeItem('token');
+        toast.error('Authentication failed. Please try again.');
         // Clean up URL
         window.history.replaceState({}, document.title, '/login');
       }
+    };
+
+    if (error) {
+      const errorMessages = {
+        'provider_error': 'Social authentication failed. Please try again.',
+        'account_exists': 'An account with this email already exists. Please log in normally.',
+        'invalid_provider': 'Invalid authentication provider. Please use Google or Facebook.',
+        'configuration_error': 'Social login is not properly configured. Please contact support.',
+        'security_check_failed': 'Security verification failed. Please try again.',
+        'authentication_failed': 'Authentication failed. Please try again later.',
+        'redirect_failed': 'Failed to redirect to authentication provider. Please try again.',
+      };
+
+      toast.error(errorMessages[error] || 'Authentication failed. Please try again.');
+      // Clean up URL
+      window.history.replaceState({}, document.title, '/login');
+    } else if (token && isSocialLogin) {
+      handleSocialLoginCallback();
     }
   }, [location, login, navigate, from]);
 

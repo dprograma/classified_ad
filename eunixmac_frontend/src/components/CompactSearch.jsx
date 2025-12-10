@@ -10,24 +10,26 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Grid,
-  Typography
+  Typography,
+  Menu,
+  ListItemText,
+  Fade
 } from '@mui/material';
-import { Search, LocationOn, Category } from '@mui/icons-material';
+import { Search, LocationOn, Category, KeyboardArrowRight } from '@mui/icons-material';
 import useApi from '../hooks/useApi';
+import { UNIQUE_LOCATIONS } from '../data/nigerianStates';
 
 const CompactSearch = ({ sx = {} }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [categoriesError, setCategoriesError] = useState(false);
-  const [popularLocations] = useState([
-    'Lagos', 'Abuja', 'Port Harcourt', 'Kano', 'Ibadan', 
-    'Benin City', 'Jos', 'Kaduna', 'Enugu', 'Ilorin'
-  ]);
+  const [categoryAnchorEl, setCategoryAnchorEl] = useState(null);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
 
   const { callApi } = useApi();
   const navigate = useNavigate();
@@ -41,10 +43,10 @@ const CompactSearch = ({ sx = {} }) => {
 
   const fetchCategories = async () => {
     // Check if we already have cached categories
-    const cachedCategories = localStorage.getItem('categories');
-    const cacheTimestamp = localStorage.getItem('categories_timestamp');
+    const cachedCategories = localStorage.getItem('categories_with_children');
+    const cacheTimestamp = localStorage.getItem('categories_with_children_timestamp');
     const now = Date.now();
-    
+
     // Use cache if it's less than 5 minutes old
     if (cachedCategories && cacheTimestamp && (now - parseInt(cacheTimestamp)) < 300000) {
       setCategories(JSON.parse(cachedCategories));
@@ -53,43 +55,65 @@ const CompactSearch = ({ sx = {} }) => {
     }
 
     try {
-      const data = await callApi('GET', '/categories');
+      const response = await callApi('GET', '/categories');
       let categoriesData = [];
-      
-      if (data && Array.isArray(data)) {
-        categoriesData = data;
-      } else if (data && data.categories && Array.isArray(data.categories)) {
-        categoriesData = data.categories;
+
+      // Backend returns { success: true, data: [...] }
+      if (response && response.data && Array.isArray(response.data)) {
+        categoriesData = response.data;
+      } else if (response && Array.isArray(response)) {
+        categoriesData = response;
+      } else if (response && response.categories && Array.isArray(response.categories)) {
+        categoriesData = response.categories;
       }
-      
-      setCategories(categoriesData);
+
+      // Group categories by parent
+      const parentCategories = categoriesData.filter(cat => !cat.parent_id);
+      const childCategories = categoriesData.filter(cat => cat.parent_id);
+
+      // Attach children to parents
+      const structuredCategories = parentCategories.map(parent => ({
+        ...parent,
+        children: childCategories.filter(child => child.parent_id === parent.id)
+      }));
+
+      // Remove duplicates by name, keeping the one with most children
+      const uniqueCategories = {};
+      structuredCategories.forEach(cat => {
+        if (!uniqueCategories[cat.name] || cat.children.length > uniqueCategories[cat.name].children.length) {
+          uniqueCategories[cat.name] = cat;
+        }
+      });
+
+      const finalCategories = Object.values(uniqueCategories);
+
+      setCategories(finalCategories);
       setCategoriesLoaded(true);
       setCategoriesError(false);
-      
+
       // Cache the categories
-      localStorage.setItem('categories', JSON.stringify(categoriesData));
-      localStorage.setItem('categories_timestamp', now.toString());
+      localStorage.setItem('categories_with_children', JSON.stringify(finalCategories));
+      localStorage.setItem('categories_with_children_timestamp', now.toString());
     } catch (error) {
       console.error('Error fetching categories:', error);
       setCategoriesError(true);
-      
+
       // Set fallback categories so the dropdown still works
       const fallbackCategories = [
-        { id: 1, name: 'Electronics' },
-        { id: 2, name: 'Vehicles' },
-        { id: 3, name: 'Real Estate' },
-        { id: 4, name: 'Fashion' },
-        { id: 5, name: 'Home & Garden' }
+        { id: 1, name: 'Electronics', children: [] },
+        { id: 2, name: 'Vehicles', children: [] },
+        { id: 3, name: 'Real Estate', children: [] },
+        { id: 4, name: 'Fashion', children: [] },
+        { id: 5, name: 'Home & Garden', children: [] }
       ];
       setCategories(fallbackCategories);
       setCategoriesLoaded(true);
-      
+
       // Don't show alert for rate limiting errors
       if (error.response?.status !== 429) {
-        // Only show alert for non-rate-limiting errors after a delay to avoid spam
         setTimeout(() => {
           if (!categoriesLoaded) {
-            alert('Unable to load categories. Using default categories.');
+            console.warn('Unable to load categories. Using default categories.');
           }
         }, 1000);
       }
@@ -105,7 +129,7 @@ const CompactSearch = ({ sx = {} }) => {
         const cachedSuggestions = sessionStorage.getItem(cacheKey);
         const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
         const now = Date.now();
-        
+
         // Use cache if it's less than 2 minutes old
         if (cachedSuggestions && cacheTimestamp && (now - parseInt(cacheTimestamp)) < 120000) {
           setSuggestions(JSON.parse(cachedSuggestions));
@@ -115,20 +139,20 @@ const CompactSearch = ({ sx = {} }) => {
         try {
           const data = await apiFunction('GET', `/ads/search/suggestions?query=${encodeURIComponent(query)}&limit=5`);
           let suggestionsData = [];
-          
+
           if (data && data.titles && Array.isArray(data.titles)) {
             suggestionsData = data.titles.map(title => ({ type: 'title', value: title }));
           }
-          
+
           setSuggestions(suggestionsData);
-          
+
           // Cache the suggestions
           sessionStorage.setItem(cacheKey, JSON.stringify(suggestionsData));
           sessionStorage.setItem(`${cacheKey}_timestamp`, now.toString());
         } catch (error) {
           console.error('Error fetching suggestions:', error);
-          
-          // For rate limiting errors, don't provide fallback suggestions to reduce API calls
+
+          // For rate limiting errors, don't provide fallback suggestions
           if (error.response?.status === 429) {
             setSuggestions([]);
           } else {
@@ -160,16 +184,42 @@ const CompactSearch = ({ sx = {} }) => {
     }
   }, [searchTerm, debouncedFetchSuggestions]);
 
+  const handleCategoryOpen = (event) => {
+    setCategoryAnchorEl(event.currentTarget);
+  };
+
+  const handleCategoryClose = () => {
+    setCategoryAnchorEl(null);
+    setHoveredCategory(null);
+  };
+
+  const handleCategorySelect = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setSelectedSubcategory(''); // Reset subcategory when changing parent
+    handleCategoryClose();
+  };
+
+  const handleSubcategorySelect = (subcategoryId) => {
+    setSelectedSubcategory(subcategoryId);
+    handleCategoryClose();
+  };
+
   const handleSearch = (customTerm = null) => {
     const searchParams = new URLSearchParams();
-    
+
     const termToUse = customTerm || searchTerm;
-    // Ensure termToUse is a string before calling trim
     const searchTermString = typeof termToUse === 'string' ? termToUse : String(termToUse || '');
     if (searchTermString && searchTermString.trim()) {
       searchParams.set('search', searchTermString.trim());
     }
-    if (selectedCategory) searchParams.set('category_id', selectedCategory);
+
+    // Use subcategory if selected, otherwise use category
+    if (selectedSubcategory) {
+      searchParams.set('category_id', selectedSubcategory);
+    } else if (selectedCategory) {
+      searchParams.set('category_id', selectedCategory);
+    }
+
     if (selectedLocation && typeof selectedLocation === 'string' && selectedLocation.trim()) {
       searchParams.set('location', selectedLocation.trim());
     }
@@ -181,6 +231,24 @@ const CompactSearch = ({ sx = {} }) => {
     if (event.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  // Get selected category/subcategory name for display
+  const getSelectedCategoryName = () => {
+    if (selectedSubcategory) {
+      const parentCat = categories.find(cat =>
+        cat.children && cat.children.some(child => child.id === selectedSubcategory)
+      );
+      if (parentCat) {
+        const subCat = parentCat.children.find(child => child.id === selectedSubcategory);
+        return `${parentCat.name} > ${subCat?.name}`;
+      }
+    }
+    if (selectedCategory) {
+      const cat = categories.find(c => c.id === selectedCategory);
+      return cat?.name || '';
+    }
+    return '';
   };
 
   return (
@@ -268,7 +336,6 @@ const CompactSearch = ({ sx = {} }) => {
             onChange={(event, newValue) => {
               if (newValue && typeof newValue === 'object' && newValue.value) {
                 setSearchTerm(newValue.value);
-                // Auto-search when selecting from suggestions
                 handleSearch(newValue.value);
               }
             }}
@@ -276,13 +343,30 @@ const CompactSearch = ({ sx = {} }) => {
           />
         </Box>
 
-        {/* Category */}
+        {/* Category with Subcategories */}
         <Box sx={{ flex: { xs: '1 1 100%', md: '0 1 200px' }, minWidth: 0 }}>
           <FormControl fullWidth>
             <InputLabel sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>Category</InputLabel>
             <Select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              value={selectedSubcategory || selectedCategory || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Check if it's a subcategory or parent category
+                const isSubcategory = categories.some(cat =>
+                  cat.children && cat.children.some(child => child.id === value)
+                );
+                if (isSubcategory) {
+                  setSelectedSubcategory(value);
+                  const parentCat = categories.find(cat =>
+                    cat.children && cat.children.some(child => child.id === value)
+                  );
+                  if (parentCat) setSelectedCategory(parentCat.id);
+                } else {
+                  setSelectedCategory(value);
+                  setSelectedSubcategory('');
+                }
+              }}
+              renderValue={(value) => getSelectedCategoryName() || 'All Categories'}
               label="Category"
               sx={{
                 height: { xs: '48px', sm: '52px', md: '56px' },
@@ -296,11 +380,25 @@ const CompactSearch = ({ sx = {} }) => {
               startAdornment={<Category sx={{ mr: 1, color: 'text.secondary', fontSize: { xs: '1.2rem', sm: '1.5rem' } }} />}
             >
               <MenuItem value="">All Categories</MenuItem>
-              {categories.map((category) => (
-                <MenuItem key={category.id} value={category.id}>
+              {categories.map((category) => [
+                <MenuItem
+                  key={category.id}
+                  value={category.id}
+                  sx={{ fontWeight: 600 }}
+                >
                   {category.name}
-                </MenuItem>
-              ))}
+                </MenuItem>,
+                ...(category.children && category.children.length > 0 ? category.children.map(subcat => (
+                  <MenuItem
+                    key={subcat.id}
+                    value={subcat.id}
+                    sx={{ pl: 4, fontSize: '0.9rem' }}
+                  >
+                    <KeyboardArrowRight sx={{ mr: 0.5, fontSize: '1rem' }} />
+                    {subcat.name}
+                  </MenuItem>
+                )) : [])
+              ]).flat()}
             </Select>
           </FormControl>
         </Box>
@@ -308,14 +406,14 @@ const CompactSearch = ({ sx = {} }) => {
         {/* Location */}
         <Box sx={{ flex: { xs: '1 1 100%', md: '0 1 200px' }, minWidth: 0 }}>
           <Autocomplete
-            options={popularLocations}
+            options={UNIQUE_LOCATIONS}
             value={selectedLocation}
             onChange={(event, newValue) => setSelectedLocation(newValue || '')}
             renderInput={(params) => (
               <TextField
                 {...params}
                 label="Location"
-                placeholder="City or State"
+                placeholder="State or City"
                 variant="outlined"
                 fullWidth
                 sx={{
@@ -393,7 +491,6 @@ const CompactSearch = ({ sx = {} }) => {
               variant="text"
               onClick={() => {
                 setSearchTerm(term);
-                // Navigate directly without waiting for state update
                 const searchParams = new URLSearchParams();
                 searchParams.set('search', term);
                 navigate(`/search?${searchParams.toString()}`);
