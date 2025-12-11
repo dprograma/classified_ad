@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Typography, Box, Card, CardContent, CardMedia, Chip, Stack, Button, TextField, Container, CircularProgress } from '@mui/material';
+import { Typography, Box, Card, CardContent, CardMedia, Chip, Stack, Button, TextField, Container, CircularProgress, IconButton, Grid } from '@mui/material';
+import { NavigateBefore, NavigateNext } from '@mui/icons-material';
 import useApi from '../hooks/useApi';
 import { getStorageUrl } from '../config/api';
 
@@ -11,6 +12,7 @@ function AdDetail() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { callApi } = useApi();
 
   useEffect(() => {
@@ -135,16 +137,16 @@ function AdDetail() {
           receiver_id: ad.user.id,
         });
         setNewMessage('');
-        
+
         // Invalidate messages cache and re-fetch messages to update the chat
         const messagesCacheKey = `ad_messages_${id}`;
         sessionStorage.removeItem(messagesCacheKey);
         sessionStorage.removeItem(`${messagesCacheKey}_timestamp`);
-        
+
         try {
           const messagesData = await callApi('GET', `/ads/${id}/messages`);
           setMessages(messagesData || []);
-          
+
           // Update cache with fresh messages
           const now = Date.now();
           sessionStorage.setItem(messagesCacheKey, JSON.stringify(messagesData || []));
@@ -158,6 +160,18 @@ function AdDetail() {
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Failed to send message. Please try again.');
+    }
+  };
+
+  const handleNextImage = () => {
+    if (ad?.images && ad.images.length > 0) {
+      setCurrentImageIndex((prev) => (prev + 1) % ad.images.length);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (ad?.images && ad.images.length > 0) {
+      setCurrentImageIndex((prev) => (prev - 1 + ad.images.length) % ad.images.length);
     }
   };
 
@@ -189,22 +203,114 @@ function AdDetail() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Card sx={{ borderRadius: 3, boxShadow: 3 }}>
+        {/* Image Carousel */}
         {(ad.images && ad.images.length > 0) ? (
-          <CardMedia
-            component="img"
-            height="400"
-            image={getStorageUrl(ad.images[0].image_path)}
-            alt={ad.title}
-            onError={(e) => {
-              e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop&auto=format';
-            }}
-            sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
-          />
+          <Box sx={{ position: 'relative' }}>
+            <CardMedia
+              component="img"
+              height="500"
+              image={getStorageUrl(ad.images[currentImageIndex].image_path)}
+              alt={`${ad.title} - Image ${currentImageIndex + 1}`}
+              onError={(e) => {
+                e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&auto=format';
+              }}
+              sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
+            />
+
+            {/* Navigation Arrows - Only show if more than 1 image */}
+            {ad.images.length > 1 && (
+              <>
+                <IconButton
+                  onClick={handlePrevImage}
+                  sx={{
+                    position: 'absolute',
+                    left: 16,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.95)' }
+                  }}
+                >
+                  <NavigateBefore fontSize="large" />
+                </IconButton>
+                <IconButton
+                  onClick={handleNextImage}
+                  sx={{
+                    position: 'absolute',
+                    right: 16,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.95)' }
+                  }}
+                >
+                  <NavigateNext fontSize="large" />
+                </IconButton>
+
+                {/* Image Counter */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 16,
+                    right: 16,
+                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                    color: 'white',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: 600
+                  }}
+                >
+                  {currentImageIndex + 1} / {ad.images.length}
+                </Box>
+              </>
+            )}
+
+            {/* Thumbnail Navigation */}
+            {ad.images.length > 1 && (
+              <Box sx={{ p: 2, backgroundColor: '#f5f5f5' }}>
+                <Grid container spacing={1}>
+                  {ad.images.map((image, index) => (
+                    <Grid item xs={2} sm={1.5} md={1.2} key={index}>
+                      <Box
+                        onClick={() => setCurrentImageIndex(index)}
+                        sx={{
+                          cursor: 'pointer',
+                          border: currentImageIndex === index ? '3px solid #1976d2' : '2px solid transparent',
+                          borderRadius: 1,
+                          overflow: 'hidden',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            opacity: 0.8,
+                            transform: 'scale(1.05)'
+                          }
+                        }}
+                      >
+                        <img
+                          src={getStorageUrl(image.image_path)}
+                          alt={`Thumbnail ${index + 1}`}
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop&auto=format';
+                          }}
+                          style={{
+                            width: '100%',
+                            height: '60px',
+                            objectFit: 'cover',
+                            display: 'block'
+                          }}
+                        />
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            )}
+          </Box>
         ) : (
           <CardMedia
             component="img"
-            height="400"
-            image="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=400&fit=crop&auto=format"
+            height="500"
+            image="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&auto=format"
             alt={ad.title}
             sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
           />
