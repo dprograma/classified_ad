@@ -211,7 +211,7 @@ class AdController extends Controller
             'description' => 'required|string|min:10',
             'price' => 'required|numeric|min:0',
             'location' => 'required|string|max:255',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max per image
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // 2MB max per image (PHP limit)
             'custom_fields' => 'nullable|array',
             'custom_fields.*.field_name' => 'required_with:custom_fields|string|max:100',
             'custom_fields.*.field_value' => 'required_with:custom_fields|string|max:255',
@@ -232,8 +232,11 @@ class AdController extends Controller
 
             // Handle image uploads with preview detection
             if ($request->hasFile('images')) {
+                $imageFiles = $request->file('images');
+                \Log::info('Uploading images for ad', ['ad_id' => $ad->id, 'image_count' => count($imageFiles)]);
+
                 $isFirstImage = true;
-                foreach ($request->file('images') as $index => $image) {
+                foreach ($imageFiles as $index => $image) {
                     try {
                         if (!$image->isValid()) {
                             throw new \Exception("Invalid image file at index $index");
@@ -246,10 +249,16 @@ class AdController extends Controller
                             throw new \Exception("Failed to store image at index $index");
                         }
                         
-                        AdImage::create([
+                        $savedImage = AdImage::create([
                             'ad_id' => $ad->id,
                             'image_path' => $path,
                             'is_preview' => $isFirstImage,
+                        ]);
+                        \Log::info('Image saved successfully', [
+                            'ad_id' => $ad->id,
+                            'image_id' => $savedImage->id,
+                            'path' => $path,
+                            'is_preview' => $isFirstImage
                         ]);
                         $isFirstImage = false;
                     } catch (\Exception $e) {
