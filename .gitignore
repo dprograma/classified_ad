@@ -31,3 +31,7 @@ sample-ads.md
 SUPPORT_SYSTEM_PRODUCTION_READINESS.md
 .gitignore
 .ftpignore
+
+.setting/*
+logs/mcp_server.log
+dist.zip
