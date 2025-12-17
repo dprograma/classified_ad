@@ -95,37 +95,41 @@ function PostAd() {
 
   const handleImageChange = (event) => {
     const files = Array.from(event.target.files);
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 2 * 1024 * 1024; // 2MB (matching PHP upload_max_filesize limit)
     const validFiles = [];
     const previews = [];
+    let errorMessages = [];
 
     files.forEach(file => {
       if (file.size > maxSize) {
-        setErrors(prev => ({ ...prev, images: `File ${file.name} is too large. Max size is 5MB.` }));
+        errorMessages.push(`${file.name} is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). Max size is 2MB.`);
         return;
       }
-      
+
       if (!file.type.startsWith('image/')) {
-        setErrors(prev => ({ ...prev, images: `File ${file.name} is not an image.` }));
+        errorMessages.push(`${file.name} is not an image.`);
         return;
       }
 
       validFiles.push(file);
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         previews.push({ file, preview: e.target.result });
         if (previews.length === validFiles.length) {
-          setImagePreview(previews);
+          setImagePreview(prev => [...prev, ...previews]);
         }
       };
       reader.readAsDataURL(file);
     });
 
-    setImages(validFiles);
-    if (validFiles.length > 0 && errors.images) {
+    if (errorMessages.length > 0) {
+      setErrors(prev => ({ ...prev, images: errorMessages.join(' ') }));
+    } else if (validFiles.length > 0 && errors.images) {
       setErrors(prev => ({ ...prev, images: '' }));
     }
+
+    setImages(prev => [...prev, ...validFiles]);
   };
 
   const removeImage = (index) => {
@@ -194,12 +198,11 @@ function PostAd() {
     });
 
     try {
-      const response = await callApi('POST', '/ads', submitData, {
-        'Content-Type': 'multipart/form-data',
-      });
+      // Don't set Content-Type manually for FormData - axios will set it with boundary automatically
+      const response = await callApi('POST', '/ads', submitData);
       
       setSubmitSuccess(true);
-      
+
       // Clear form after successful submission
       setFormData({
         title: '',
@@ -212,6 +215,8 @@ function PostAd() {
       setImages([]);
       setImagePreview([]);
       setCategoryFields([]);
+      setSelectedParentCategory('');
+      setSubCategories([]);
       
     } catch (error) {
       console.error('Error posting ad:', error);
@@ -543,7 +548,7 @@ function PostAd() {
                     </Button>
                   </label>
                   <Typography variant="body2" color="text.secondary">
-                    Upload up to 10 images (Max 5MB each)
+                    Upload up to 10 images (Max 2MB each)
                   </Typography>
                   {errors.images && (
                     <Typography variant="body2" color="error" sx={{ mt: 1 }}>
