@@ -1,0 +1,15 @@
+# .htaccess Workaround for Storage (if symlink creation fails)
+# This redirects /storage/* requests to the actual storage location
+#
+# INSTRUCTIONS:
+# 1. Only use this if symlink creation completely fails
+# 2. Add these lines to /home/eunixmac/public_html/.htaccess
+# 3. Add them BEFORE any existing RewriteRule lines
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect storage requests to actual storage location
+    RewriteCond %{REQUEST_URI} ^/storage/(.*)$
+    RewriteRule ^storage/(.*)$ ../eunixmac_api/storage/app/public/$1 [L]
+</IfModule>

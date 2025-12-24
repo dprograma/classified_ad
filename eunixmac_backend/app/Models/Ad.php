@@ -76,11 +76,11 @@ class Ad extends Model
     {
         $previewImage = $this->images()->where('is_preview', true)->first();
         if ($previewImage) {
-            return asset('storage/' . $previewImage->image_path);
+            return $previewImage->image_path;
         }
-        
+
         $firstImage = $this->images()->first();
-        return $firstImage ? asset('storage/' . $firstImage->image_path) : null;
+        return $firstImage ? $firstImage->image_path : null;
     }
 
     public function getFormattedPriceAttribute()
