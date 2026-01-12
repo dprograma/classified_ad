@@ -175,6 +175,37 @@ function AdDetail() {
     }
   };
 
+  const formatWhatsAppNumber = (phoneNumber) => {
+    if (!phoneNumber) return '';
+
+    // Remove all non-numeric characters except the leading +
+    let cleaned = phoneNumber.replace(/[^\d+]/g, '');
+
+    // Remove the + sign if present
+    cleaned = cleaned.replace(/^\+/, '');
+
+    // If it starts with 0 (local format), remove it and add Nigeria country code
+    if (cleaned.startsWith('0')) {
+      cleaned = '234' + cleaned.substring(1);
+    }
+
+    // If it doesn't start with a country code, assume Nigeria (+234)
+    if (!cleaned.startsWith('234') && cleaned.length === 10) {
+      cleaned = '234' + cleaned;
+    }
+
+    return cleaned;
+  };
+
+  const getWhatsAppLink = () => {
+    if (!ad?.user?.phone_number) return '#';
+
+    const formattedNumber = formatWhatsAppNumber(ad.user.phone_number);
+    const message = encodeURIComponent(`Hi! I'm interested in your ad: "${ad.title}"`);
+
+    return `https://wa.me/${formattedNumber}?text=${message}`;
+  };
+
   if (loading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -346,7 +377,15 @@ function AdDetail() {
 
           <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
             <Button variant="contained" href={`tel:${ad.user.phone_number}`}>Call Seller</Button>
-            <Button variant="contained" color="success" href={`https://wa.me/${ad.user.phone_number}`} target="_blank">WhatsApp Seller</Button>
+            <Button
+              variant="contained"
+              color="success"
+              href={getWhatsAppLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp Seller
+            </Button>
           </Stack>
 
           {ad.custom_fields && ad.custom_fields.length > 0 && (
