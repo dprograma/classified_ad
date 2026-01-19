@@ -65,4 +65,54 @@ class MessageController extends Controller
             'updated_count' => $updatedCount
         ]);
     }
+
+    /**
+     * Get unread message count for notification badge
+     */
+    public function unreadCount()
+    {
+        $currentUserId = auth()->id();
+
+        $unreadCount = Message::where('receiver_id', $currentUserId)
+            ->whereNull('read_at')
+            ->count();
+
+        // Get list of conversations with unread messages
+        $unreadConversations = Message::where('receiver_id', $currentUserId)
+            ->whereNull('read_at')
+            ->select('ad_id', 'sender_id')
+            ->with(['ad:id,title', 'sender:id,name,profile_picture'])
+            ->groupBy('ad_id', 'sender_id')
+            ->get()
+            ->map(function ($message) use ($currentUserId) {
+                $unreadInConversation = Message::where('ad_id', $message->ad_id)
+                    ->where('sender_id', $message->sender_id)
+                    ->where('receiver_id', $currentUserId)
+                    ->whereNull('read_at')
+                    ->count();
+
+                $latestMessage = Message::where('ad_id', $message->ad_id)
+                    ->where('sender_id', $message->sender_id)
+                    ->where('receiver_id', $currentUserId)
+                    ->whereNull('read_at')
+                    ->latest()
+                    ->first();
+
+                return [
+                    'ad_id' => $message->ad_id,
+                    'ad_title' => $message->ad->title ?? 'Unknown Ad',
+                    'sender_id' => $message->sender_id,
+                    'sender_name' => $message->sender->name ?? 'Unknown User',
+                    'sender_picture' => $message->sender->profile_picture ?? null,
+                    'unread_count' => $unreadInConversation,
+                    'latest_message' => $latestMessage ? $latestMessage->message : null,
+                    'latest_message_time' => $latestMessage ? $latestMessage->created_at : null,
+                ];
+            });
+
+        return response()->json([
+            'unread_count' => $unreadCount,
+            'conversations' => $unreadConversations
+        ]);
+    }
 }

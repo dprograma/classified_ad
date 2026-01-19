@@ -81,6 +81,46 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(UserSettings::class);
     }
 
+    public function affiliateCommissions()
+    {
+        return $this->hasMany(AffiliateCommission::class, 'affiliate_id');
+    }
+
+    public function withdrawals()
+    {
+        return $this->hasMany(Withdrawal::class);
+    }
+
+    /**
+     * Get the available balance for withdrawal (approved commissions not yet paid)
+     */
+    public function getAvailableBalanceAttribute()
+    {
+        return $this->affiliateCommissions()
+            ->where('status', 'approved')
+            ->sum('commission_amount');
+    }
+
+    /**
+     * Get total earnings (all paid commissions)
+     */
+    public function getTotalEarningsAttribute()
+    {
+        return $this->affiliateCommissions()
+            ->where('status', 'paid')
+            ->sum('commission_amount');
+    }
+
+    /**
+     * Get pending earnings (pending approval)
+     */
+    public function getPendingEarningsAttribute()
+    {
+        return $this->affiliateCommissions()
+            ->where('status', 'pending')
+            ->sum('commission_amount');
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -103,6 +143,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'provider',
         'provider_id',
         'provider_token',
+        'bank_name',
+        'bank_account_number',
+        'bank_account_name',
+        'bank_code',
+        'affiliate_enrolled_at',
     ];
 
     /**
@@ -122,6 +167,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'affiliate_enrolled_at' => 'datetime',
         'is_agent' => 'boolean',
         'is_affiliate' => 'boolean',
         'is_verified' => 'boolean',

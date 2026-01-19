@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
 import { getStorageUrl } from '../config/api';
+import NotificationBell from './NotificationBell';
 
 const GlassAppBar = styled(AppBar)(({ theme }) => ({
   background: 'rgba(255,255,255,0.75)',
@@ -304,6 +305,7 @@ function Navbar() {
           </Button>
           {isAuthenticated ? (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <NotificationBell />
               <AccountButton onClick={handleMenu}>
                 <Avatar
                   alt={user?.name}
