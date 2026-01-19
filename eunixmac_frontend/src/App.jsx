@@ -8,6 +8,7 @@ import theme from './theme';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import CookieConsent from './components/CookieConsent';
+import ScrollToTop from './components/ScrollToTop';
 import { AuthProvider } from './AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 
@@ -50,9 +51,10 @@ function App() {
       <CssBaseline />
       <Router>
         <AuthProvider>
-          <Box sx={{ 
-            minHeight: '100vh', 
-            display: 'flex', 
+          <ScrollToTop />
+          <Box sx={{
+            minHeight: '100vh',
+            display: 'flex',
             flexDirection: 'column',
             backgroundColor: 'background.default',
           }}>

@@ -1,32 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Typography, Box, Card, CardContent, CardMedia, Chip, Stack, Button, TextField, Container, CircularProgress, IconButton, Grid } from '@mui/material';
-import { NavigateBefore, NavigateNext } from '@mui/icons-material';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Typography, Box, Card, CardContent, CardMedia, Chip, Stack, Button, TextField, Container, CircularProgress, IconButton, Grid, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { NavigateBefore, NavigateNext, Download, ShoppingCart, CheckCircle, MenuBook } from '@mui/icons-material';
 import useApi from '../hooks/useApi';
-import { getStorageUrl } from '../config/api';
+import { useAuth } from '../AuthContext';
+import { getStorageUrl, API_CONFIG } from '../config/api';
+import { toast } from 'react-toastify';
+
+// Books & Media category ID
+const BOOKS_CATEGORY_ID = 7;
 
 function AdDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [ad, setAd] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
   const { callApi } = useApi();
+  const { user, isAuthenticated } = useAuth();
+
+  // Check if this is a book/media item
+  const isBook = ad?.category_id === BOOKS_CATEGORY_ID || ad?.category?.id === BOOKS_CATEGORY_ID || ad?.file_path;
+  const isOwner = ad?.user_id === user?.id || ad?.user?.id === user?.id;
 
   useEffect(() => {
     const fetchAdData = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // Check cache first for ad details
         const adCacheKey = `ad_detail_${id}`;
         const cachedAd = sessionStorage.getItem(adCacheKey);
         const adCacheTimestamp = sessionStorage.getItem(`${adCacheKey}_timestamp`);
         const now = Date.now();
-        
+
         // Use cached ad if it's less than 5 minutes old
         if (cachedAd && adCacheTimestamp && (now - parseInt(adCacheTimestamp)) < 300000) {
           try {
@@ -34,36 +48,34 @@ function AdDetail() {
             setAd(parsedAd);
           } catch (parseError) {
             console.warn('Failed to parse cached ad:', parseError);
-            // Continue to fetch from API
           }
         }
-        
+
         // If no cached ad or cache is expired, fetch from API
         if (!cachedAd || !adCacheTimestamp || (now - parseInt(adCacheTimestamp)) >= 300000) {
           try {
             const adData = await callApi('GET', `/ads/${id}`);
             setAd(adData);
-            
+
             // Cache the ad data
             sessionStorage.setItem(adCacheKey, JSON.stringify(adData));
             sessionStorage.setItem(`${adCacheKey}_timestamp`, now.toString());
           } catch (adError) {
             console.error('Error fetching ad:', adError);
-            
-            // For rate limiting errors, use cached data if available
+
             if (adError.response?.status === 429 && cachedAd) {
               try {
                 const parsedAd = JSON.parse(cachedAd);
                 setAd(parsedAd);
               } catch (parseError) {
-                throw adError; // Re-throw if can't use cache
+                throw adError;
               }
             } else {
-              throw adError; // Re-throw for other errors
+              throw adError;
             }
           }
         }
-        
+
         // Fetch messages if user is authenticated
         const token = localStorage.getItem('token');
         if (token) {
@@ -71,33 +83,25 @@ function AdDetail() {
             const messagesCacheKey = `ad_messages_${id}`;
             const cachedMessages = sessionStorage.getItem(messagesCacheKey);
             const messagesCacheTimestamp = sessionStorage.getItem(`${messagesCacheKey}_timestamp`);
-            
-            // Use cached messages if they're less than 2 minutes old
+
             if (cachedMessages && messagesCacheTimestamp && (now - parseInt(messagesCacheTimestamp)) < 120000) {
               try {
                 const parsedMessages = JSON.parse(cachedMessages);
                 setMessages(parsedMessages);
               } catch (parseError) {
-                // Continue to fetch from API
                 const messagesData = await callApi('GET', `/ads/${id}/messages`);
                 setMessages(messagesData || []);
-                
-                // Cache the messages
                 sessionStorage.setItem(messagesCacheKey, JSON.stringify(messagesData || []));
                 sessionStorage.setItem(`${messagesCacheKey}_timestamp`, now.toString());
               }
             } else {
-              // Fetch fresh messages
               try {
                 const messagesData = await callApi('GET', `/ads/${id}/messages`);
                 setMessages(messagesData || []);
-                
-                // Cache the messages
                 sessionStorage.setItem(messagesCacheKey, JSON.stringify(messagesData || []));
                 sessionStorage.setItem(`${messagesCacheKey}_timestamp`, now.toString());
               } catch (msgError) {
                 console.warn('Could not fetch messages:', msgError);
-                // Use cached messages if available, otherwise empty array
                 if (cachedMessages) {
                   try {
                     const parsedMessages = JSON.parse(cachedMessages);
@@ -128,6 +132,29 @@ function AdDetail() {
     }
   }, [id]);
 
+  // Check if user has purchased this book
+  useEffect(() => {
+    const checkPurchaseStatus = async () => {
+      if (isBook && isAuthenticated && !isOwner) {
+        try {
+          // Try to access the book endpoint - if successful, user has purchased
+          await callApi('GET', `/books/${id}`);
+          setHasPurchased(true);
+        } catch (error) {
+          // 403 means not purchased, which is expected
+          if (error.response?.status !== 403) {
+            console.warn('Error checking purchase status:', error);
+          }
+          setHasPurchased(false);
+        }
+      }
+    };
+
+    if (ad && isBook) {
+      checkPurchaseStatus();
+    }
+  }, [ad, isBook, isAuthenticated, isOwner, id]);
+
   const handleSendMessage = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -138,7 +165,6 @@ function AdDetail() {
         });
         setNewMessage('');
 
-        // Invalidate messages cache and re-fetch messages to update the chat
         const messagesCacheKey = `ad_messages_${id}`;
         sessionStorage.removeItem(messagesCacheKey);
         sessionStorage.removeItem(`${messagesCacheKey}_timestamp`);
@@ -146,8 +172,6 @@ function AdDetail() {
         try {
           const messagesData = await callApi('GET', `/ads/${id}/messages`);
           setMessages(messagesData || []);
-
-          // Update cache with fresh messages
           const now = Date.now();
           sessionStorage.setItem(messagesCacheKey, JSON.stringify(messagesData || []));
           sessionStorage.setItem(`${messagesCacheKey}_timestamp`, now.toString());
@@ -155,11 +179,11 @@ function AdDetail() {
           console.warn('Could not refresh messages:', msgError);
         }
       } else if (!token) {
-        alert('Please log in to send messages.');
+        toast.error('Please log in to send messages.');
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please try again.');
     }
   };
 
@@ -177,33 +201,97 @@ function AdDetail() {
 
   const formatWhatsAppNumber = (phoneNumber) => {
     if (!phoneNumber) return '';
-
-    // Remove all non-numeric characters except the leading +
     let cleaned = phoneNumber.replace(/[^\d+]/g, '');
-
-    // Remove the + sign if present
     cleaned = cleaned.replace(/^\+/, '');
-
-    // If it starts with 0 (local format), remove it and add Nigeria country code
     if (cleaned.startsWith('0')) {
       cleaned = '234' + cleaned.substring(1);
     }
-
-    // If it doesn't start with a country code, assume Nigeria (+234)
     if (!cleaned.startsWith('234') && cleaned.length === 10) {
       cleaned = '234' + cleaned;
     }
-
     return cleaned;
   };
 
   const getWhatsAppLink = () => {
     if (!ad?.user?.phone_number) return '#';
-
     const formattedNumber = formatWhatsAppNumber(ad.user.phone_number);
     const message = encodeURIComponent(`Hi! I'm interested in your ad: "${ad.title}"`);
-
     return `https://wa.me/${formattedNumber}?text=${message}`;
+  };
+
+  const handlePurchaseBook = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please log in to purchase this item.');
+      navigate('/login');
+      return;
+    }
+
+    setPurchasing(true);
+    try {
+      const response = await callApi('POST', `/books/${id}/pay`);
+      if (response.data?.authorization_url) {
+        window.location.href = response.data.authorization_url;
+      } else {
+        toast.error('Failed to initiate payment. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error initiating purchase:', error);
+      toast.error(error.message || 'Failed to initiate payment. Please try again.');
+    } finally {
+      setPurchasing(false);
+      setPurchaseDialogOpen(false);
+    }
+  };
+
+  const handleDownloadBook = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error('Please log in to download.');
+        return;
+      }
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/books/${id}/download`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/octet-stream'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          toast.error('You need to purchase this item first.');
+          return;
+        }
+        throw new Error('Download failed');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let filename = `${ad.title}.pdf`;
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Download started successfully!');
+    } catch (error) {
+      console.error('Error downloading:', error);
+      toast.error('Failed to download. Please try again.');
+    }
   };
 
   if (loading) {
@@ -248,7 +336,6 @@ function AdDetail() {
               sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
             />
 
-            {/* Navigation Arrows - Only show if more than 1 image */}
             {ad.images.length > 1 && (
               <>
                 <IconButton
@@ -278,7 +365,6 @@ function AdDetail() {
                   <NavigateNext fontSize="large" />
                 </IconButton>
 
-                {/* Image Counter */}
                 <Box
                   sx={{
                     position: 'absolute',
@@ -297,7 +383,6 @@ function AdDetail() {
               </>
             )}
 
-            {/* Thumbnail Navigation */}
             {ad.images.length > 1 && (
               <Box sx={{ p: 2, backgroundColor: '#f5f5f5' }}>
                 <Grid container spacing={1}>
@@ -337,16 +422,110 @@ function AdDetail() {
               </Box>
             )}
           </Box>
+        ) : ad.preview_image_path ? (
+          <CardMedia
+            component="img"
+            height="500"
+            image={getStorageUrl(ad.preview_image_path)}
+            alt={ad.title}
+            sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
+          />
         ) : (
           <CardMedia
             component="img"
             height="500"
-            image="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&auto=format"
+            image={isBook ? 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=500&fit=crop&auto=format' : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&auto=format'}
             alt={ad.title}
             sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
           />
         )}
+
         <CardContent>
+          {/* Book/Digital Product CTA Banner */}
+          {isBook && !isOwner && (
+            <Box
+              sx={{
+                mb: 3,
+                p: 3,
+                borderRadius: 2,
+                background: hasPurchased
+                  ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                  : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                color: 'white'
+              }}
+            >
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                    <MenuBook />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {hasPurchased ? 'You Own This Item!' : 'Digital Download Available'}
+                    </Typography>
+                  </Stack>
+                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                    {hasPurchased
+                      ? 'Click the button to download your purchased content.'
+                      : `Get instant access to this digital content for only ₦${Number(ad.price).toLocaleString()}`
+                    }
+                  </Typography>
+                </Box>
+                {hasPurchased ? (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<Download />}
+                    onClick={handleDownloadBook}
+                    sx={{
+                      bgcolor: 'white',
+                      color: '#10b981',
+                      fontWeight: 600,
+                      px: 4,
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
+                    }}
+                  >
+                    Download Now
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<ShoppingCart />}
+                    onClick={() => setPurchaseDialogOpen(true)}
+                    sx={{
+                      bgcolor: 'white',
+                      color: '#6366f1',
+                      fontWeight: 600,
+                      px: 4,
+                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
+                    }}
+                  >
+                    Buy Now - ₦{Number(ad.price).toLocaleString()}
+                  </Button>
+                )}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Owner's Download Button */}
+          {isBook && isOwner && (
+            <Alert
+              severity="info"
+              sx={{ mb: 3 }}
+              action={
+                <Button
+                  color="inherit"
+                  size="small"
+                  startIcon={<Download />}
+                  onClick={handleDownloadBook}
+                >
+                  Download
+                </Button>
+              }
+            >
+              This is your uploaded content. You can download it anytime.
+            </Alert>
+          )}
+
           <Typography variant="h4" component="h1" gutterBottom>
             {ad.title}
           </Typography>
@@ -356,11 +535,53 @@ function AdDetail() {
           <Typography variant="body1" paragraph>
             {ad.description}
           </Typography>
-          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap' }}>
+          <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
             <Chip label={`Category: ${ad.category?.name || 'N/A'}`} color="primary" />
             <Chip label={`Location: ${ad.location || 'N/A'}`} color="secondary" />
             <Chip label={`Status: ${ad.status || 'Active'}`} variant="outlined" />
+            {isBook && <Chip icon={<MenuBook />} label="Digital Download" color="info" />}
           </Stack>
+
+          {/* Book-specific info */}
+          {isBook && (
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
+              <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                Product Details
+              </Typography>
+              <Grid container spacing={2}>
+                {ad.subject_area && (
+                  <Grid item xs={6} sm={4}>
+                    <Typography variant="body2" color="text.secondary">Subject</Typography>
+                    <Typography variant="body2" fontWeight="medium">{ad.subject_area}</Typography>
+                  </Grid>
+                )}
+                {ad.education_level && (
+                  <Grid item xs={6} sm={4}>
+                    <Typography variant="body2" color="text.secondary">Level</Typography>
+                    <Typography variant="body2" fontWeight="medium">{ad.education_level}</Typography>
+                  </Grid>
+                )}
+                {ad.language && (
+                  <Grid item xs={6} sm={4}>
+                    <Typography variant="body2" color="text.secondary">Language</Typography>
+                    <Typography variant="body2" fontWeight="medium">{ad.language}</Typography>
+                  </Grid>
+                )}
+                {ad.author_info && (
+                  <Grid item xs={6} sm={4}>
+                    <Typography variant="body2" color="text.secondary">Author</Typography>
+                    <Typography variant="body2" fontWeight="medium">{ad.author_info}</Typography>
+                  </Grid>
+                )}
+                {ad.year_published && (
+                  <Grid item xs={6} sm={4}>
+                    <Typography variant="body2" color="text.secondary">Year</Typography>
+                    <Typography variant="body2" fontWeight="medium">{ad.year_published}</Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </Box>
+          )}
 
           <Typography variant="h6" gutterBottom>
             Seller Information
@@ -403,12 +624,18 @@ function AdDetail() {
 
           <Box sx={{ mt: 4 }}>
             <Typography variant="h6" gutterBottom>Chat with Seller</Typography>
-            <Box sx={{ border: '1px solid #ccc', p: 2, height: 200, overflowY: 'auto', mb: 2 }}>
-              {messages.map((msg) => (
-                <Typography key={msg.id} variant="body2">
-                  <strong>{msg.sender_id === ad.user.id ? ad.user.name : 'You'}:</strong> {msg.message}
+            <Box sx={{ border: '1px solid #ccc', p: 2, height: 200, overflowY: 'auto', mb: 2, borderRadius: 1 }}>
+              {messages.length > 0 ? (
+                messages.map((msg) => (
+                  <Typography key={msg.id} variant="body2" sx={{ mb: 1 }}>
+                    <strong>{msg.sender_id === ad.user.id ? ad.user.name : 'You'}:</strong> {msg.message}
+                  </Typography>
+                ))
+              ) : (
+                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mt: 8 }}>
+                  No messages yet. Start a conversation!
                 </Typography>
-              ))}
+              )}
             </Box>
             <TextField
               fullWidth
@@ -424,9 +651,54 @@ function AdDetail() {
             />
             <Button variant="contained" sx={{ mt: 1 }} onClick={handleSendMessage}>Send</Button>
           </Box>
-
         </CardContent>
       </Card>
+
+      {/* Purchase Confirmation Dialog */}
+      <Dialog open={purchaseDialogOpen} onClose={() => setPurchaseDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Confirm Purchase</DialogTitle>
+        <DialogContent>
+          <Box sx={{ py: 2 }}>
+            <Typography variant="h6" gutterBottom>{ad.title}</Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+              {ad.description?.substring(0, 150)}...
+            </Typography>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <Typography variant="body2">
+                <strong>Price:</strong> ₦{Number(ad.price).toLocaleString()}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                After payment, you will be able to download this item immediately.
+              </Typography>
+            </Alert>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <CheckCircle color="success" fontSize="small" />
+              <Typography variant="body2">Instant download after payment</Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+              <CheckCircle color="success" fontSize="small" />
+              <Typography variant="body2">Secure payment via Paystack</Typography>
+            </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+              <CheckCircle color="success" fontSize="small" />
+              <Typography variant="body2">Download anytime from your account</Typography>
+            </Stack>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPurchaseDialogOpen(false)} disabled={purchasing}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handlePurchaseBook}
+            disabled={purchasing}
+            startIcon={purchasing ? <CircularProgress size={20} /> : <ShoppingCart />}
+          >
+            {purchasing ? 'Processing...' : `Pay ₦${Number(ad.price).toLocaleString()}`}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

@@ -20,6 +20,7 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
 import { getStorageUrl } from '../config/api';
+import NotificationBell from './NotificationBell';
 
 const GlassAppBar = styled(AppBar)(({ theme }) => ({
   background: 'rgba(255,255,255,0.75)',
@@ -225,6 +226,12 @@ function Navbar() {
         >
           <MenuIcon />
         </IconButton>
+        {/* Mobile notification bell - visible only on small screens */}
+        {isAuthenticated && (
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, ml: 'auto', mr: 1 }}>
+            <NotificationBell />
+          </Box>
+        )}
         <LogoBox component={Link} to="/" sx={{ mr: 2 }}>
           {/* Modern logo with icon and text */}
           <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
@@ -304,6 +311,7 @@ function Navbar() {
           </Button>
           {isAuthenticated ? (
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <NotificationBell />
               <AccountButton onClick={handleMenu}>
                 <Avatar
                   alt={user?.name}
@@ -438,7 +446,7 @@ function Navbar() {
           '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
         }}
       >
-        <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
+        <Box sx={{ textAlign: 'center' }}>
           <Typography variant="h6" sx={{ my: 2 }}>
             Classified Ads
           </Typography>
@@ -454,6 +462,12 @@ function Navbar() {
             </ListItem>
             {isAuthenticated ? (
               <>
+                <ListItem component={Link} to="/dashboard?tab=messages" onClick={handleDrawerToggle}>
+                  <ListItemIcon>
+                    <NotificationBell />
+                  </ListItemIcon>
+                  <ListItemText primary="Messages" />
+                </ListItem>
                 <ListItem component={Link} to="/dashboard" onClick={handleDrawerToggle}>
                   <ListItemText primary="Dashboard" />
                 </ListItem>

@@ -27,6 +27,7 @@ use App\Http\Controllers\AdminSupportController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\AffiliateController;
 
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:registration');
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])->name('verification.verify');
@@ -59,6 +60,7 @@ Route::get('/news/search', [NewsController::class, 'search']);
 Route::get('/news/{identifier}', [NewsController::class, 'show']);
 
 Route::match(['get', 'post'], '/payments/verify', [PaymentController::class, 'verifyPayment']); // Public route for Paystack callback
+Route::match(['get', 'post'], '/affiliate/verify-enrollment', [AffiliateController::class, 'verifyEnrollment']); // Public route for affiliate enrollment callback
 
 Route::middleware('auth:sanctum')->group(function () {
     // Payment history routes
@@ -70,11 +72,24 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/become-agent', [AuthController::class, 'becomeAgent']);
-    Route::post('/user/become-affiliate', [AuthController::class, 'becomeAffiliate']);
     Route::post('/user/profile', [AuthController::class, 'updateProfile']);
+
+    // Affiliate routes
+    Route::get('/affiliate/banks', [AffiliateController::class, 'getBanks']);
+    Route::post('/affiliate/enroll', [AffiliateController::class, 'initiateEnrollment']);
+    Route::get('/affiliate/dashboard', [AffiliateController::class, 'dashboard']);
+    Route::post('/affiliate/bank-account', [AffiliateController::class, 'updateBankAccount']);
+    Route::post('/affiliate/withdraw', [AffiliateController::class, 'requestWithdrawal']);
+    Route::get('/affiliate/withdrawals', [AffiliateController::class, 'withdrawalHistory']);
+    Route::get('/affiliate/commissions', [AffiliateController::class, 'commissionHistory']);
     Route::put('/user/settings', [AuthController::class, 'updateSettings']);
     Route::post('/user/change-password', [AuthController::class, 'changePassword']);
     Route::delete('/user', [AuthController::class, 'deleteAccount']);
+
+    // Bank account routes
+    Route::get('/user/banks', [AuthController::class, 'getBanks']);
+    Route::get('/user/bank-account', [AuthController::class, 'getBankAccount']);
+    Route::post('/user/bank-account', [AuthController::class, 'updateBankAccount']);
 
     // Support routes
     Route::post('/support/contact', [SupportController::class, 'contact']);
@@ -88,6 +103,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ads/{ad}/messages', [MessageController::class, 'index']);
     Route::post('/ads/{ad}/messages', [MessageController::class, 'store']);
     Route::put('/conversations/{conversationId}/read', [MessageController::class, 'markAsRead']);
+    Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
 
     Route::get('/books', [BookController::class, 'index']);
     Route::get('/books/{ad}', [BookController::class, 'show']);
