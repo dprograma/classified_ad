@@ -86,6 +86,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/change-password', [AuthController::class, 'changePassword']);
     Route::delete('/user', [AuthController::class, 'deleteAccount']);
 
+    // Bank account routes
+    Route::get('/user/banks', [AuthController::class, 'getBanks']);
+    Route::get('/user/bank-account', [AuthController::class, 'getBankAccount']);
+    Route::post('/user/bank-account', [AuthController::class, 'updateBankAccount']);
+
     // Support routes
     Route::post('/support/contact', [SupportController::class, 'contact']);
 

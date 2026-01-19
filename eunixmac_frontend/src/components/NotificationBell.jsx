@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   IconButton,
   Badge,
   Menu,
-  MenuItem,
   Typography,
   Box,
   Avatar,
@@ -23,7 +22,8 @@ import {
 import { styled } from '@mui/system';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import useApi from '../hooks/useApi';
+import axios from 'axios';
+import { API_CONFIG } from '../config/api';
 import { getStorageUrl } from '../config/api';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -80,21 +80,31 @@ const NotificationBell = () => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
-  const { callApi } = useApi();
   const navigate = useNavigate();
   const open = Boolean(anchorEl);
 
+  // Silent API call - no toast on errors to avoid spamming user with timeout notifications
   const fetchUnreadCount = useCallback(async () => {
     if (!isAuthenticated) return;
 
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
     try {
-      const response = await callApi('GET', '/messages/unread-count');
-      setUnreadCount(response.unread_count || 0);
-      setConversations(response.conversations || []);
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/messages/unread-count`, {
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        timeout: 10000 // 10 second timeout for polling
+      });
+      setUnreadCount(response.data.unread_count || 0);
+      setConversations(response.data.conversations || []);
     } catch (error) {
-      console.warn('Failed to fetch unread count:', error);
+      // Silently ignore errors - don't show toast for background polling
+      console.debug('Notification poll failed:', error.message);
     }
-  }, [isAuthenticated, callApi]);
+  }, [isAuthenticated]);
 
   // Initial fetch and polling
   useEffect(() => {

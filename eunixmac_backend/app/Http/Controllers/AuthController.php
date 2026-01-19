@@ -18,6 +18,7 @@ use App\Exceptions\Custom\PermissionDeniedException;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -367,5 +368,89 @@ class AuthController extends Controller
         $user->sendEmailVerificationNotification();
 
         return response()->json(['message' => 'Verification email sent.']);
+    }
+
+    /**
+     * Get list of banks from Paystack
+     */
+    public function getBanks()
+    {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
+        ])->get('https://api.paystack.co/bank?country=nigeria');
+
+        if ($response->successful()) {
+            return response()->json($response->json()['data']);
+        }
+
+        return response()->json([
+            'message' => 'Could not fetch banks list'
+        ], 500);
+    }
+
+    /**
+     * Get user's bank account details
+     */
+    public function getBankAccount(Request $request)
+    {
+        $user = $request->user();
+
+        return response()->json([
+            'bank_account' => [
+                'bank_name' => $user->bank_name,
+                'bank_code' => $user->bank_code,
+                'account_number' => $user->bank_account_number,
+                'account_name' => $user->bank_account_name,
+            ],
+        ]);
+    }
+
+    /**
+     * Update bank account details
+     */
+    public function updateBankAccount(Request $request)
+    {
+        $request->validate([
+            'bank_name' => 'required|string|max:255',
+            'bank_code' => 'required|string|max:20',
+            'bank_account_number' => 'required|string|max:20',
+            'bank_account_name' => 'required|string|max:255',
+        ]);
+
+        $user = $request->user();
+
+        // Verify bank account with Paystack
+        $verifyResponse = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
+        ])->get('https://api.paystack.co/bank/resolve', [
+            'account_number' => $request->bank_account_number,
+            'bank_code' => $request->bank_code,
+        ]);
+
+        if (!$verifyResponse->successful() || !$verifyResponse->json()['status']) {
+            return response()->json([
+                'message' => 'Could not verify bank account. Please check your details.',
+                'error' => $verifyResponse->json()['message'] ?? 'Verification failed'
+            ], 400);
+        }
+
+        $verifiedData = $verifyResponse->json()['data'];
+
+        $user->update([
+            'bank_name' => $request->bank_name,
+            'bank_code' => $request->bank_code,
+            'bank_account_number' => $request->bank_account_number,
+            'bank_account_name' => $verifiedData['account_name'] ?? $request->bank_account_name,
+        ]);
+
+        return response()->json([
+            'message' => 'Bank account updated successfully',
+            'bank_account' => [
+                'bank_name' => $user->bank_name,
+                'bank_code' => $user->bank_code,
+                'account_number' => $user->bank_account_number,
+                'account_name' => $user->bank_account_name,
+            ],
+        ]);
     }
 }
