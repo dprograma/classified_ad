@@ -142,8 +142,8 @@ const PaymentHistorySection = () => {
 
   const getPaymentTypeLabel = (payment) => {
     switch (payment.payable_type) {
-      case 'EducationalMaterial':
-        return 'Educational Material';
+      case 'Book':
+        return 'Book';
       default:
         return payment.type || 'Payment';
     }

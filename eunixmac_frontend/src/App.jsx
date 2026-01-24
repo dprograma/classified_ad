@@ -45,6 +45,7 @@ import AdminNewsManagement from './pages/AdminNewsManagement';
 import AdminNewsletterManagement from './pages/AdminNewsletterManagement';
 import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
+import Withdrawals from './pages/Withdrawals';
 
 
 function App() {
@@ -184,6 +185,14 @@ function App() {
                   element={
                     <PrivateRoute>
                       <AdminNewsletterManagement />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/withdrawals"
+                  element={
+                    <PrivateRoute>
+                      <Withdrawals />
                     </PrivateRoute>
                   }
                 />

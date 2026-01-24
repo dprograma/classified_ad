@@ -138,8 +138,8 @@
                 <div class="detail-label">Payment Type:</div>
                 <div class="detail-value">
                     @switch($payment->payable_type)
-                        @case('educational_material')
-                            Educational Material Purchase
+                        @case('book')
+                            Book Purchase
                             @break
                         @default
                             {{ $payment->type ?? 'Payment' }}

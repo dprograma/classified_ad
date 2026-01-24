@@ -609,11 +609,11 @@ class AdminController extends Controller
         $agents->getCollection()->transform(function ($agent) {
             $materialIds = $agent->ads->pluck('id');
             $agent->total_sales = Payment::whereIn('payable_id', $materialIds)
-                ->where('payable_type', 'educational_material')
+                ->where('payable_type', 'book')
                 ->where('status', 'success')
                 ->count();
             $agent->total_earnings = Payment::whereIn('payable_id', $materialIds)
-                ->where('payable_type', 'educational_material')
+                ->where('payable_type', 'book')
                 ->where('status', 'success')
                 ->sum('amount');
             return $agent;

@@ -38,10 +38,13 @@ import {
   Star,
   TrendingUp,
   AccountBalance,
-  Calculate
+  Calculate,
+  AccountBalanceWallet
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import EnhancedStatCard from '../common/EnhancedStatCard';
 import StatCardsContainer from '../common/StatCardsContainer';
+import EarningsWidget from '../withdrawal/EarningsWidget';
 import { useAuth } from '../../AuthContext';
 import useApi from '../../hooks/useApi';
 import { toast } from 'react-toastify';
@@ -52,6 +55,7 @@ const AgentSection = ({ materials, onRefresh }) => {
   const [earningsReportDialogOpen, setEarningsReportDialogOpen] = useState(false);
   const { user } = useAuth();
   const { callApi, loading } = useApi();
+  const navigate = useNavigate();
 
   const handleBecomeAgent = async () => {
     try {
@@ -235,6 +239,11 @@ const AgentSection = ({ materials, onRefresh }) => {
         Manage your educational materials and track sales performance
       </Typography>
 
+      {/* Earnings Widget */}
+      <Box sx={{ mb: 4 }}>
+        <EarningsWidget />
+      </Box>
+
       {/* Agent Stats */}
       <StatCardsContainer
         columns={{ mobile: 2, tablet: 2, desktop: 4 }}
@@ -309,6 +318,15 @@ const AgentSection = ({ materials, onRefresh }) => {
                   href="/educational-materials/upload"
                 >
                   Upload Material
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<AccountBalanceWallet />}
+                  fullWidth
+                  onClick={() => navigate('/withdrawals')}
+                  color="success"
+                >
+                  Manage Withdrawals
                 </Button>
                 <Button
                   variant="outlined"
