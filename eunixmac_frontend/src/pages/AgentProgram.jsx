@@ -284,12 +284,12 @@ const AgentProgram = () => {
             <Box display="flex" alignItems="center" gap={2} mb={3}>
               <School color="info" sx={{ fontSize: 32 }} />
               <Typography variant="h5" fontWeight={600}>
-                Types of Educational Materials
+                Types of Books
               </Typography>
             </Box>
 
             <Typography variant="body1" color="text.secondary" mb={3}>
-              We accept a wide variety of educational content across different categories:
+              We accept a wide variety of books across different categories:
             </Typography>
 
             <Grid container spacing={3}>

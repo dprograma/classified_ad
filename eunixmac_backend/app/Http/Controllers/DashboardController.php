@@ -40,6 +40,7 @@ class DashboardController extends Controller
             ],
             'affiliate' => $user->is_affiliate ? $this->getAffiliateData($user) : null,
             'materials' => $user->is_agent ? $this->getEducationalMaterials($user) : null,
+            'earnings' => $user->is_agent ? $this->getEarningsData($user) : null,
             'conversations' => $this->getConversations($user),
             'payments' => $user->payments()->latest()->take(10)->get(),
             'analytics' => [
@@ -106,12 +107,12 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get educational materials for the agent user
+     * Get books for the agent user
      */
     private function getEducationalMaterials($user)
     {
-        // Educational material category IDs
-        $educationalCategoryIds = [83, 84, 85, 86]; // Education Material, Past Questions, Ebooks, Publications
+        // Books category IDs
+        $educationalCategoryIds = [83, 84, 85, 86]; // Books, Past Questions, Ebooks, Publications
 
         $materials = $user->ads()
             ->whereIn('category_id', $educationalCategoryIds)
@@ -122,7 +123,7 @@ class DashboardController extends Controller
             ->map(function ($ad) {
                 // Calculate earnings from successful payments for this material
                 $totalEarnings = \App\Models\Payment::where('payable_id', $ad->id)
-                    ->where('payable_type', 'educational_material')
+                    ->where('payable_type', 'book')
                     ->where('status', 'success')
                     ->sum('amount');
 
@@ -153,6 +154,31 @@ class DashboardController extends Controller
             });
 
         return $materials;
+    }
+
+    /**
+     * Get earnings data for agent
+     */
+    private function getEarningsData($user)
+    {
+        $bookEarnings = $user->book_earnings;
+
+        $totalWithdrawn = $user->withdrawals()
+            ->whereIn('status', ['completed', 'processing'])
+            ->sum('amount');
+
+        $availableBalance = max(0, $bookEarnings - $totalWithdrawn);
+
+        $pendingWithdrawals = $user->withdrawals()
+            ->whereIn('status', ['pending', 'processing'])
+            ->sum('amount');
+
+        return [
+            'total_earnings' => (float) $bookEarnings,
+            'total_withdrawn' => (float) $totalWithdrawn,
+            'available_balance' => (float) $availableBalance,
+            'pending_withdrawals' => (float) $pendingWithdrawals,
+        ];
     }
 
     /**

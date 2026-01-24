@@ -91,6 +91,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Withdrawal::class);
     }
 
+    public function bankAccounts()
+    {
+        return $this->hasMany(BankAccount::class);
+    }
+
+    public function primaryBankAccount()
+    {
+        return $this->hasOne(BankAccount::class)->where('is_primary', true)->where('is_verified', true);
+    }
+
     /**
      * Get the available balance for withdrawal (approved commissions not yet paid)
      */
@@ -119,6 +129,36 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->affiliateCommissions()
             ->where('status', 'pending')
             ->sum('commission_amount');
+    }
+
+    /**
+     * Get total earnings from book sales (seller_amount from payments)
+     */
+    public function getBookEarningsAttribute()
+    {
+        $bookCategoryIds = [83, 84, 85, 86]; // Books, Past Questions, Ebooks, Publications
+
+        $adIds = $this->ads()
+            ->whereIn('category_id', $bookCategoryIds)
+            ->pluck('id');
+
+        return Payment::whereIn('payable_id', $adIds)
+            ->where('payable_type', 'book')
+            ->where('status', 'success')
+            ->sum('seller_amount');
+    }
+
+    /**
+     * Get available balance for withdrawal (book earnings minus withdrawn amount)
+     */
+    public function getAvailableWithdrawalBalance()
+    {
+        $totalEarnings = $this->book_earnings;
+        $totalWithdrawn = $this->withdrawals()
+            ->whereIn('status', ['completed', 'processing'])
+            ->sum('amount');
+
+        return max(0, $totalEarnings - $totalWithdrawn);
     }
 
     /**

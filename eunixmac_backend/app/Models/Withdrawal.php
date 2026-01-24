@@ -11,21 +11,24 @@ class Withdrawal extends Model
 
     protected $fillable = [
         'user_id',
+        'bank_account_id',
         'amount',
-        'bank_name',
-        'bank_account_number',
-        'bank_account_name',
-        'bank_code',
-        'transfer_code',
-        'reference',
+        'fee',
+        'net_amount',
         'status',
-        'failure_reason',
+        'reference',
+        'paystack_transfer_code',
+        'reason',
         'processed_at',
+        'completed_at',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'fee' => 'decimal:2',
+        'net_amount' => 'decimal:2',
         'processed_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     /**
@@ -37,6 +40,14 @@ class Withdrawal extends Model
     }
 
     /**
+     * Get the bank account for this withdrawal
+     */
+    public function bankAccount()
+    {
+        return $this->belongsTo(BankAccount::class);
+    }
+
+    /**
      * Scope for pending withdrawals
      */
     public function scopePending($query)
@@ -45,11 +56,19 @@ class Withdrawal extends Model
     }
 
     /**
-     * Scope for successful withdrawals
+     * Scope for completed withdrawals
      */
-    public function scopeSuccess($query)
+    public function scopeCompleted($query)
     {
-        return $query->where('status', 'success');
+        return $query->where('status', 'completed');
+    }
+
+    /**
+     * Scope for failed withdrawals
+     */
+    public function scopeFailed($query)
+    {
+        return $query->where('status', 'failed');
     }
 
     /**

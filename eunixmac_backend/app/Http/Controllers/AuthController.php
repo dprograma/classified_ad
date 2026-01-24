@@ -98,7 +98,7 @@ class AuthController extends Controller
         $user->save();
 
         return response()->json([
-            'message' => 'Congratulations! You are now an agent. You can start uploading educational materials.',
+            'message' => 'Congratulations! You are now an agent. You can start uploading books.',
             'user' => $user
         ]);
     }

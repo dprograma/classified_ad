@@ -86,7 +86,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/change-password', [AuthController::class, 'changePassword']);
     Route::delete('/user', [AuthController::class, 'deleteAccount']);
 
-    // Bank account routes
+    // Bank account routes (New system)
+    Route::prefix('bank-accounts')->group(function () {
+        Route::get('/', [App\Http\Controllers\BankAccountController::class, 'index']);
+        Route::get('/banks', [App\Http\Controllers\BankAccountController::class, 'getBanks']);
+        Route::post('/verify', [App\Http\Controllers\BankAccountController::class, 'verifyAccount']);
+        Route::post('/', [App\Http\Controllers\BankAccountController::class, 'store']);
+        Route::put('/{id}/primary', [App\Http\Controllers\BankAccountController::class, 'setPrimary']);
+        Route::delete('/{id}', [App\Http\Controllers\BankAccountController::class, 'destroy']);
+    });
+
+    // Withdrawal routes
+    Route::prefix('withdrawals')->group(function () {
+        Route::get('/', [App\Http\Controllers\WithdrawalController::class, 'index']);
+        Route::get('/stats', [App\Http\Controllers\WithdrawalController::class, 'stats']);
+        Route::post('/', [App\Http\Controllers\WithdrawalController::class, 'store']);
+        Route::get('/{id}', [App\Http\Controllers\WithdrawalController::class, 'show']);
+        Route::post('/{id}/cancel', [App\Http\Controllers\WithdrawalController::class, 'cancel']);
+    });
+
+    // Old bank account routes (keep for backward compatibility)
     Route::get('/user/banks', [AuthController::class, 'getBanks']);
     Route::get('/user/bank-account', [AuthController::class, 'getBankAccount']);
     Route::post('/user/bank-account', [AuthController::class, 'updateBankAccount']);

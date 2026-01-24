@@ -33,11 +33,27 @@ class PaymentController extends Controller
             // Check if payment record already exists (avoid duplicates)
             $existingPayment = Payment::where('reference', $reference)->first();
             if (!$existingPayment) {
+                $amount = $data['amount'] / 100; // Convert back from kobo
+
+                // Calculate commission for Books category
+                $platformCommission = 0;
+                $sellerAmount = $amount;
+                $commissionRate = 0;
+
+                if ($metadata['type'] === 'book') {
+                    $commissionRate = 30; // 30% platform commission
+                    $platformCommission = $amount * 0.30;
+                    $sellerAmount = $amount * 0.70; // 70% goes to seller
+                }
+
                 $payment = Payment::create([
                     'user_id' => $metadata['user_id'],
                     'payable_id' => $metadata['ad_id'],
                     'payable_type' => $metadata['type'],
-                    'amount' => $data['amount'] / 100, // Convert back from kobo
+                    'amount' => $amount,
+                    'platform_commission' => $platformCommission,
+                    'seller_amount' => $sellerAmount,
+                    'commission_rate' => $commissionRate,
                     'reference' => $reference,
                     'status' => 'success',
                 ]);
@@ -66,7 +82,7 @@ class PaymentController extends Controller
         if ($type && $type !== 'all') {
             switch ($type) {
                 case 'materials':
-                    $query->where('payable_type', 'educational_material');
+                    $query->where('payable_type', 'book');
                     break;
                 case 'affiliate':
                     $query->where('type', 'affiliate_payout');
@@ -82,9 +98,9 @@ class PaymentController extends Controller
 
             // Add description based on payment type
             switch ($payment->payable_type) {
-                case 'educational_material':
-                    $paymentArray['description'] = 'Educational Material Purchase';
-                    $paymentArray['payable_type'] = 'EducationalMaterial'; // Normalize for frontend
+                case 'book':
+                    $paymentArray['description'] = 'Book Purchase';
+                    $paymentArray['payable_type'] = 'Book'; // Normalize for frontend
                     break;
                 default:
                     $paymentArray['description'] = $payment->type ?? 'Payment';
@@ -104,7 +120,7 @@ class PaymentController extends Controller
         // Calculate total spent on materials
         $totalSpent = $user->payments()
             ->where('status', 'success')
-            ->whereIn('payable_type', ['educational_material'])
+            ->whereIn('payable_type', ['book'])
             ->sum('amount');
 
         // Calculate total earned from affiliate payouts
@@ -117,7 +133,7 @@ class PaymentController extends Controller
         $totalTransactions = $user->payments()->count();
 
         $materialPayments = $user->payments()
-            ->where('payable_type', 'educational_material')
+            ->where('payable_type', 'book')
             ->count();
 
         $affiliatePayments = $user->payments()

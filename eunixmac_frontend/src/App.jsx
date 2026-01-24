@@ -41,8 +41,11 @@ import AdDetail from './pages/AdDetail';
 import AdminSupportManagement from './pages/AdminSupportManagement';
 import AdminBooksManagement from './pages/AdminBooksManagement';
 import AdminAdsManagement from './pages/AdminAdsManagement';
+import AdminNewsManagement from './pages/AdminNewsManagement';
+import AdminNewsletterManagement from './pages/AdminNewsletterManagement';
 import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
+import Withdrawals from './pages/Withdrawals';
 
 
 function App() {
@@ -158,6 +161,38 @@ function App() {
                   element={
                     <PrivateRoute>
                       <AdminBooksManagement />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/admin/news"
+                  element={
+                    <PrivateRoute>
+                      <AdminNewsManagement />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/admin/ads"
+                  element={
+                    <PrivateRoute>
+                      <AdminAdsManagement />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/admin/newsletter"
+                  element={
+                    <PrivateRoute>
+                      <AdminNewsletterManagement />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/withdrawals"
+                  element={
+                    <PrivateRoute>
+                      <Withdrawals />
                     </PrivateRoute>
                   }
                 />

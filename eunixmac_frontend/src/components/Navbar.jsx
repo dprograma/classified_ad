@@ -16,7 +16,8 @@ import {
   Settings as SettingsIcon,
   ExitToApp as LogoutIcon,
   KeyboardArrowDown as ArrowDownIcon,
-  AccountCircle as AccountIcon
+  AccountCircle as AccountIcon,
+  AccountBalanceWallet as WalletIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
 import { getStorageUrl } from '../config/api';
@@ -407,6 +408,15 @@ function Navbar() {
                   </ListItemIcon>
                   <ListItemText primary="Settings" />
                 </ModernMenuItem>
+
+                {user?.is_agent && (
+                  <ModernMenuItem onClick={() => { navigate('/withdrawals'); handleClose(); }}>
+                    <ListItemIcon>
+                      <WalletIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Earnings & Withdrawals" />
+                  </ModernMenuItem>
+                )}
 
                 {user?.is_admin && (
                   <ModernMenuItem onClick={() => { navigate('/dashboard?tab=admin-ads'); handleClose(); }}>
