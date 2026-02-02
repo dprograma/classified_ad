@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/user/become-agent', [AuthController::class, 'becomeAgent']);
+    Route::post('/user/become-affiliate', [AuthController::class, 'becomeAffiliate']);
     Route::post('/user/profile', [AuthController::class, 'updateProfile']);
 
     // Affiliate routes
