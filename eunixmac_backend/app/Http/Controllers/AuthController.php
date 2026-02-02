@@ -349,6 +349,10 @@ class AuthController extends Controller
         }
 
         if ($user->markEmailAsVerified()) {
+            // Also set is_verified flag for verification badge
+            $user->is_verified = true;
+            $user->save();
+
             event(new Verified($user));
         }
 

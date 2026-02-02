@@ -97,7 +97,9 @@ function UploadBook() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [dragging, setDragging] = useState(false);
-  
+  const [coverImage, setCoverImage] = useState(null);
+  const [coverImagePreview, setCoverImagePreview] = useState(null);
+
   const [bookData, setBookData] = useState({
     title: '',
     description: '',
@@ -167,6 +169,26 @@ function UploadBook() {
     setBookData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleCoverImageSelect = (file) => {
+    if (file && file.type.startsWith('image/')) {
+      setCoverImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCoverImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      toast.error('Please select a valid image file');
+    }
+  };
+
+  const handleCoverImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleCoverImageSelect(file);
+    }
+  };
+
   const handleNext = () => {
     if (activeStep === 0 && !selectedFile) {
       toast.error('Please select a file to upload');
@@ -198,7 +220,12 @@ function UploadBook() {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
-      
+
+      // Add cover image if selected
+      if (coverImage) {
+        formData.append('preview_image', coverImage);
+      }
+
       // Add all book data
       Object.keys(bookData).forEach(key => {
         formData.append(key, bookData[key]);
@@ -326,6 +353,70 @@ function UploadBook() {
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Provide a detailed description of the book, what it covers, and who it's for..."
                 />
+              </Grid>
+
+              {/* Cover Image Upload */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 600 }}>
+                  Cover Image (Optional)
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'start' }}>
+                  <input
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    id="cover-image-upload"
+                    type="file"
+                    onChange={handleCoverImageChange}
+                  />
+                  <label htmlFor="cover-image-upload">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      startIcon={<Upload />}
+                    >
+                      Upload Cover Image
+                    </Button>
+                  </label>
+                  {coverImagePreview && (
+                    <Box sx={{ position: 'relative' }}>
+                      <img
+                        src={coverImagePreview}
+                        alt="Cover preview"
+                        style={{
+                          maxWidth: '150px',
+                          maxHeight: '200px',
+                          borderRadius: '8px',
+                          objectFit: 'cover',
+                          border: '2px solid #e0e0e0'
+                        }}
+                      />
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="error"
+                        sx={{
+                          position: 'absolute',
+                          top: -10,
+                          right: -10,
+                          minWidth: 'auto',
+                          width: 30,
+                          height: 30,
+                          borderRadius: '50%',
+                          p: 0
+                        }}
+                        onClick={() => {
+                          setCoverImage(null);
+                          setCoverImagePreview(null);
+                        }}
+                      >
+                        ×
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  Upload a cover image for your book (JPG, PNG, GIF - Max 2MB)
+                </Typography>
               </Grid>
 
               <Grid item xs={12} md={4}>
