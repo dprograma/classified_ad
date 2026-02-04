@@ -100,21 +100,19 @@ class BankAccountController extends Controller
         // If this is the first account, make it primary
         $isPrimary = $user->bankAccounts()->count() === 0;
 
-        // Create bank account
+        // Create bank account (already verified via verifyAccount endpoint)
         $bankAccount = $user->bankAccounts()->create([
             'bank_name' => $request->bank_name,
             'bank_code' => $request->bank_code,
             'account_number' => $request->account_number,
             'account_name' => $request->account_name,
             'is_primary' => $isPrimary,
-            'is_verified' => false,
+            'is_verified' => true, // Set as verified since Paystack already verified it
+            'verified_at' => now(),
         ]);
 
-        // Send verification amount (small deposit)
-        $this->sendVerificationDeposit($bankAccount);
-
         return response()->json([
-            'message' => 'Bank account added successfully. A verification deposit will be sent shortly.',
+            'message' => 'Bank account added and verified successfully',
             'bank_account' => $bankAccount
         ], 201);
     }
@@ -161,58 +159,5 @@ class BankAccountController extends Controller
         $bankAccount->delete();
 
         return response()->json(['message' => 'Bank account deleted successfully']);
-    }
-
-    /**
-     * Send small verification deposit to bank account
-     */
-    private function sendVerificationDeposit($bankAccount)
-    {
-        // Generate random amount between ₦1 and ₦10
-        $verificationAmount = rand(1, 10);
-
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
-            ])->post('https://api.paystack.co/transfer', [
-                'source' => 'balance',
-                'amount' => $verificationAmount * 100, // Convert to kobo
-                'recipient' => $this->createTransferRecipient($bankAccount),
-                'reason' => 'Account verification - eUnix Mac',
-            ]);
-
-            if ($response->successful()) {
-                $bankAccount->update([
-                    'verification_amount' => $verificationAmount,
-                    'is_verified' => true,
-                    'verified_at' => now(),
-                ]);
-            }
-        } catch (\Exception $e) {
-            // Log error but don't fail the request
-            \Log::error('Verification deposit failed: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Create transfer recipient on Paystack
-     */
-    private function createTransferRecipient($bankAccount)
-    {
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
-        ])->post('https://api.paystack.co/transferrecipient', [
-            'type' => 'nuban',
-            'name' => $bankAccount->account_name,
-            'account_number' => $bankAccount->account_number,
-            'bank_code' => $bankAccount->bank_code,
-            'currency' => 'NGN',
-        ]);
-
-        if ($response->successful()) {
-            return $response->json()['data']['recipient_code'];
-        }
-
-        throw new \Exception('Failed to create transfer recipient');
     }
 }

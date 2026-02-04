@@ -1,18 +1,42 @@
 import React from 'react';
 import { Button, Typography, Box } from '@mui/material';
 import useApi from '../hooks/useApi';
+import { useAuth } from '../AuthContext';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 function BecomeAgent() {
   const { callApi, loading } = useApi();
-  
+  const { updateUser } = useAuth();
+  const navigate = useNavigate();
+
   const handleBecomeAgent = async () => {
     try {
-      await callApi('POST', '/user/become-agent');
-      alert('You are now an agent!');
-      // Optionally, refresh user data or redirect
+      const response = await callApi('POST', '/user/become-agent');
+
+      // Update user in context with the returned user data
+      if (response.user) {
+        updateUser(response.user);
+      }
+
+      toast.success('Congratulations! You are now an agent. You can start uploading educational materials.');
+
+      // Redirect to dashboard after a short delay
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1500);
     } catch (error) {
       console.error('Error becoming agent:', error);
-      // Error message is already handled by useApi hook
+
+      // Handle "already an agent" case gracefully
+      if (error.message && error.message.includes('already an agent')) {
+        toast.info('You are already an agent!');
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1500);
+      } else {
+        toast.error(error.message || 'Failed to become an agent. Please try again.');
+      }
     }
   };
 

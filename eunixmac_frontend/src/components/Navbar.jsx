@@ -487,6 +487,14 @@ function Navbar() {
                 <ListItem component={Link} to="/settings" onClick={handleDrawerToggle}>
                   <ListItemText primary="Settings" />
                 </ListItem>
+                {user?.is_agent && (
+                  <ListItem component={Link} to="/withdrawals" onClick={handleDrawerToggle}>
+                    <ListItemIcon>
+                      <WalletIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Earnings & Withdrawals" />
+                  </ListItem>
+                )}
                 {user?.is_admin && (
                   <ListItem component={Link} to="/dashboard?tab=admin-ads" onClick={handleDrawerToggle}>
                     <ListItemText primary="Ads Management" />

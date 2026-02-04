@@ -61,6 +61,7 @@ Route::get('/news/{identifier}', [NewsController::class, 'show']);
 
 Route::match(['get', 'post'], '/payments/verify', [PaymentController::class, 'verifyPayment']); // Public route for Paystack callback
 Route::match(['get', 'post'], '/affiliate/verify-enrollment', [AffiliateController::class, 'verifyEnrollment']); // Public route for affiliate enrollment callback
+Route::post('/webhooks/paystack/transfer', [App\Http\Controllers\PaystackWebhookController::class, 'handleTransferWebhook']); // Paystack transfer webhook
 
 Route::middleware('auth:sanctum')->group(function () {
     // Payment history routes
