@@ -1,20 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Alert, AlertDescription } from '../ui/alert';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  CircularProgress,
+  Grid,
+  Divider,
+  InputAdornment,
+  Paper
+} from '@mui/material';
+import {
+  AccountBalanceWallet,
+  TrendingUp,
+  CheckCircle,
+  Warning,
+  Info
+} from '@mui/icons-material';
 import { getUserBankAccounts } from '../../services/bankAccountService';
 import { getWithdrawalStats, requestWithdrawal } from '../../services/withdrawalService';
-import { Loader2, AlertCircle, CheckCircle, Wallet, TrendingUp } from 'lucide-react';
+import { toast } from 'react-toastify';
+import EnhancedStatCard from '../common/EnhancedStatCard';
+import StatCardsContainer from '../common/StatCardsContainer';
+import { formatCurrency } from '../../utils/formatCurrency';
 
 const WithdrawalRequest = ({ onSuccess }) => {
   const [stats, setStats] = useState(null);
   const [bankAccounts, setBankAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   const [formData, setFormData] = useState({
     amount: '',
@@ -44,7 +65,7 @@ const WithdrawalRequest = ({ onSuccess }) => {
         setFormData((prev) => ({ ...prev, bank_account_id: primaryAccount.id }));
       }
     } catch (err) {
-      setError('Failed to load withdrawal data');
+      toast.error('Failed to load withdrawal data');
       console.error(err);
     } finally {
       setLoading(false);
@@ -54,26 +75,24 @@ const WithdrawalRequest = ({ onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setError('');
-    setSuccess('');
 
     try {
       const amount = parseFloat(formData.amount);
 
       if (amount < stats.minimum_withdrawal) {
-        setError(`Minimum withdrawal amount is ₦${stats.minimum_withdrawal.toLocaleString()}`);
+        toast.error(`Minimum withdrawal amount is ${formatCurrency(stats.minimum_withdrawal)}`);
         setSubmitting(false);
         return;
       }
 
       if (amount > stats.available_balance) {
-        setError(`Insufficient balance. Available: ₦${stats.available_balance.toLocaleString()}`);
+        toast.error(`Insufficient balance. Available: ${formatCurrency(stats.available_balance)}`);
         setSubmitting(false);
         return;
       }
 
       await requestWithdrawal(amount, formData.bank_account_id);
-      setSuccess('Withdrawal request submitted successfully!');
+      toast.success('Withdrawal request submitted successfully!');
       setFormData({ ...formData, amount: '' });
 
       // Reload stats
@@ -85,7 +104,7 @@ const WithdrawalRequest = ({ onSuccess }) => {
         onSuccess();
       }
     } catch (err) {
-      setError(err.error || 'Failed to request withdrawal');
+      toast.error(err.error || 'Failed to request withdrawal');
     } finally {
       setSubmitting(false);
     }
@@ -99,176 +118,183 @@ const WithdrawalRequest = ({ onSuccess }) => {
 
   if (loading) {
     return (
-      <Card>
-        <CardContent className="flex justify-center items-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </CardContent>
-      </Card>
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (bankAccounts.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Request Withdrawal</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Please add and verify a bank account before requesting a withdrawal.
-            </AlertDescription>
-          </Alert>
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+        <CardContent sx={{ p: 4, textAlign: 'center' }}>
+          <Warning sx={{ fontSize: 64, color: 'warning.main', mb: 2 }} />
+          <Typography variant="h6" gutterBottom>
+            No Bank Account Found
+          </Typography>
+          <Typography variant="body2" color="text.secondary" paragraph>
+            Please add and verify a bank account before requesting a withdrawal.
+          </Typography>
+          <Button variant="contained" href="#" onClick={() => window.location.reload()}>
+            Refresh Page
+          </Button>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Request Withdrawal</CardTitle>
-        <CardDescription>
-          Withdraw your earnings to your bank account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+    <Box>
+      {/* Balance Overview Cards */}
+      <StatCardsContainer
+        columns={{ mobile: 1, tablet: 2, desktop: 2 }}
+        gap="16px"
+        sx={{ mb: 4 }}
+      >
+        <EnhancedStatCard
+          icon={AccountBalanceWallet}
+          value={formatCurrency(stats?.available_balance || 0)}
+          label="Available Balance"
+          color="#3b82f6"
+          size="large"
+        />
+        <EnhancedStatCard
+          icon={TrendingUp}
+          value={formatCurrency(stats?.total_earnings || 0)}
+          label="Total Earnings"
+          color="#10b981"
+          size="large"
+        />
+      </StatCardsContainer>
+
+      {/* Withdrawal Form */}
+      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            Request Withdrawal
+          </Typography>
+
+          <Box component="form" onSubmit={handleSubmit}>
+            <Grid container spacing={3}>
+              {/* Bank Account Selection */}
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Bank Account</InputLabel>
+                  <Select
+                    value={formData.bank_account_id}
+                    label="Bank Account"
+                    onChange={(e) => setFormData({ ...formData, bank_account_id: e.target.value })}
+                    required
+                  >
+                    {bankAccounts.map((account) => (
+                      <MenuItem key={account.id} value={account.id}>
+                        {account.bank_name} - {account.account_number} ({account.account_name})
+                        {account.is_primary ? ' (Primary)' : ''}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Amount Input */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Withdrawal Amount"
+                  type="number"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">₦</InputAdornment>,
+                  }}
+                  helperText={`Minimum withdrawal: ${formatCurrency(stats?.minimum_withdrawal || 3000)}`}
+                  required
+                  inputProps={{
+                    min: stats?.minimum_withdrawal || 3000,
+                    max: stats?.available_balance || 0,
+                    step: 0.01
+                  }}
+                />
+              </Grid>
+
+              {/* Calculation Summary */}
+              {formData.amount && (
+                <Grid item xs={12}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      bgcolor: 'grey.50',
+                      p: 2,
+                      borderRadius: 2
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Withdrawal Amount:
+                      </Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {formatCurrency(parseFloat(formData.amount))}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Transfer Fee:
+                      </Typography>
+                      <Typography variant="body2" color="error.main" fontWeight={600}>
+                        -{formatCurrency(stats?.transfer_fee || 50)}
+                      </Typography>
+                    </Box>
+                    <Divider sx={{ my: 1 }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body1" fontWeight={600}>
+                        You will receive:
+                      </Typography>
+                      <Typography variant="body1" color="success.main" fontWeight={700}>
+                        {formatCurrency(calculateNetAmount())}
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </Grid>
+              )}
+
+              {/* Submit Button */}
+              <Grid item xs={12}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  fullWidth
+                  disabled={submitting || !formData.amount || !formData.bank_account_id}
+                  sx={{ py: 1.5 }}
+                >
+                  {submitting ? (
+                    <>
+                      <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
+                      Processing...
+                    </>
+                  ) : (
+                    'Request Withdrawal'
+                  )}
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+
+          {/* Processing Information */}
+          <Alert severity="info" icon={<Info />} sx={{ mt: 3 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+              Processing Information
+            </Typography>
+            <Box component="ul" sx={{ m: 0, pl: 2, fontSize: '0.875rem' }}>
+              <li>Withdrawals are processed automatically via Paystack</li>
+              <li>Transfer fee: {formatCurrency(stats?.transfer_fee || 50)} per withdrawal</li>
+              <li>Funds typically arrive within minutes</li>
+              <li>Pending withdrawals: {formatCurrency(stats?.pending_withdrawals || 0)}</li>
+            </Box>
           </Alert>
-        )}
-
-        {success && (
-          <Alert className="mb-4 bg-green-50 text-green-900 border-green-200">
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>{success}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Balance Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Card className="bg-blue-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Available Balance</p>
-                  <p className="text-2xl font-bold text-blue-700">
-                    ₦{stats?.available_balance?.toLocaleString() || '0'}
-                  </p>
-                </div>
-                <Wallet className="h-10 w-10 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-green-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Earnings</p>
-                  <p className="text-2xl font-bold text-green-700">
-                    ₦{stats?.total_earnings?.toLocaleString() || '0'}
-                  </p>
-                </div>
-                <TrendingUp className="h-10 w-10 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Withdrawal Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="bank_account">Bank Account</Label>
-            <select
-              id="bank_account"
-              className="w-full mt-1 p-2 border rounded-md"
-              value={formData.bank_account_id}
-              onChange={(e) => setFormData({ ...formData, bank_account_id: e.target.value })}
-              required
-            >
-              <option value="">Select Bank Account</option>
-              {bankAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.bank_name} - {account.account_number} ({account.account_name})
-                  {account.is_primary ? ' (Primary)' : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <Label htmlFor="amount">Withdrawal Amount (₦)</Label>
-            <Input
-              id="amount"
-              type="number"
-              min={stats?.minimum_withdrawal || 3000}
-              max={stats?.available_balance || 0}
-              step="0.01"
-              placeholder={`Minimum: ₦${stats?.minimum_withdrawal?.toLocaleString() || '3,000'}`}
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              required
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Minimum withdrawal: ₦{stats?.minimum_withdrawal?.toLocaleString() || '3,000'}
-            </p>
-          </div>
-
-          {formData.amount && (
-            <div className="bg-gray-50 p-4 rounded-md space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Withdrawal Amount:</span>
-                <span className="font-semibold">
-                  ₦{parseFloat(formData.amount).toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Transfer Fee:</span>
-                <span className="font-semibold text-red-600">
-                  -₦{stats?.transfer_fee?.toLocaleString() || '50'}
-                </span>
-              </div>
-              <div className="flex justify-between text-base border-t pt-2">
-                <span className="font-semibold">You will receive:</span>
-                <span className="font-bold text-green-600">
-                  ₦{calculateNetAmount().toLocaleString()}
-                </span>
-              </div>
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={submitting || !formData.amount || !formData.bank_account_id}
-            className="w-full"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Processing...
-              </>
-            ) : (
-              'Request Withdrawal'
-            )}
-          </Button>
-        </form>
-
-        {/* Additional Info */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-md">
-          <h4 className="font-semibold text-sm mb-2">Processing Information</h4>
-          <ul className="text-xs text-gray-700 space-y-1">
-            <li>• Withdrawals are processed automatically via Paystack</li>
-            <li>• Transfer fee: ₦{stats?.transfer_fee?.toLocaleString() || '50'} per withdrawal</li>
-            <li>• Funds typically arrive within minutes</li>
-            <li>• Pending withdrawals: ₦{stats?.pending_withdrawals?.toLocaleString() || '0'}</li>
-          </ul>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Box>
   );
 };
 

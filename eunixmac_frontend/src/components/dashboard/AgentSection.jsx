@@ -53,18 +53,32 @@ const AgentSection = ({ materials, onRefresh }) => {
   const [infoDialogOpen, setInfoDialogOpen] = useState(false);
   const [analyticsDialogOpen, setAnalyticsDialogOpen] = useState(false);
   const [earningsReportDialogOpen, setEarningsReportDialogOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { callApi, loading } = useApi();
   const navigate = useNavigate();
 
   const handleBecomeAgent = async () => {
     try {
       const response = await callApi('POST', '/user/become-agent');
+
+      // Update user in context with the returned user data
+      if (response.user) {
+        updateUser(response.user);
+      }
+
       toast.success('Congratulations! You are now an agent. You can start uploading educational materials.');
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error becoming agent:', error);
-      toast.error(error.message || 'Failed to become an agent. Please try again.');
+
+      // Handle "already an agent" case gracefully
+      if (error.message && error.message.includes('already an agent')) {
+        toast.info('You are already an agent!');
+        // Force refresh user data to sync state
+        if (onRefresh) onRefresh();
+      } else {
+        toast.error(error.message || 'Failed to become an agent. Please try again.');
+      }
     }
   };
 
@@ -315,7 +329,7 @@ const AgentSection = ({ materials, onRefresh }) => {
                   variant="contained"
                   startIcon={<Upload />}
                   fullWidth
-                  href="/educational-materials/upload"
+                  onClick={() => navigate('/books/upload')}
                 >
                   Upload Material
                 </Button>
