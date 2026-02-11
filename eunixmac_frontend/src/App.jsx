@@ -35,6 +35,7 @@ import TermsOfService from './pages/TermsOfService';
 import CookiePolicy from './pages/CookiePolicy';
 import UploadBook from './pages/UploadBook';
 import BookView from './pages/BookView';
+import BookDownload from './pages/BookDownload';
 import BookEdit from './pages/BookEdit';
 import Categories from './pages/Categories';
 import AdDetail from './pages/AdDetail';
@@ -104,6 +105,14 @@ function App() {
                   element={
                     <PrivateRoute>
                       <BookView />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/books/:id/download"
+                  element={
+                    <PrivateRoute>
+                      <BookDownload />
                     </PrivateRoute>
                   }
                 />

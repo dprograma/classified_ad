@@ -11,7 +11,7 @@ import {
   Card,
   CardContent
 } from '@mui/material';
-import { CheckCircle, Error, TrendingUp } from '@mui/icons-material';
+import { CheckCircle, Error, TrendingUp, Download } from '@mui/icons-material';
 import useApi from '../hooks/useApi';
 
 function PaymentCallback() {
@@ -27,13 +27,15 @@ function PaymentCallback() {
     const reference = searchParams.get('reference');
     const adId = searchParams.get('ad_id');
     const message = searchParams.get('message');
-    
+    const type = searchParams.get('type');
+
     if (status === 'success') {
       setStatus('success');
       setMessage('Payment verified successfully!');
       setPaymentData({
         ad_id: adId,
-        reference: reference
+        reference: reference,
+        type: type
       });
     } else if (status === 'error') {
       setStatus('error');
@@ -79,7 +81,11 @@ function PaymentCallback() {
 
   const handleContinue = () => {
     if (status === 'success' && paymentData?.ad_id) {
-      navigate(`/ads/${paymentData.ad_id}`);
+      if (paymentData.type === 'book') {
+        navigate(`/books/${paymentData.ad_id}/download`);
+      } else {
+        navigate(`/ads/${paymentData.ad_id}`);
+      }
     } else {
       navigate('/dashboard');
     }
@@ -127,13 +133,14 @@ function PaymentCallback() {
               </Card>
             )}
             
-            <Button 
-              variant="contained" 
-              size="large" 
+            <Button
+              variant="contained"
+              size="large"
               onClick={handleContinue}
+              startIcon={paymentData?.type === 'book' ? <Download /> : undefined}
               sx={{ mr: 2 }}
             >
-              Continue
+              {paymentData?.type === 'book' ? 'Download Now' : 'Continue'}
             </Button>
             <Button 
               variant="outlined" 
