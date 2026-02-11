@@ -219,6 +219,25 @@ class AdController extends Controller
 
         $validatedData = $request->validate($validationRules);
 
+        // Block regular users from posting ads in Books categories
+        // Books (past questions, ebooks, publications) are only posted by Admin/Agents
+        $category = \App\Models\Category::find($validatedData['category_id']);
+        if ($category) {
+            // Only restrict the "Books" category (Past Questions, Ebooks, Publications)
+            // "Books and Media" (Music, Movies, etc.) is a separate category and remains open
+            $isBookCategory = strtolower($category->name) === 'books';
+            if (!$isBookCategory && $category->parent_id) {
+                $parentCategory = \App\Models\Category::find($category->parent_id);
+                $isBookCategory = $parentCategory && strtolower($parentCategory->name) === 'books';
+            }
+
+            if ($isBookCategory && !$request->user()->is_admin && !$request->user()->is_agent) {
+                return response()->json([
+                    'message' => 'Books, past questions, and publications can only be uploaded by Admins and Agents. Please use the Books upload section in your dashboard if you are an Agent.',
+                ], 403);
+            }
+        }
+
         try {
             $ad = Ad::create([
                 'user_id' => $request->user()->id,

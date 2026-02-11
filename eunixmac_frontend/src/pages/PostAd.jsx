@@ -43,7 +43,14 @@ function PostAd() {
     try {
       const response = await callApi('GET', '/categories');
       // Backend returns { success: true, data: [...] }
-      setCategories(response.data || []);
+      // Filter out the "Books" category (Past Questions, Ebooks, Publications)
+      // Books are only posted by Admin/Agents via their dashboard
+      // Note: "Books and Media" (Music, Movies, etc.) is a separate category and remains available
+      const allCategories = response.data || [];
+      const filteredCategories = allCategories.filter(
+        (cat) => cat.name.toLowerCase() !== 'books'
+      );
+      setCategories(filteredCategories);
     } catch (error) {
       console.error('Error fetching categories:', error);
       setCategories([]); // Set empty array on error

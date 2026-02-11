@@ -63,7 +63,7 @@ class PaymentController extends Controller
             }
 
             // Redirect to frontend success page
-            return redirect(env('FRONTEND_URL') . '/payment/callback?status=success&reference=' . $reference . '&ad_id=' . $metadata['ad_id']);
+            return redirect(env('FRONTEND_URL') . '/payment/callback?status=success&reference=' . $reference . '&ad_id=' . $metadata['ad_id'] . '&type=' . ($metadata['type'] ?? ''));
         } else {
             // Redirect to frontend error page
             return redirect(env('FRONTEND_URL') . '/payment/callback?status=error&reference=' . $reference . '&message=' . urlencode('Payment verification failed'));
