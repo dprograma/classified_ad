@@ -93,12 +93,10 @@ const AdminBooksManagement = () => {
   };
 
   const categories = [
-    { id: 7, name: 'Books and Media' },
-    { id: 8, name: 'Fiction Books' },
-    { id: 9, name: 'Non-Fiction Books' },
-    { id: 10, name: 'Music' },
-    { id: 11, name: 'Movies' },
-    { id: 12, name: 'TV Shows' }
+    { id: 83, name: 'Books' },
+    { id: 84, name: 'Past Questions' },
+    { id: 85, name: 'Ebooks' },
+    { id: 86, name: 'Publications' }
   ];
 
   useEffect(() => {
@@ -433,11 +431,18 @@ const AdminBooksManagement = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={book.category?.name}
-                        size="small"
-                        variant="outlined"
-                      />
+                      <Box>
+                        <Chip
+                          label={book.category?.parent?.name || book.category?.name}
+                          size="small"
+                          variant="outlined"
+                        />
+                        {book.category?.parent && (
+                          <Typography variant="caption" color="text.secondary" display="block" mt={0.5}>
+                            {book.category?.name}
+                          </Typography>
+                        )}
+                      </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -578,7 +583,8 @@ const AdminBooksManagement = () => {
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="body2">
-                          <strong>Category:</strong> {selectedBook.category?.name}
+                          <strong>Category:</strong> {selectedBook.category?.parent?.name || selectedBook.category?.name}
+                          {selectedBook.category?.parent && ` > ${selectedBook.category?.name}`}
                         </Typography>
                       </Grid>
                       <Grid item xs={6}>

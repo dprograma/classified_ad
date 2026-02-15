@@ -14,7 +14,7 @@ class BookController extends Controller
     public function index(Request $request)
     {
         $books = $request->user()->ads()
-            ->where('category_id', 7) // Books and Media
+            ->whereIn('category_id', [83, 84, 85, 86]) // Books, Past Questions, Ebooks, Publications
             ->whereNotNull('file_path')
             ->with(['category:id,name'])
             ->orderBy('created_at', 'desc')
@@ -228,17 +228,15 @@ class BookController extends Controller
 
     private function getCategoryIdByName($categoryName)
     {
-        // Map category names to IDs based on your categories
+        // Map category names to IDs based on the Books category (ID 83) sub-categories
         $categoryMap = [
-            'Fiction Books' => 8,
-            'Non-Fiction Books' => 9,
-            'Music' => 10,
-            'Movies' => 11,
-            'TV Shows' => 12,
-            'Book' => 7, // Default
+            'Past Questions' => 84,
+            'Ebooks' => 85,
+            'Publications' => 86,
+            'Books' => 83, // Default parent
         ];
 
-        return $categoryMap[$categoryName] ?? 7; // Default to Books and Media category
+        return $categoryMap[$categoryName] ?? 83; // Default to Books parent category
     }
 
     public function download(Request $request, Ad $ad)

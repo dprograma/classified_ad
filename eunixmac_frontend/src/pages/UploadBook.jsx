@@ -55,11 +55,9 @@ const UploadBox = styled(Box)(({ theme }) => ({
 const steps = ['Upload File', 'Book Details', 'Pricing & Settings', 'Review & Submit'];
 
 const bookCategories = [
-  'Fiction Books',
-  'Non-Fiction Books',
-  'Music',
-  'Movies',
-  'TV Shows'
+  'Past Questions',
+  'Ebooks',
+  'Publications'
 ];
 
 const subjectAreas = [

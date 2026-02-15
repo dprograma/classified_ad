@@ -152,9 +152,9 @@ class AdminController extends Controller
      */
     public function getBooks(Request $request)
     {
-        $query = Ad::where('category_id', 7) // Books and Media
+        $query = Ad::whereIn('category_id', [83, 84, 85, 86]) // Books, Past Questions, Ebooks, Publications
             ->whereNotNull('file_path')
-            ->with(['user:id,name,email', 'category:id,name']);
+            ->with(['user:id,name,email', 'category:id,name,parent_id', 'category.parent:id,name']);
 
         // Apply filters
         if ($request->filled('status')) {
@@ -208,11 +208,11 @@ class AdminController extends Controller
     public function showBook(Ad $ad)
     {
         // Verify this is a book
-        if ($ad->category_id !== 7 || !$ad->file_path) {
+        if (!in_array($ad->category_id, [83, 84, 85, 86]) || !$ad->file_path) {
             return response()->json(['message' => 'Not a book'], 404);
         }
 
-        $ad->load(['user:id,name,email,phone_number', 'category:id,name']);
+        $ad->load(['user:id,name,email,phone_number', 'category:id,name,parent_id', 'category.parent:id,name']);
 
         // Add additional data
         $ad->file_size = $this->getFileSize($ad->file_path);
@@ -244,7 +244,7 @@ class AdminController extends Controller
     public function approveBook(Request $request, Ad $ad)
     {
         // Verify this is a book
-        if ($ad->category_id !== 7 || !$ad->file_path) {
+        if (!in_array($ad->category_id, [83, 84, 85, 86]) || !$ad->file_path) {
             return response()->json(['message' => 'Not a book'], 404);
         }
 
@@ -281,7 +281,7 @@ class AdminController extends Controller
         ]);
 
         // Verify this is a book
-        if ($ad->category_id !== 7 || !$ad->file_path) {
+        if (!in_array($ad->category_id, [83, 84, 85, 86]) || !$ad->file_path) {
             return response()->json(['message' => 'Not a book'], 404);
         }
 
@@ -320,7 +320,7 @@ class AdminController extends Controller
         ]);
 
         // Verify this is a book
-        if ($ad->category_id !== 7 || !$ad->file_path) {
+        if (!in_array($ad->category_id, [83, 84, 85, 86]) || !$ad->file_path) {
             return response()->json(['message' => 'Not a book'], 404);
         }
 
@@ -373,15 +373,15 @@ class AdminController extends Controller
     public function getBooksStats()
     {
         $stats = [
-            'total_books' => Ad::where('category_id', 7)
+            'total_books' => Ad::whereIn('category_id', [83, 84, 85, 86])
                 ->whereNotNull('file_path')->count(),
-            'pending_approval' => Ad::where('category_id', 7)
+            'pending_approval' => Ad::whereIn('category_id', [83, 84, 85, 86])
                 ->whereNotNull('file_path')
                 ->where('status', 'pending_approval')->count(),
-            'approved_books' => Ad::where('category_id', 7)
+            'approved_books' => Ad::whereIn('category_id', [83, 84, 85, 86])
                 ->whereNotNull('file_path')
                 ->where('status', 'active')->count(),
-            'rejected_books' => Ad::where('category_id', 7)
+            'rejected_books' => Ad::whereIn('category_id', [83, 84, 85, 86])
                 ->whereNotNull('file_path')
                 ->where('status', 'rejected')->count(),
             'total_sales' => Payment::where('payable_type', 'book')
@@ -430,11 +430,11 @@ class AdminController extends Controller
     {
         return User::where('is_agent', true)
             ->withCount(['ads as books_count' => function ($query) {
-                $query->where('category_id', 7)
+                $query->whereIn('category_id', [83, 84, 85, 86])
                       ->whereNotNull('file_path');
             }])
             ->with(['ads' => function ($query) {
-                $query->where('category_id', 7)
+                $query->whereIn('category_id', [83, 84, 85, 86])
                       ->whereNotNull('file_path');
             }])
             ->orderBy('books_count', 'desc')
@@ -469,7 +469,7 @@ class AdminController extends Controller
      */
     private function getBooksByCategory()
     {
-        return Ad::where('category_id', 7)
+        return Ad::whereIn('category_id', [83, 84, 85, 86])
             ->whereNotNull('file_path')
             ->join('categories', 'ads.category_id', '=', 'categories.id')
             ->selectRaw('categories.name as category_name, COUNT(*) as count')
@@ -483,7 +483,7 @@ class AdminController extends Controller
      */
     private function getRecentUploads()
     {
-        return Ad::where('category_id', 7)
+        return Ad::whereIn('category_id', [83, 84, 85, 86])
             ->whereNotNull('file_path')
             ->with(['user:id,name,email', 'category:id,name'])
             ->latest()
