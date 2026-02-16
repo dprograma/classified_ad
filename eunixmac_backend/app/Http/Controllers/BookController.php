@@ -206,7 +206,7 @@ class BookController extends Controller
             'title' => $request->title,
             'description' => $request->description,
             'price' => $request->price,
-            'location' => 'N/A', // Books don't have a physical location
+            'location' => 'Digital Product', // Books don't have a physical location
             'status' => 'pending_approval', // Admin review required
             'file_path' => $file_path,
             'preview_image_path' => $preview_image_path,

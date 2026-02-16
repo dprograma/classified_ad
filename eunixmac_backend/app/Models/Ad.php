@@ -74,6 +74,12 @@ class Ad extends Model
     // Accessors
     public function getPreviewImageAttribute()
     {
+        // For books (educational materials), check preview_image_path first
+        if ($this->preview_image_path) {
+            return $this->preview_image_path;
+        }
+
+        // For regular ads, check the images relationship
         $previewImage = $this->images()->where('is_preview', true)->first();
         if ($previewImage) {
             return $previewImage->image_path;
