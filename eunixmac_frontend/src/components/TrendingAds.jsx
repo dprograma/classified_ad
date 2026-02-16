@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, Typography, CardMedia, Box, Chip, IconButton, Button } from '@mui/material';
-import { FavoriteBorder, Visibility, LocationOn, Favorite } from '@mui/icons-material';
+import { FavoriteBorder, Visibility, LocationOn, Favorite, CloudDownload } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import useSlowApi from '../hooks/useSlowApi';
 import { getStorageUrl } from '../config/api';
@@ -427,19 +427,31 @@ const TrendingAds = () => {
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <LocationOn sx={{ 
-                  fontSize: {
-                    xs: '14px',
-                    sm: '16px',
-                    md: '18px'
-                  },
-                  color: 'text.secondary',
-                  mr: 0.5 
-                }} />
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary" 
-                  sx={{ 
+                {ad.location === 'Digital Product' ? (
+                  <CloudDownload sx={{
+                    fontSize: {
+                      xs: '14px',
+                      sm: '16px',
+                      md: '18px'
+                    },
+                    color: 'primary.main',
+                    mr: 0.5
+                  }} />
+                ) : (
+                  <LocationOn sx={{
+                    fontSize: {
+                      xs: '14px',
+                      sm: '16px',
+                      md: '18px'
+                    },
+                    color: 'text.secondary',
+                    mr: 0.5
+                  }} />
+                )}
+                <Typography
+                  variant="body2"
+                  color={ad.location === 'Digital Product' ? 'primary' : 'text.secondary'}
+                  sx={{
                     fontSize: {
                       xs: '0.75rem',
                       sm: '0.8rem',
