@@ -309,6 +309,7 @@ function Footer() {
                   disabled={isSubmitting}
                   endIcon={<Send sx={{ fontSize: '16px' }} />}
                   sx={{
+                    color: 'white',
                     background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
                     borderRadius: '8px',
                     height: '40px',
@@ -325,6 +326,7 @@ function Footer() {
                       background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
                       transform: 'translateY(-1px)',
                       boxShadow: '0 4px 12px rgba(108,71,255,0.3)',
+                      color: 'white',
                     },
                     '&:disabled': {
                       background: 'rgba(255,255,255,0.2)',

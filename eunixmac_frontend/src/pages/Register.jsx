@@ -310,11 +310,13 @@ function Register() {
                   borderRadius: 3,
                   textTransform: 'none',
                   boxShadow: 'none',
+                  color: 'white',
                   background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
                   '&:hover': {
                     background: 'linear-gradient(135deg, #2563EB 0%, #7C3AED 100%)',
                     boxShadow: '0 8px 25px rgba(59, 130, 246, 0.3)',
                     transform: 'translateY(-2px)',
+                    color: 'white',
                   },
                   '&:disabled': {
                     background: 'rgba(0,0,0,0.12)',

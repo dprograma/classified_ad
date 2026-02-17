@@ -30,7 +30,8 @@ import {
   MoreVert,
   ViewModule,
   ViewList,
-  GridView
+  GridView,
+  ImageNotSupported
 } from '@mui/icons-material';
 import useApi from '../hooks/useApi';
 import { getStorageUrl } from '../config/api';
@@ -201,6 +202,8 @@ function EnhancedAdList({ initialSearchParams = {} }) {
               to={`/ads/${ad.id}`}
               sx={{
                 textDecoration: 'none',
+                display: 'flex',
+                flexDirection: 'column',
                 height: '100%',
                 width: '100%',
                 border: 1,
@@ -214,23 +217,54 @@ function EnhancedAdList({ initialSearchParams = {} }) {
               }}
             >
 
-              {ad.images && ad.images.length > 0 && (
+              {/* Always render image area for uniform card height */}
+              {(ad.preview_image || (ad.images && ad.images.length > 0)) ? (
                 <CardMedia
                   component="img"
                   height="200"
-                  image={getStorageUrl(ad.preview_image) || getStorageUrl(ad.images[0]?.image_path)}
+                  image={
+                    getStorageUrl(ad.preview_image) ||
+                    getStorageUrl(ad.images[0]?.image_path)
+                  }
                   alt={ad.title}
                   sx={{
                     objectFit: 'cover',
+                    flexShrink: 0,
                     transition: 'transform 0.3s ease',
                     '&:hover': {
                       transform: 'scale(1.05)',
                     }
                   }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                  }}
                 />
+              ) : null}
+
+              {/* Placeholder shown when no image is available */}
+              {(!ad.preview_image && (!ad.images || ad.images.length === 0)) && (
+                <Box
+                  sx={{
+                    height: 200,
+                    flexShrink: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'grey.100',
+                    color: 'grey.400',
+                    gap: 1,
+                  }}
+                >
+                  <ImageNotSupported sx={{ fontSize: 48 }} />
+                  <Typography variant="caption" color="inherit">
+                    No Image
+                  </Typography>
+                </Box>
               )}
 
-              <CardContent sx={{ p: 2 }}>
+              <CardContent sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Typography
                   variant="h6"
                   component="h3"

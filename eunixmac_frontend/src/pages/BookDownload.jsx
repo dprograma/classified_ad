@@ -218,9 +218,14 @@ function BookDownload() {
                 fontSize: '1.1rem',
                 fontWeight: 600,
                 borderRadius: 3,
+                color: 'white',
                 background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                 '&:hover': {
                   background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                  color: 'white',
+                },
+                '&.Mui-disabled': {
+                  color: 'rgba(255,255,255,0.6)',
                 }
               }}
             >

@@ -446,6 +446,7 @@ const CompactSearch = ({ sx = {} }) => {
             onClick={() => handleSearch()}
             sx={{
               height: { xs: '48px', sm: '52px', md: '56px' },
+              color: 'white',
               background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
               borderRadius: 2,
               fontWeight: 600,
@@ -456,6 +457,7 @@ const CompactSearch = ({ sx = {} }) => {
                 background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
                 transform: 'translateY(-2px)',
                 boxShadow: '0 6px 25px rgba(108,71,255,0.4)',
+                color: 'white',
               },
               transition: 'all 0.3s ease',
             }}
