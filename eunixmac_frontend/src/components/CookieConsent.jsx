@@ -236,9 +236,11 @@ const CookieConsent = () => {
                 size="small"
                 onClick={handleAcceptAll}
                 sx={{
+                  color: 'white',
                   background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
                   '&:hover': {
                     background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
+                    color: 'white',
                   }
                 }}
               >
@@ -356,9 +358,11 @@ const CookieConsent = () => {
             onClick={handleSavePreferences}
             variant="contained"
             sx={{
+              color: 'white',
               background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
               '&:hover': {
                 background: 'linear-gradient(135deg, #5a3de6 0%, #00a693 100%)',
+                color: 'white',
               }
             }}
           >

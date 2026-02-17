@@ -457,12 +457,12 @@ function AdDetail() {
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="space-between">
                 <Box>
                   <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                    <MenuBook />
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    <MenuBook sx={{ color: 'white' }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'white' }}>
                       {hasPurchased ? 'You Own This Item!' : 'Digital Download Available'}
                     </Typography>
                   </Stack>
-                  <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  <Typography variant="body2" sx={{ opacity: 0.9, color: 'white' }}>
                     {hasPurchased
                       ? 'Click the button to download your purchased content.'
                       : `Get instant access to this digital content for only ₦${Number(ad.price).toLocaleString()}`
@@ -471,32 +471,48 @@ function AdDetail() {
                 </Box>
                 {hasPurchased ? (
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     size="large"
                     startIcon={<Download />}
                     onClick={handleDownloadBook}
                     sx={{
-                      bgcolor: 'white',
-                      color: '#10b981',
+                      backgroundColor: 'white !important',
+                      color: '#10b981 !important',
+                      borderColor: 'white !important',
                       fontWeight: 600,
                       px: 4,
-                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
+                      boxShadow: 'none',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.9) !important',
+                        borderColor: 'white !important',
+                        color: '#10b981 !important',
+                        boxShadow: 'none',
+                      },
+                      '& .MuiButton-startIcon': { color: '#10b981 !important' },
                     }}
                   >
                     Download Now
                   </Button>
                 ) : (
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     size="large"
                     startIcon={<ShoppingCart />}
                     onClick={() => setPurchaseDialogOpen(true)}
                     sx={{
-                      bgcolor: 'white',
-                      color: '#6366f1',
+                      backgroundColor: 'white !important',
+                      color: '#6366f1 !important',
+                      borderColor: 'white !important',
                       fontWeight: 600,
                       px: 4,
-                      '&:hover': { bgcolor: 'rgba(255,255,255,0.9)' }
+                      boxShadow: 'none',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255,255,255,0.9) !important',
+                        borderColor: 'white !important',
+                        color: '#6366f1 !important',
+                        boxShadow: 'none',
+                      },
+                      '& .MuiButton-startIcon': { color: '#6366f1 !important' },
                     }}
                   >
                     Buy Now - ₦{Number(ad.price).toLocaleString()}
