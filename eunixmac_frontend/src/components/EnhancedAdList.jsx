@@ -36,6 +36,7 @@ import {
 import useApi from '../hooks/useApi';
 import { getStorageUrl } from '../config/api';
 import EnhancedSearch from './EnhancedSearch';
+import NoImagePlaceholder from './NoImagePlaceholder';
 
 function EnhancedAdList({ initialSearchParams = {} }) {
   const [ads, setAds] = useState([]);
@@ -244,24 +245,7 @@ function EnhancedAdList({ initialSearchParams = {} }) {
 
               {/* Placeholder shown when no image is available */}
               {(!ad.preview_image && (!ad.images || ad.images.length === 0)) && (
-                <Box
-                  sx={{
-                    height: 200,
-                    flexShrink: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: 'grey.100',
-                    color: 'grey.400',
-                    gap: 1,
-                  }}
-                >
-                  <ImageNotSupported sx={{ fontSize: 48 }} />
-                  <Typography variant="caption" color="inherit">
-                    No Image
-                  </Typography>
-                </Box>
+                <NoImagePlaceholder height={200} />
               )}
 
               <CardContent sx={{ p: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>

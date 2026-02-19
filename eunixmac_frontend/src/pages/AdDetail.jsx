@@ -6,6 +6,7 @@ import useApi from '../hooks/useApi';
 import { useAuth } from '../AuthContext';
 import { getStorageUrl, API_CONFIG } from '../config/api';
 import { toast } from 'react-toastify';
+import NoImagePlaceholder from '../components/NoImagePlaceholder';
 
 // Books & Media category ID
 const BOOKS_CATEGORY_ID = 7;
@@ -331,7 +332,7 @@ function AdDetail() {
               image={getStorageUrl(ad.images[currentImageIndex].image_path)}
               alt={`${ad.title} - Image ${currentImageIndex + 1}`}
               onError={(e) => {
-                e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&auto=format';
+                e.target.style.display = 'none';
               }}
               sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
             />
@@ -406,7 +407,7 @@ function AdDetail() {
                           src={getStorageUrl(image.image_path)}
                           alt={`Thumbnail ${index + 1}`}
                           onError={(e) => {
-                            e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop&auto=format';
+                            e.target.style.display = 'none';
                           }}
                           style={{
                             width: '100%',
@@ -431,12 +432,10 @@ function AdDetail() {
             sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
           />
         ) : (
-          <CardMedia
-            component="img"
-            height="500"
-            image={isBook ? 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=500&fit=crop&auto=format' : 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=500&fit=crop&auto=format'}
-            alt={ad.title}
-            sx={{ objectFit: 'cover', backgroundColor: '#f5f5f5' }}
+          <NoImagePlaceholder
+            height={500}
+            label={isBook ? 'No Cover Image' : 'No Image'}
+            fontSize={64}
           />
         )}
 

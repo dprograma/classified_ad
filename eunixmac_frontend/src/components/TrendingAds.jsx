@@ -4,6 +4,7 @@ import { FavoriteBorder, Visibility, LocationOn, Favorite, CloudDownload } from 
 import { useNavigate } from 'react-router-dom';
 import useSlowApi from '../hooks/useSlowApi';
 import { getStorageUrl } from '../config/api';
+import NoImagePlaceholder from './NoImagePlaceholder';
 
 const TrendingAds = () => {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -263,24 +264,26 @@ const TrendingAds = () => {
             aria-label={`${ad.title} for ${ad.price} in ${ad.location}`}
           >
             <Box sx={{ position: 'relative' }}>
-              <CardMedia
-                component="img"
-                height={windowWidth < 480 ? "160" : windowWidth < 768 ? "180" : "200"}
-                image={ad.preview_image ? getStorageUrl(ad.preview_image) : '/placeholder-image.jpg'}
-                alt={ad.title}
-                onError={(e) => {
-                  // If image fails to load, use a fallback
-                  e.target.src = 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=200&fit=crop&auto=format';
-                }}
-                sx={{ 
-                  objectFit: 'cover',
-                  transition: 'transform 0.3s ease',
-                  backgroundColor: '#f5f5f5',
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                  }
-                }}
-              />
+              {ad.preview_image ? (
+                <CardMedia
+                  component="img"
+                  height={windowWidth < 480 ? "160" : windowWidth < 768 ? "180" : "200"}
+                  image={getStorageUrl(ad.preview_image)}
+                  alt={ad.title}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                  }}
+                  sx={{
+                    objectFit: 'cover',
+                    transition: 'transform 0.3s ease',
+                    backgroundColor: '#f5f5f5',
+                    '&:hover': { transform: 'scale(1.05)' }
+                  }}
+                />
+              ) : (
+                <NoImagePlaceholder height={windowWidth < 480 ? 160 : windowWidth < 768 ? 180 : 200} />
+              )}
               
               {/* Discount Badge */}
               {ad.discount && (
