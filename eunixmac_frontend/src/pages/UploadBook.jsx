@@ -34,6 +34,8 @@ import useApi from '../hooks/useApi';
 import { useAuth } from '../AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import axios from 'axios';
+import { API_CONFIG } from '../config/api';
 
 const UploadBox = styled(Box)(({ theme }) => ({
   border: '2px dashed #ccc',
@@ -214,8 +216,14 @@ function UploadBook() {
     setActiveStep(prev => prev - 1);
   };
 
+  const [uploadProgress, setUploadProgress] = React.useState(0);
+  const [isUploading, setIsUploading] = React.useState(false);
+
   const handleSubmit = async () => {
     try {
+      setIsUploading(true);
+      setUploadProgress(0);
+
       const formData = new FormData();
       formData.append('file', selectedFile);
 
@@ -229,14 +237,31 @@ function UploadBook() {
         formData.append(key, bookData[key]);
       });
 
-      const response = await callApi('POST', '/books', formData, {
-        'Content-Type': 'multipart/form-data'
+      const token = localStorage.getItem('token');
+
+      // Use a dedicated axios instance with a generous timeout for file uploads
+      // (default useApi timeout of 30s is too short for large files on shared hosting)
+      await axios.post(`${API_CONFIG.BASE_URL}/books`, formData, {
+        timeout: 300000, // 5 minutes — enough for large files on slow shared hosting
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+          'Accept': 'application/json',
+        },
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percent);
+        },
       });
 
       toast.success('Book uploaded successfully! It will be reviewed before being published.');
       navigate('/dashboard?tab=books');
     } catch (error) {
-      toast.error(error.message || 'Failed to upload book. Please try again.');
+      const message = error.response?.data?.message || error.message || 'Failed to upload book. Please try again.';
+      toast.error(message);
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -722,10 +747,14 @@ function UploadBook() {
           <Button
             onClick={activeStep === steps.length - 1 ? handleSubmit : handleNext}
             variant="contained"
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
+            disabled={isUploading}
+            startIcon={isUploading ? <CircularProgress size={20} color="inherit" /> : null}
           >
-            {loading ? 'Uploading...' : activeStep === steps.length - 1 ? 'Submit for Review' : 'Next'}
+            {isUploading
+              ? `Uploading... ${uploadProgress}%`
+              : activeStep === steps.length - 1
+              ? 'Submit for Review'
+              : 'Next'}
           </Button>
         </Box>
       </Paper>
