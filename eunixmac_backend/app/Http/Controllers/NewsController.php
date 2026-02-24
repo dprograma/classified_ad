@@ -81,6 +81,11 @@ class NewsController extends Controller
             $data = $request->validated();
             $data['author_id'] = auth()->id();
 
+            // Auto-set published_at to now if status is published but no date was provided
+            if (($data['status'] ?? '') === 'published' && empty($data['published_at'])) {
+                $data['published_at'] = now();
+            }
+
             // Handle thumbnail upload
             if ($request->hasFile('thumbnail')) {
                 $thumbnail = $request->file('thumbnail');
@@ -133,6 +138,11 @@ class NewsController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->validated();
+
+            // Auto-set published_at to now if status is published but no date was provided
+            if (($data['status'] ?? '') === 'published' && empty($data['published_at'])) {
+                $data['published_at'] = now();
+            }
 
             // Handle thumbnail upload
             if ($request->hasFile('thumbnail')) {
