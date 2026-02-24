@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use App\Models\Ad;
 use App\Models\Payment;
 use App\Models\User;
-use App\Models\AffiliateCommission;
 use Illuminate\Support\Facades\Http;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -58,8 +57,7 @@ class PaymentController extends Controller
                     'status' => 'success',
                 ]);
 
-                // Process affiliate commission if applicable
-                $this->processAffiliateCommission($payment);
+
             }
 
             // Redirect to frontend success page
@@ -185,53 +183,4 @@ class PaymentController extends Controller
         }
     }
 
-    /**
-     * Process affiliate commission for a payment
-     * Creates a commission record if the buyer was referred by an affiliate
-     */
-    protected function processAffiliateCommission(Payment $payment)
-    {
-        try {
-            // Get the buyer
-            $buyer = User::find($payment->user_id);
-
-            if (!$buyer || !$buyer->referred_by) {
-                return; // No referrer, no commission
-            }
-
-            // Get the affiliate (referrer)
-            $affiliate = User::find($buyer->referred_by);
-
-            if (!$affiliate || !$affiliate->is_affiliate) {
-                return; // Referrer is not an active affiliate
-            }
-
-            // Check if commission already exists for this payment
-            $existingCommission = AffiliateCommission::where('payment_id', $payment->id)->first();
-            if ($existingCommission) {
-                return; // Already processed
-            }
-
-            // Calculate 65% commission
-            $commissionRate = 65.00;
-            $commissionAmount = ($payment->amount * $commissionRate) / 100;
-
-            // Create commission record
-            AffiliateCommission::create([
-                'affiliate_id' => $affiliate->id,
-                'referred_user_id' => $buyer->id,
-                'payment_id' => $payment->id,
-                'purchase_amount' => $payment->amount,
-                'commission_rate' => $commissionRate,
-                'commission_amount' => $commissionAmount,
-                'status' => 'approved', // Auto-approve commissions
-            ]);
-
-            \Log::info("Affiliate commission created: Affiliate #{$affiliate->id} earns ₦{$commissionAmount} from buyer #{$buyer->id}");
-
-        } catch (\Exception $e) {
-            \Log::error('Affiliate commission processing error: ' . $e->getMessage());
-            // Don't throw - commission processing failure shouldn't block payment
-        }
-    }
 }

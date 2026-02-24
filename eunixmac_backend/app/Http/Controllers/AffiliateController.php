@@ -88,7 +88,7 @@ class AffiliateController extends Controller
             $existingPayment = Payment::where('reference', $reference)->first();
             if (!$existingPayment) {
                 // Create payment record
-                Payment::create([
+                $payment = Payment::create([
                     'user_id' => $user->id,
                     'payable_id' => $user->id,
                     'payable_type' => 'affiliate_enrollment',
@@ -102,6 +102,33 @@ class AffiliateController extends Controller
                 $user->referral_code = strtoupper(Str::random(8));
                 $user->affiliate_enrolled_at = now();
                 $user->save();
+
+                // Process affiliate commission for the referrer
+                // If this user was referred by an active affiliate, pay them 65% of the enrollment fee
+                try {
+                    if ($user->referred_by) {
+                        $affiliate = User::find($user->referred_by);
+
+                        if ($affiliate && $affiliate->is_affiliate) {
+                            $commissionAmount = (self::AFFILIATE_ENROLLMENT_FEE * self::COMMISSION_RATE) / 100;
+
+                            AffiliateCommission::create([
+                                'affiliate_id' => $affiliate->id,
+                                'referred_user_id' => $user->id,
+                                'payment_id' => $payment->id,
+                                'purchase_amount' => self::AFFILIATE_ENROLLMENT_FEE,
+                                'commission_rate' => self::COMMISSION_RATE,
+                                'commission_amount' => $commissionAmount,
+                                'status' => 'approved',
+                            ]);
+
+                            Log::info("Affiliate enrollment commission: Affiliate #{$affiliate->id} earns ₦{$commissionAmount} from referral #{$user->id} enrollment");
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Affiliate enrollment commission error: ' . $e->getMessage());
+                    // Don't block enrollment if commission processing fails
+                }
             }
 
             return redirect(env('FRONTEND_URL') . '/dashboard?tab=affiliate&status=success&message=' . urlencode('Welcome to the affiliate program!'));
@@ -125,7 +152,7 @@ class AffiliateController extends Controller
         }
 
         $totalReferrals = User::where('referred_by', $user->id)->count();
-        $successfulReferrals = AffiliateCommission::where('affiliate_id', $user->id)->distinct('referred_user_id')->count('referred_user_id');
+        $successfulReferrals = User::where('referred_by', $user->id)->where('is_affiliate', true)->count();
 
         $totalEarnings = AffiliateCommission::where('affiliate_id', $user->id)
             ->whereIn('status', ['approved', 'paid'])
@@ -411,22 +438,22 @@ class AffiliateController extends Controller
         }
 
         $referrals = User::where('referred_by', $user->id)
-            ->select('id', 'name', 'email', 'created_at')
+            ->select('id', 'name', 'email', 'created_at', 'is_affiliate')
             ->latest()
             ->get()
             ->map(function ($referral) use ($user) {
-                $commissions = AffiliateCommission::where('affiliate_id', $user->id)
+                $commission = AffiliateCommission::where('affiliate_id', $user->id)
                     ->where('referred_user_id', $referral->id)
-                    ->get();
+                    ->first();
 
                 return [
                     'id' => $referral->id,
                     'name' => $referral->name,
                     'email' => $referral->email,
                     'joined_at' => $referral->created_at,
-                    'total_purchases' => $commissions->sum('purchase_amount'),
-                    'total_commission' => $commissions->sum('commission_amount'),
-                    'has_purchased' => $commissions->count() > 0,
+                    'is_affiliate' => (bool) $referral->is_affiliate,
+                    'enrollment_fee' => $referral->is_affiliate ? self::AFFILIATE_ENROLLMENT_FEE : 0,
+                    'total_commission' => $commission ? (float) $commission->commission_amount : 0,
                 ];
             });
 
