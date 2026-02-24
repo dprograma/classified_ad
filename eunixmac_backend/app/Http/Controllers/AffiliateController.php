@@ -400,6 +400,40 @@ class AffiliateController extends Controller
     }
 
     /**
+     * Get list of referred users
+     */
+    public function referrals(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->is_affiliate) {
+            return response()->json(['message' => 'Not an affiliate'], 403);
+        }
+
+        $referrals = User::where('referred_by', $user->id)
+            ->select('id', 'name', 'email', 'created_at')
+            ->latest()
+            ->get()
+            ->map(function ($referral) use ($user) {
+                $commissions = AffiliateCommission::where('affiliate_id', $user->id)
+                    ->where('referred_user_id', $referral->id)
+                    ->get();
+
+                return [
+                    'id' => $referral->id,
+                    'name' => $referral->name,
+                    'email' => $referral->email,
+                    'joined_at' => $referral->created_at,
+                    'total_purchases' => $commissions->sum('purchase_amount'),
+                    'total_commission' => $commissions->sum('commission_amount'),
+                    'has_purchased' => $commissions->count() > 0,
+                ];
+            });
+
+        return response()->json($referrals);
+    }
+
+    /**
      * Get commission history
      */
     public function commissionHistory(Request $request)

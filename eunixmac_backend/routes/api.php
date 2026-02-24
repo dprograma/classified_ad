@@ -84,6 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/affiliate/withdraw', [AffiliateController::class, 'requestWithdrawal']);
     Route::get('/affiliate/withdrawals', [AffiliateController::class, 'withdrawalHistory']);
     Route::get('/affiliate/commissions', [AffiliateController::class, 'commissionHistory']);
+    Route::get('/affiliate/referrals', [AffiliateController::class, 'referrals']);
     Route::put('/user/settings', [AuthController::class, 'updateSettings']);
     Route::post('/user/change-password', [AuthController::class, 'changePassword']);
     Route::delete('/user', [AuthController::class, 'deleteAccount']);

@@ -64,6 +64,9 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
   const [earningsHistoryOpen, setEarningsHistoryOpen] = useState(false);
   const [withdrawDialogOpen, setWithdrawDialogOpen] = useState(false);
   const [bankDialogOpen, setBankDialogOpen] = useState(false);
+  const [referralsDialogOpen, setReferralsDialogOpen] = useState(false);
+  const [referralsList, setReferralsList] = useState([]);
+  const [loadingReferrals, setLoadingReferrals] = useState(false);
   const [affiliateData, setAffiliateData] = useState(initialAffiliateData);
   const [banks, setBanks] = useState([]);
   const [loadingBanks, setLoadingBanks] = useState(false);
@@ -120,6 +123,24 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
     } finally {
       setLoadingBanks(false);
     }
+  };
+
+  const fetchReferrals = async () => {
+    setLoadingReferrals(true);
+    try {
+      const response = await callApi('GET', '/affiliate/referrals');
+      setReferralsList(response || []);
+    } catch (error) {
+      console.error('Error fetching referrals:', error);
+      toast.error('Failed to load referrals');
+    } finally {
+      setLoadingReferrals(false);
+    }
+  };
+
+  const handleOpenReferrals = () => {
+    setReferralsDialogOpen(true);
+    fetchReferrals();
   };
 
   const handleEnrollAffiliate = async () => {
@@ -484,13 +505,18 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
         gap="16px"
         className="mb-6"
       >
-        <EnhancedStatCard
-          icon={People}
-          value={stats.total_referrals}
-          label="Total Referrals"
-          color="#3b82f6"
-          size="medium"
-        />
+        <Box
+          onClick={handleOpenReferrals}
+          sx={{ cursor: 'pointer', '&:hover': { opacity: 0.85 }, transition: 'opacity 0.15s' }}
+        >
+          <EnhancedStatCard
+            icon={People}
+            value={stats.total_referrals}
+            label="Total Referrals"
+            color="#3b82f6"
+            size="medium"
+          />
+        </Box>
 
         <EnhancedStatCard
           icon={CheckCircle}
@@ -838,6 +864,80 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
           >
             {loading ? 'Verifying...' : 'Save Bank Account'}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Referrals Dialog */}
+      <Dialog open={referralsDialogOpen} onClose={() => setReferralsDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <People sx={{ color: '#3b82f6' }} />
+            <Typography variant="h6">Total Referrals ({stats.total_referrals})</Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Users who registered using your referral link.
+          </Typography>
+          {loadingReferrals ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <TableContainer component={Paper} elevation={0}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Joined</TableCell>
+                    <TableCell align="right">Purchases</TableCell>
+                    <TableCell align="right">Your Commission</TableCell>
+                    <TableCell>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {referralsList.length > 0 ? (
+                    referralsList.map((referral) => (
+                      <TableRow key={referral.id}>
+                        <TableCell>{referral.name}</TableCell>
+                        <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{referral.email}</TableCell>
+                        <TableCell>{new Date(referral.joined_at).toLocaleDateString()}</TableCell>
+                        <TableCell align="right">
+                          {referral.total_purchases > 0 ? `₦${parseFloat(referral.total_purchases).toLocaleString()}` : '—'}
+                        </TableCell>
+                        <TableCell align="right">
+                          {referral.total_commission > 0 ? (
+                            <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600 }}>
+                              ₦{parseFloat(referral.total_commission).toLocaleString()}
+                            </Typography>
+                          ) : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={referral.has_purchased ? 'Active' : 'Registered'}
+                            color={referral.has_purchased ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                        <Typography color="text.secondary">
+                          No referrals yet. Share your referral link to get started!
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setReferralsDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
 
