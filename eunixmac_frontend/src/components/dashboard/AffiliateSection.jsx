@@ -256,7 +256,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
               Join Our Affiliate Program
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              Earn <strong>65% commission</strong> on every purchase made by users you refer to our platform.
+              Earn <strong>₦1,950 (65% commission)</strong> when users you refer join the affiliate program.
             </Typography>
 
             <Alert severity="warning" sx={{ mb: 3, textAlign: 'center' }}>
@@ -274,7 +274,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
               </Typography>
               <List dense>
                 <ListItem disablePadding>
-                  <ListItemText primary="• Earn 65% commission on all purchases by referrals" />
+                  <ListItemText primary="• Earn ₦1,950 (65%) when each referral becomes an affiliate" />
                 </ListItem>
                 <ListItem disablePadding>
                   <ListItemText primary="• Unique referral link and tracking" />
@@ -317,7 +317,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
           <DialogContent>
             <Stack spacing={3}>
               <Alert severity="success">
-                Earn 65% commission on every purchase made by users you refer!
+                Earn ₦1,950 (65%) when each of your referrals joins the affiliate program!
               </Alert>
 
               <Box>
@@ -349,7 +349,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                     </ListItemIcon>
                     <ListItemText
                       primary="Share and earn"
-                      secondary="Share your link and earn 65% on all purchases by your referrals"
+                      secondary="Share your link and earn ₦1,950 when your referrals join the affiliate program"
                     />
                   </ListItem>
                   <ListItem>
@@ -373,10 +373,10 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                     <Card variant="outlined">
                       <CardContent sx={{ textAlign: 'center', p: 2 }}>
                         <Typography variant="h6" color="success.main">
-                          ₦6,500
+                          ₦1,950
                         </Typography>
                         <Typography variant="body2">
-                          From ₦10,000 purchase
+                          1 affiliate referral
                         </Typography>
                       </CardContent>
                     </Card>
@@ -385,10 +385,10 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                     <Card variant="outlined">
                       <CardContent sx={{ textAlign: 'center', p: 2 }}>
                         <Typography variant="h6" color="success.main">
-                          ₦32,500
+                          ₦9,750
                         </Typography>
                         <Typography variant="body2">
-                          From ₦50,000 purchase
+                          5 affiliate referrals
                         </Typography>
                       </CardContent>
                     </Card>
@@ -397,10 +397,10 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                     <Card variant="outlined">
                       <CardContent sx={{ textAlign: 'center', p: 2 }}>
                         <Typography variant="h6" color="success.main">
-                          ₦65,000
+                          ₦19,500
                         </Typography>
                         <Typography variant="body2">
-                          From ₦100,000 purchase
+                          10 affiliate referrals
                         </Typography>
                       </CardContent>
                     </Card>
@@ -440,7 +440,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                 <ListItemIcon>
                   <CheckCircle color="success" fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="Earn 65% commission on all referral purchases" />
+                <ListItemText primary="Earn ₦1,950 when each referral joins the affiliate program" />
               </ListItem>
               <ListItem>
                 <ListItemIcon>
@@ -521,7 +521,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
         <EnhancedStatCard
           icon={CheckCircle}
           value={stats.successful_referrals}
-          label="Paid Referrals"
+          label="Affiliate Referrals"
           color="#10b981"
           size="medium"
         />
@@ -568,7 +568,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                 Your Referral Link
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Share this link to earn 65% commission on purchases
+                Share this link to earn ₦1,950 per affiliate referral
               </Typography>
 
               <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
@@ -592,7 +592,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
 
               <Alert severity="info">
                 <Typography variant="body2">
-                  <strong>Commission Rate:</strong> {affiliateData?.commission_rate || 65}% of every purchase made by your referrals
+                  <strong>Commission:</strong> ₦1,950 ({affiliateData?.commission_rate || 65}% of ₦3,000 enrollment fee) per affiliate referral
                 </Typography>
               </Alert>
             </CardContent>
@@ -674,7 +674,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                   <TableRow>
                     <TableCell>Date</TableCell>
                     <TableCell>Referred User</TableCell>
-                    <TableCell align="right">Purchase</TableCell>
+                    <TableCell align="right">Enrollment Fee</TableCell>
                     <TableCell align="right">Commission</TableCell>
                     <TableCell>Status</TableCell>
                   </TableRow>
@@ -891,7 +891,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                     <TableCell>Name</TableCell>
                     <TableCell>Email</TableCell>
                     <TableCell>Joined</TableCell>
-                    <TableCell align="right">Purchases</TableCell>
+                    <TableCell align="right">Enrollment Fee</TableCell>
                     <TableCell align="right">Your Commission</TableCell>
                     <TableCell>Status</TableCell>
                   </TableRow>
@@ -904,7 +904,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                         <TableCell sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>{referral.email}</TableCell>
                         <TableCell>{new Date(referral.joined_at).toLocaleDateString()}</TableCell>
                         <TableCell align="right">
-                          {referral.total_purchases > 0 ? `₦${parseFloat(referral.total_purchases).toLocaleString()}` : '—'}
+                          {referral.enrollment_fee > 0 ? `₦${parseFloat(referral.enrollment_fee).toLocaleString()}` : '—'}
                         </TableCell>
                         <TableCell align="right">
                           {referral.total_commission > 0 ? (
@@ -915,8 +915,8 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={referral.has_purchased ? 'Active' : 'Registered'}
-                            color={referral.has_purchased ? 'success' : 'default'}
+                            label={referral.is_affiliate ? 'Affiliate' : 'Registered'}
+                            color={referral.is_affiliate ? 'success' : 'default'}
                             size="small"
                           />
                         </TableCell>
@@ -955,7 +955,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                 <TableRow>
                   <TableCell>Date</TableCell>
                   <TableCell>Referred User</TableCell>
-                  <TableCell align="right">Purchase</TableCell>
+                  <TableCell align="right">Enrollment Fee</TableCell>
                   <TableCell>Rate</TableCell>
                   <TableCell align="right">Commission</TableCell>
                   <TableCell>Status</TableCell>
