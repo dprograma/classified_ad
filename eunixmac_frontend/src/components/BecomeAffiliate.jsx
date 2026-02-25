@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
-import { Button, Typography, Box, TextField } from '@mui/material';
+import { Button, Typography, Box } from '@mui/material';
 import useApi from '../hooks/useApi';
+import { toast } from 'react-toastify';
 
 function BecomeAffiliate() {
-  const [referralLink, setReferralLink] = useState('');
   const { callApi, loading } = useApi();
 
   const handleBecomeAffiliate = async () => {
     try {
-      const response = await callApi('POST', '/user/become-affiliate');
-      setReferralLink(response.referral_link);
-      alert('You are now an affiliate!');
+      const response = await callApi('POST', '/affiliate/enroll');
+      if (response.data?.authorization_url) {
+        // Redirect to Paystack payment page for ₦3,000 enrollment fee
+        window.location.href = response.data.authorization_url;
+      } else {
+        toast.error('Failed to initiate payment. Please try again.');
+      }
     } catch (error) {
-      console.error('Error becoming affiliate:', error);
-      // Error message is already handled by useApi hook
+      console.error('Error enrolling as affiliate:', error);
+      toast.error(error.message || 'Failed to initiate enrollment. Please try again.');
     }
   };
 
@@ -21,22 +25,11 @@ function BecomeAffiliate() {
     <Box sx={{ mt: 4, p: 2, border: '1px solid #ccc', borderRadius: '8px' }}>
       <Typography variant="h6" gutterBottom>Become an Affiliate</Typography>
       <Typography variant="body1" paragraph>
-        Earn commission by promoting our platform. Click the button below to become an affiliate.
+        Join our affiliate program for a one-time fee of ₦3,000. Earn ₦1,950 (65% commission) for every referral who joins the affiliate program.
       </Typography>
       <Button variant="contained" onClick={handleBecomeAffiliate} disabled={loading}>
-        {loading ? 'Processing...' : 'Become Affiliate'}
+        {loading ? 'Processing...' : 'Pay ₦3,000 & Join Affiliate Program'}
       </Button>
-      {referralLink && (
-        <Box sx={{ mt: 2 }}>
-          <Typography variant="body2">Your Referral Link:</Typography>
-          <TextField
-            fullWidth
-            value={referralLink}
-            InputProps={{ readOnly: true }}
-            sx={{ mt: 1 }}
-          />
-        </Box>
-      )}
     </Box>
   );
 }
