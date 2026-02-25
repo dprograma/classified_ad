@@ -83,10 +83,15 @@ const ProfileSection = ({ user, onRefresh }) => {
 
   const handleBecomeAffiliate = async () => {
     try {
-      await callApi('POST', '/user/become-affiliate');
-      if (onRefresh) onRefresh();
+      const response = await callApi('POST', '/affiliate/enroll');
+      if (response.data?.authorization_url) {
+        // Redirect to Paystack payment page for ₦3,000 enrollment fee
+        window.location.href = response.data.authorization_url;
+      } else {
+        console.error('Failed to initiate affiliate enrollment payment');
+      }
     } catch (error) {
-      console.error('Error becoming affiliate:', error);
+      console.error('Error enrolling as affiliate:', error);
     }
   };
 

@@ -64,3 +64,5 @@ WITHDRAWALS_REDESIGN_SUMMARY.md
 
 .DS_Store
 dist.zip
+
+eunixmac_backend/public/run_migrate.php

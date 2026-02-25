@@ -41,12 +41,16 @@ class News extends Model
 
     /**
      * Scope for published news
+     * Includes news where published_at is NULL (legacy records) or published_at <= now
      */
     public function scopePublished($query)
     {
         return $query->where('status', 'published')
-            ->where('published_at', '<=', now())
-            ->orderBy('published_at', 'desc');
+            ->where(function ($q) {
+                $q->where('published_at', '<=', now())
+                  ->orWhereNull('published_at');
+            })
+            ->orderByRaw('COALESCE(published_at, created_at) DESC');
     }
 
     /**
@@ -125,11 +129,19 @@ class News extends Model
             if (!$news->slug) {
                 $news->slug = static::generateSlug($news->title);
             }
+            // Auto-set published_at when status is published
+            if ($news->status === 'published' && !$news->published_at) {
+                $news->published_at = now();
+            }
         });
 
         static::updating(function ($news) {
             if ($news->isDirty('title') && !$news->isDirty('slug')) {
                 $news->slug = static::generateSlug($news->title, $news->id);
+            }
+            // Auto-set published_at when status changes to published
+            if ($news->isDirty('status') && $news->status === 'published' && !$news->published_at) {
+                $news->published_at = now();
             }
         });
     }

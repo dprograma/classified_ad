@@ -106,28 +106,37 @@ class AuthController extends Controller
     public function becomeAffiliate(Request $request)
     {
         $user = $request->user();
-        
+
         if ($user->is_affiliate) {
             return response()->json([
-                'message' => 'User is already an affiliate',
-                'referral_link' => env('APP_URL') . '?ref=' . $user->referral_code,
+                'message' => 'You are already an affiliate',
+                'referral_link' => env('FRONTEND_URL') . '/register?ref=' . $user->referral_code,
             ], 400);
         }
-        
-        $user->is_affiliate = true;
-        
-        // Generate and store a unique referral code if not exists
-        if (!$user->referral_code) {
-            $user->referral_code = strtoupper(Str::random(8));
+
+        // Affiliate enrollment requires payment via Paystack
+        // Redirect to the affiliate enrollment flow
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
+            'Content-Type' => 'application/json',
+        ])->post('https://api.paystack.co/transaction/initialize', [
+            'email' => $user->email,
+            'amount' => 3000 * 100, // ₦3,000 in kobo
+            'callback_url' => env('APP_URL') . '/api/affiliate/verify-enrollment',
+            'metadata' => [
+                'user_id' => $user->id,
+                'type' => 'affiliate_enrollment',
+            ],
+        ]);
+
+        if ($response->successful()) {
+            return response()->json($response->json());
         }
-        
-        $user->save();
 
         return response()->json([
-            'message' => 'Welcome to our affiliate program! Your unique referral link has been generated.',
-            'referral_link' => env('APP_URL') . '?ref=' . $user->referral_code,
-            'user' => $user
-        ]);
+            'message' => 'Payment initiation failed',
+            'error' => $response->json()
+        ], 500);
     }
 
     public function updateProfile(Request $request)

@@ -819,13 +819,17 @@ const OverviewSection = ({ data, onRefresh, setActiveTab }) => {
 
   const confirmBecomeAffiliate = async () => {
     try {
-      await callApi('POST', '/user/become-affiliate');
-      toast.success('Welcome to our affiliate program! Your unique referral link has been generated.');
+      const response = await callApi('POST', '/affiliate/enroll');
+      if (response.data?.authorization_url) {
+        // Redirect to Paystack payment page
+        window.location.href = response.data.authorization_url;
+      } else {
+        toast.error('Failed to initiate payment. Please try again.');
+      }
       setAffiliateDialogOpen(false);
-      if (onRefresh) onRefresh();
     } catch (error) {
-      console.error('Error becoming affiliate:', error);
-      toast.error(error.message || 'Failed to join affiliate program. Please try again.');
+      console.error('Error enrolling as affiliate:', error);
+      toast.error(error.message || 'Failed to initiate enrollment. Please try again.');
       setAffiliateDialogOpen(false);
     }
   };
@@ -1201,13 +1205,13 @@ const OverviewSection = ({ data, onRefresh, setActiveTab }) => {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="affiliate-dialog-description">
-            Are you sure you want to join our affiliate program? As an affiliate, you will:
+            Join our affiliate program for a one-time fee of <strong>₦3,000</strong>. As an affiliate, you will:
             <br />• Get a unique referral link to share
-            <br />• Earn commission for every successful referral
+            <br />• Earn ₦1,950 (65% commission) for every referral who joins the affiliate program
             <br />• Access affiliate tracking and analytics
-            <br />• Receive regular commission payouts
+            <br />• Withdraw your earnings directly to your bank account
             <br /><br />
-            This action cannot be undone.
+            You will be redirected to Paystack to complete the payment.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -1215,7 +1219,7 @@ const OverviewSection = ({ data, onRefresh, setActiveTab }) => {
             Cancel
           </Button>
           <Button onClick={confirmBecomeAffiliate} variant="contained" disabled={loading} autoFocus>
-            Yes, Join Program
+            Pay ₦3,000 & Join
           </Button>
         </DialogActions>
       </Dialog>
