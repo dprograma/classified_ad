@@ -66,3 +66,5 @@ WITHDRAWALS_REDESIGN_SUMMARY.md
 dist.zip
 
 eunixmac_backend/public/run_migrate.php
+eunixmac_backend/public/test_news_api.html
+eunixmac_backend/public/check_news.php

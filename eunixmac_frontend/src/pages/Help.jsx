@@ -103,7 +103,7 @@ const Help = () => {
     },
     {
       question: "Is there a limit to how many ads I can post?",
-      answer: "Free accounts can post up to 10 active ads. Verified users can post up to 25 ads. Agents have unlimited posting privileges for educational materials."
+      answer: "There is no limit to the number of ads you can post. Agents also have unlimited posting privileges for educational materials."
     }
   ];
 
