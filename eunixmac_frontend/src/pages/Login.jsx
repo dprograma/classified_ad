@@ -167,7 +167,7 @@ function Login() {
       login(response.user, response.access_token);
       navigate(from, { replace: true });
     } catch (error) {
-      // Error is already handled by the useApi hook
+      toast.error(error.message || 'Invalid login credentials. Please try again.');
     }
   };
 
