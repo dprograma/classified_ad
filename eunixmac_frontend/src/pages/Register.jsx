@@ -114,24 +114,25 @@ function Register() {
     }
 
     try {
-      const registrationData = {
-        name,
-        email,
-        phone_number: phoneNumber,
-        password,
-        password_confirmation: confirmPassword,
-      };
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('phone_number', phoneNumber);
+      formData.append('password', password);
+      formData.append('password_confirmation', confirmPassword);
 
       // Include referral code if present
       if (referralCode) {
-        registrationData.ref = referralCode;
+        formData.append('ref', referralCode);
       }
 
-      await callApi('post', '/register', registrationData);
+      await callApi('post', '/register', formData, {
+        'Content-Type': 'multipart/form-data',
+      });
       setRegistrationSuccess(true);
       toast.success('Registration successful! Please check your email for a verification link.');
     } catch (error) {
-      // Error is already handled by the useApi hook
+      toast.error(error.message || 'Registration failed. Please try again.');
     }
   };
 
