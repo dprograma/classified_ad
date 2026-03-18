@@ -10,7 +10,7 @@ import {
   ListItemText,
   Alert
 } from '@mui/material';
-import { Gavel, Email, Phone } from '@mui/icons-material';
+import { Gavel } from '@mui/icons-material';
 
 const TermsOfService = () => {
   return (
@@ -19,27 +19,30 @@ const TermsOfService = () => {
       <Box textAlign="center" mb={4}>
         <Gavel sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
         <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
-          Terms of Service
+          Terms and Conditions
         </Typography>
         <Typography variant="h6" color="text.secondary">
-          Last updated: {new Date().toLocaleDateString()}
+          Eunixma Classified Ads App
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Effective Date: 11/03/2026
         </Typography>
       </Box>
 
       <Paper elevation={3} sx={{ p: 4 }}>
         <Alert severity="warning" sx={{ mb: 4 }}>
           <Typography variant="body1">
-            By using EunixMac Classifieds, you agree to these terms. Please read them carefully.
+            By using our app, you agree to these Terms and Conditions. Please read them carefully.
           </Typography>
         </Alert>
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            1. Acceptance of Terms
+            1. Introduction
           </Typography>
           <Typography variant="body1" paragraph>
-            By accessing and using EunixMac Classifieds ("the Platform"), you accept and agree to be bound by the terms
-            and provision of this agreement. If you do not agree to abide by these terms, please do not use this service.
+            Welcome to Eunixma.com.ng, a classified ads platform for buying and selling goods and other services.
+            You ("you" or "user") accept these terms and conditions by using our app.
           </Typography>
         </Box>
 
@@ -47,125 +50,25 @@ const TermsOfService = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            2. Description of Service
-          </Typography>
-          <Typography variant="body1" paragraph>
-            EunixMac Classifieds is an online marketplace that allows users to:
-          </Typography>
-          <List>
-            <ListItem>
-              <ListItemText primary="Post advertisements for goods and services" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Browse and search for items offered by other users" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Communicate with other users regarding posted items" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Participate in educational material trading as agents" />
-            </ListItem>
-          </List>
-        </Box>
-
-        <Divider sx={{ my: 4 }} />
-
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            3. User Responsibilities
-          </Typography>
-
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
-            Account Registration:
-          </Typography>
-          <List>
-            <ListItem>
-              <ListItemText primary="You must provide accurate and complete information" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="You are responsible for maintaining the confidentiality of your account" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="You must be at least 18 years old to use this service" />
-            </ListItem>
-          </List>
-
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
-            Content Standards:
-          </Typography>
-          <List>
-            <ListItem>
-              <ListItemText primary="All posted content must be accurate and truthful" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Content must not violate any laws or regulations" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Prohibited items include illegal goods, weapons, and adult content" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="You must own or have permission to sell the items you post" />
-            </ListItem>
-          </List>
-        </Box>
-
-        <Divider sx={{ my: 4 }} />
-
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            4. Prohibited Activities
-          </Typography>
-          <Typography variant="body1" paragraph>
-            Users are strictly prohibited from:
-          </Typography>
-          <List>
-            <ListItem>
-              <ListItemText primary="Posting false, misleading, or fraudulent advertisements" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Attempting to circumvent payment systems or fees" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Harassing, threatening, or abusing other users" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Using automated systems to scrape or harvest data" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Posting duplicate or spam advertisements" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Impersonating other individuals or entities" />
-            </ListItem>
-          </List>
-        </Box>
-
-        <Divider sx={{ my: 4 }} />
-
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            5. Fees and Payments
-          </Typography>
-          <Typography variant="body1" paragraph>
-            Our fee structure includes:
+            2. Definitions
           </Typography>
           <List>
             <ListItem>
               <ListItemText
-                primary="Basic Listings"
-                secondary="Free for standard classified advertisements"
+                primary='"User"'
+                secondary="Anyone who uses our app"
               />
             </ListItem>
             <ListItem>
               <ListItemText
-                primary="Agent Commissions"
-                secondary="Commission fees on educational material sales"
+                primary='"Ad"'
+                secondary="A listing posted by a user to buy or sell goods/services"
               />
             </ListItem>
             <ListItem>
               <ListItemText
-                primary="Payment Processing"
-                secondary="Third-party payment processing fees may apply"
+                primary='"Transaction"'
+                secondary="A sale or purchase made through our app"
               />
             </ListItem>
           </List>
@@ -175,11 +78,59 @@ const TermsOfService = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            6. Privacy and Data Protection
+            3. Eligibility
+          </Typography>
+          <List>
+            <ListItem>
+              <ListItemText primary="Users must be 18 years or older" />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary="Users are obligated to adhere to all applicable laws" />
+            </ListItem>
+          </List>
+        </Box>
+
+        <Divider sx={{ my: 4 }} />
+
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+            4. User Responsibilities
+          </Typography>
+          <List>
+            <ListItem>
+              <ListItemText primary="Provide accurate and complete information" />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary="Check that advertisements adhere to our Content Guidelines" />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary="Not engage in prohibited activities (e.g., fraud, harassment)" />
+            </ListItem>
+          </List>
+        </Box>
+
+        <Divider sx={{ my: 4 }} />
+
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+            5. Guidelines for Content
           </Typography>
           <Typography variant="body1" paragraph>
-            Your privacy is important to us. Our use of your personal information is governed by our Privacy Policy,
-            which is incorporated into these terms by reference.
+            Ads should not:
+          </Typography>
+          <List>
+            <ListItem>
+              <ListItemText primary="Contain prohibited content (e.g., explicit, hate speech)" />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary="Infringe on intellectual property rights" />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary="Promote illegal activities" />
+            </ListItem>
+          </List>
+          <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+            Users retain ownership of their content and grant us a non-exclusive license.
           </Typography>
         </Box>
 
@@ -187,11 +138,12 @@ const TermsOfService = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            7. Intellectual Property
+            6. Payments and Transactions
           </Typography>
           <Typography variant="body1" paragraph>
-            The Platform and its original content, features, and functionality are owned by EunixMac Classifieds and are
-            protected by international copyright, trademark, and other intellectual property laws.
+            Our app makes it easier for buyers and sellers to connect. Payments are handled directly between users,
+            with exceptions on intellectual property added to the website, with the settlement of agreed royalty.
+            Users agree to comply with payment policies.
           </Typography>
         </Box>
 
@@ -199,11 +151,10 @@ const TermsOfService = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            8. Disclaimer of Warranties
+            7. Disclaimer and Responsibilities
           </Typography>
           <Typography variant="body1" paragraph>
-            The Platform is provided "as is" and "as available" without any warranties of any kind. We do not guarantee
-            the accuracy, completeness, or usefulness of any information on the Platform.
+            We don't guarantee accuracy or reliability of ads. We are not responsible for any losses or damages caused by using our app.
           </Typography>
         </Box>
 
@@ -211,11 +162,10 @@ const TermsOfService = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            9. Limitation of Liability
+            8. Data Protection
           </Typography>
           <Typography variant="body1" paragraph>
-            EunixMac Classifieds shall not be liable for any indirect, incidental, special, consequential, or punitive
-            damages resulting from your use of the Platform.
+            We collect and use data as described in our Privacy Policy. Users agree to our data practices.
           </Typography>
         </Box>
 
@@ -223,11 +173,10 @@ const TermsOfService = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            10. Termination
+            9. Termination
           </Typography>
           <Typography variant="body1" paragraph>
-            We may terminate or suspend your account immediately, without prior notice, for conduct that we believe
-            violates these Terms of Service or is harmful to other users of the Platform.
+            We may terminate or suspend accounts for violating these Terms.
           </Typography>
         </Box>
 
@@ -235,11 +184,10 @@ const TermsOfService = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            11. Governing Law
+            10. Governing Law
           </Typography>
           <Typography variant="body1" paragraph>
-            These Terms shall be interpreted and governed in accordance with the laws of the Federal Republic of Nigeria,
-            without regard to its conflict of law provisions.
+            Nigerian law applies to these Terms. Arbitration will be used to settle disputes in Nigeria.
           </Typography>
         </Box>
 
@@ -247,34 +195,14 @@ const TermsOfService = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            12. Changes to Terms
+            11. Amendments and Updates
           </Typography>
           <Typography variant="body1" paragraph>
-            We reserve the right to modify these terms at any time. Changes will be effective immediately upon posting
-            to the Platform. Your continued use constitutes acceptance of the modified terms.
+            We may update these Terms; users will be notified.
           </Typography>
-        </Box>
-
-        <Divider sx={{ my: 4 }} />
-
-        <Box sx={{ textAlign: 'center', bgcolor: 'grey.50', p: 3, borderRadius: 2 }}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-            Contact Us
+          <Typography variant="body1" paragraph sx={{ mt: 2, fontWeight: 500 }}>
+            By using our app, you agree to these Terms and Conditions.
           </Typography>
-          <Typography variant="body1" paragraph>
-            If you have any questions about these Terms of Service, please contact us:
-          </Typography>
-
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Email color="primary" />
-              <Typography variant="body2">legal@eunixmac.com</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Phone color="primary" />
-              <Typography variant="body2">+234 800 123 4567</Typography>
-            </Box>
-          </Box>
         </Box>
       </Paper>
     </Container>

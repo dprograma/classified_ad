@@ -211,13 +211,13 @@ function Footer() {
                   sm: '1.4rem',
                   md: '1.5rem'
                 },
-                background: 'linear-gradient(135deg, #6C47FF 0%, #00C6AE 100%)',
+                background: 'linear-gradient(135deg, #a08bf6 0%, #00C6AE 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
             >
-              EunixMac Classifieds
+              EunixMa Classifieds
             </Typography>
             
             <Typography 
@@ -492,7 +492,7 @@ function Footer() {
                 }}>
                   <Email sx={{ fontSize: '18px', color: '#00C6AE' }} />
                   <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                    info@eunixmac.com
+                    info@eunixma.com.ng
                   </Typography>
                 </Box>
                 
@@ -573,7 +573,7 @@ function Footer() {
               lineHeight: 1.5
             }}
           >
-            © {new Date().getFullYear()} EunixMac Classifieds. All rights reserved.
+            © {new Date().getFullYear()} EunixMa Classifieds. All rights reserved.
             <br />
             <Box component="span" sx={{ fontSize: '0.75rem', opacity: 0.8 }}>
               Made with ❤️ in Nigeria

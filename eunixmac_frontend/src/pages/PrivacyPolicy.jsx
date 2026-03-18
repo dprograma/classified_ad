@@ -10,7 +10,7 @@ import {
   ListItemText,
   Alert
 } from '@mui/material';
-import { Shield, Email, Phone } from '@mui/icons-material';
+import { Shield, Email } from '@mui/icons-material';
 
 const PrivacyPolicy = () => {
   return (
@@ -19,63 +19,58 @@ const PrivacyPolicy = () => {
       <Box textAlign="center" mb={4}>
         <Shield sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
         <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
-          Privacy Policy
+          Privacy Statement
         </Typography>
         <Typography variant="h6" color="text.secondary">
-          Last updated: {new Date().toLocaleDateString()}
+          Eunixma.com.ng Classified Ads App
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Effective Date: 11/03/2026
         </Typography>
       </Box>
 
       <Paper elevation={3} sx={{ p: 4 }}>
-        <Alert severity="info" sx={{ mb: 4 }}>
-          <Typography variant="body1">
-            This Privacy Policy describes how EunixMac Classifieds collects, uses, and protects your personal information
-            when you use our platform.
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+            1. Introduction
           </Typography>
-        </Alert>
+          <Typography variant="body1" paragraph>
+            We respect your privacy and are committed to protecting your personal data. When you use our classified ads app,
+            we (referred to as "we," "us," or "our") collect, use, and share information about you in accordance with this Privacy Policy.
+          </Typography>
+        </Box>
+
+        <Divider sx={{ my: 4 }} />
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            1. Information We Collect
-          </Typography>
-          <Typography variant="body1" paragraph>
-            We collect information you provide directly to us, such as when you create an account, post an ad,
-            or contact us for support.
+            2. Information We Collect
           </Typography>
 
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
-            Personal Information:
+            Personal Data:
           </Typography>
           <List>
             <ListItem>
-              <ListItemText primary="Name and contact information (email, phone number)" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Profile information and photos" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Payment information (processed securely by third parties)" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Communication preferences" />
+              <ListItemText primary="Name, email, phone number, address, payment info (if applicable)" />
             </ListItem>
           </List>
 
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
-            Usage Information:
+            Non-Personal Data:
           </Typography>
           <List>
             <ListItem>
-              <ListItemText primary="Device information and IP address" />
+              <ListItemText primary="Device info, usage data, location (if permitted)" />
             </ListItem>
+          </List>
+
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 3 }}>
+            User Content:
+          </Typography>
+          <List>
             <ListItem>
-              <ListItemText primary="Browser type and operating system" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Pages visited and time spent on our platform" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Search queries and interactions with ads" />
+              <ListItemText primary="Ads, messages, uploaded files (e.g., ebooks, images)" />
             </ListItem>
           </List>
         </Box>
@@ -84,30 +79,20 @@ const PrivacyPolicy = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            2. How We Use Your Information
+            3. How We Use Your Information
           </Typography>
-          <Typography variant="body1" paragraph>
-            We use the information we collect to provide, maintain, and improve our services:
-          </Typography>
-
           <List>
             <ListItem>
-              <ListItemText primary="Process and facilitate transactions" />
+              <ListItemText primary="Process transactions (ebook sales, ads)" />
             </ListItem>
             <ListItem>
-              <ListItemText primary="Communicate with you about your account and services" />
+              <ListItemText primary="Communicate with you and manage accounts" />
             </ListItem>
             <ListItem>
-              <ListItemText primary="Provide customer support" />
+              <ListItemText primary="Improve app performance and security" />
             </ListItem>
             <ListItem>
-              <ListItemText primary="Improve our platform and develop new features" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Detect and prevent fraud and abuse" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Send marketing communications (with your consent)" />
+              <ListItemText primary="Show ads that are relevant (using data that is not personal)" />
             </ListItem>
           </List>
         </Box>
@@ -116,35 +101,25 @@ const PrivacyPolicy = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            3. Information Sharing
+            4. Transmitting Your Data
           </Typography>
-          <Typography variant="body1" paragraph>
-            We do not sell, trade, or rent your personal information to third parties. We may share your information only in these circumstances:
-          </Typography>
-
           <List>
             <ListItem>
               <ListItemText
-                primary="With other users"
-                secondary="When you post ads, your profile information may be visible to other users"
+                primary="Service Providers"
+                secondary="Payment processors, analytics, support"
               />
             </ListItem>
             <ListItem>
               <ListItemText
-                primary="Service providers"
-                secondary="Third-party companies that help us operate our platform (payment processors, hosting services)"
+                primary="Third-Party Ads"
+                secondary="Advertisers (non-personal data)"
               />
             </ListItem>
             <ListItem>
               <ListItemText
-                primary="Legal requirements"
-                secondary="When required by law or to protect our rights and the safety of our users"
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemText
-                primary="Business transfers"
-                secondary="In the event of a merger, acquisition, or sale of assets"
+                primary="Legal Requirements"
+                secondary="Law enforcement, court orders"
               />
             </ListItem>
           </List>
@@ -154,40 +129,17 @@ const PrivacyPolicy = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            4. Data Security
+            5. Proprietary Rights
           </Typography>
-          <Typography variant="body1" paragraph>
-            We implement appropriate technical and organizational measures to protect your personal information against
-            unauthorized access, alteration, disclosure, or destruction. However, no method of transmission over the
-            internet is 100% secure.
-          </Typography>
-        </Box>
-
-        <Divider sx={{ my: 4 }} />
-
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            5. Your Rights
-          </Typography>
-          <Typography variant="body1" paragraph>
-            You have the right to:
-          </Typography>
-
           <List>
             <ListItem>
-              <ListItemText primary="Access and update your personal information" />
+              <ListItemText primary="You retain ownership of your content" />
             </ListItem>
             <ListItem>
-              <ListItemText primary="Delete your account and personal data" />
+              <ListItemText primary="You grant us a non-exclusive license to display/use content" />
             </ListItem>
             <ListItem>
-              <ListItemText primary="Opt-out of marketing communications" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Request a copy of your data" />
-            </ListItem>
-            <ListItem>
-              <ListItemText primary="Object to processing of your data" />
+              <ListItemText primary="We honor the rights of third parties" />
             </ListItem>
           </List>
         </Box>
@@ -196,11 +148,10 @@ const PrivacyPolicy = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            6. Cookies and Tracking
+            6. Data Security
           </Typography>
           <Typography variant="body1" paragraph>
-            We use cookies and similar technologies to enhance your experience, analyze site usage, and assist in our
-            marketing efforts. You can manage your cookie preferences in your browser settings.
+            We implement reasonable security measures. We report breaches as required.
           </Typography>
         </Box>
 
@@ -208,11 +159,37 @@ const PrivacyPolicy = () => {
 
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
-            7. Updates to This Policy
+            7. Your Choices
+          </Typography>
+          <List>
+            <ListItem>
+              <ListItemText primary="Manage settings and preferences" />
+            </ListItem>
+            <ListItem>
+              <ListItemText primary="Opt out of communications that aren't necessary" />
+            </ListItem>
+          </List>
+        </Box>
+
+        <Divider sx={{ my: 4 }} />
+
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+            8. Children's Privacy
           </Typography>
           <Typography variant="body1" paragraph>
-            We may update this Privacy Policy from time to time. We will notify you of any changes by posting the
-            new policy on this page and updating the "Last updated" date.
+            Our app is not intended for children under 18. We don't knowingly collect children's data.
+          </Typography>
+        </Box>
+
+        <Divider sx={{ my: 4 }} />
+
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, color: 'primary.main' }}>
+            9. Changes to This Policy
+          </Typography>
+          <Typography variant="body1" paragraph>
+            This policy may be updated; you will be informed.
           </Typography>
         </Box>
 
@@ -220,7 +197,7 @@ const PrivacyPolicy = () => {
 
         <Box sx={{ textAlign: 'center', bgcolor: 'grey.50', p: 3, borderRadius: 2 }}>
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-            Contact Us
+            10. Reach Out
           </Typography>
           <Typography variant="body1" paragraph>
             If you have any questions about this Privacy Policy, please contact us:
@@ -229,11 +206,7 @@ const PrivacyPolicy = () => {
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Email color="primary" />
-              <Typography variant="body2">privacy@eunixmac.com</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Phone color="primary" />
-              <Typography variant="body2">+234 800 123 4567</Typography>
+              <Typography variant="body2">Info@eunixma.com.ng</Typography>
             </Box>
           </Box>
         </Box>

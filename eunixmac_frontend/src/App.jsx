@@ -44,6 +44,7 @@ import AdminBooksManagement from './pages/AdminBooksManagement';
 import AdminAdsManagement from './pages/AdminAdsManagement';
 import AdminNewsManagement from './pages/AdminNewsManagement';
 import AdminNewsletterManagement from './pages/AdminNewsletterManagement';
+import AdminUserManagement from './pages/AdminUserManagement';
 import News from './pages/News';
 import NewsDetail from './pages/NewsDetail';
 import Withdrawals from './pages/Withdrawals';
@@ -194,6 +195,14 @@ function App() {
                   element={
                     <PrivateRoute>
                       <AdminNewsletterManagement />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <PrivateRoute>
+                      <AdminUserManagement />
                     </PrivateRoute>
                   }
                 />

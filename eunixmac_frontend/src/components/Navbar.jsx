@@ -419,6 +419,15 @@ function Navbar() {
                 )}
 
                 {user?.is_admin && (
+                  <ModernMenuItem onClick={() => { navigate('/admin/users'); handleClose(); }}>
+                    <ListItemIcon>
+                      <PersonIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="User Management" />
+                  </ModernMenuItem>
+                )}
+
+                {user?.is_admin && (
                   <ModernMenuItem onClick={() => { navigate('/dashboard?tab=admin-ads'); handleClose(); }}>
                     <ListItemIcon>
                       <DashboardIcon />
@@ -493,6 +502,11 @@ function Navbar() {
                       <WalletIcon />
                     </ListItemIcon>
                     <ListItemText primary="Earnings & Withdrawals" />
+                  </ListItem>
+                )}
+                {user?.is_admin && (
+                  <ListItem component={Link} to="/admin/users" onClick={handleDrawerToggle}>
+                    <ListItemText primary="User Management" />
                   </ListItem>
                 )}
                 {user?.is_admin && (
