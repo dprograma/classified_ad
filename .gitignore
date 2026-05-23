@@ -62,9 +62,10 @@ QUICK_FIX_REFERENCE.md
 TOAST_AND_DESIGN_FIXES.md
 WITHDRAWALS_REDESIGN_SUMMARY.md
 
-.DS_Store
 dist.zip
 
 eunixmac_backend/public/run_migrate.php
 eunixmac_backend/public/test_news_api.html
 eunixmac_backend/public/check_news.php
+
+.DS_Store

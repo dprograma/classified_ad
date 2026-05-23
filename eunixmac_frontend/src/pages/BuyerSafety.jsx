@@ -280,10 +280,10 @@ const BuyerSafety = () => {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <Chip
                 icon={<Email />}
-                label="support@classifiedads.com"
+                label="support@eunixma.com.ng"
                 clickable
                 color="primary"
-                onClick={() => window.location.href = 'mailto:support@classifiedads.com?subject=Safety Report'}
+                onClick={() => window.location.href = 'mailto:support@eunixma.com.ng?subject=Safety Report'}
               />
               <Chip
                 icon={<Phone />}

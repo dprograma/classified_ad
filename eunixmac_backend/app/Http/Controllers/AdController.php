@@ -211,7 +211,8 @@ class AdController extends Controller
             'description' => 'required|string|min:10',
             'price' => 'required|numeric|min:0',
             'location' => 'required|string|max:255',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // 2MB max per image (PHP limit)
+            'images' => 'nullable|array|max:10',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120', // 5MB max per image
             'custom_fields' => 'nullable|array',
             'custom_fields.*.field_name' => 'required_with:custom_fields|string|max:100',
             'custom_fields.*.field_value' => 'required_with:custom_fields|string|max:255',
@@ -246,7 +247,8 @@ class AdController extends Controller
                 'description' => $validatedData['description'],
                 'price' => $validatedData['price'],
                 'location' => $validatedData['location'],
-                'status' => 'pending_approval',
+                'status' => 'active',
+                'approved_at' => now(),
             ]);
 
             // Handle image uploads with preview detection

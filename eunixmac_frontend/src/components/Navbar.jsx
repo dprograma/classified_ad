@@ -1,4 +1,5 @@
 import React from 'react';
+import logoImage from '../assets/logo.png';
 import {
   AppBar, Toolbar, Typography, Button, Box, Avatar, Menu, MenuItem,
   IconButton, InputBase, Paper, useScrollTrigger, Drawer, List,
@@ -234,28 +235,7 @@ function Navbar() {
           </Box>
         )}
         <LogoBox component={Link} to="/" sx={{ mr: 2 }}>
-          {/* Modern logo with icon and text */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
-            <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="4" y="8" width="30" height="22" rx="6" fill="#6C47FF" />
-              <rect x="8" y="12" width="22" height="14" rx="4" fill="#fff" />
-              <rect x="12" y="16" width="14" height="6" rx="2" fill="#00C6AE" />
-              <circle cx="32" cy="8" r="4" fill="#FFBF00" stroke="#fff" strokeWidth="2" />
-            </svg>
-          </Box>
-          <Typography
-            variant="h5"
-            component="span"
-            sx={{
-              fontWeight: 900,
-              letterSpacing: '-0.03em',
-              fontSize: { xs: '1.3rem', sm: '1.7rem', md: '2rem' },
-              color: 'inherit',
-              lineHeight: 1,
-            }}
-          >
-            Eunixma
-          </Typography>
+          <Box component="img" src={logoImage} alt="Eunixma" sx={{ height: { xs: 36, sm: 44, md: 52 }, width: 'auto', display: 'block' }} />
         </LogoBox>
         <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', flexGrow: 1, mx: 2 }}>
           <SearchBar elevation={2} component="form" onSubmit={handleSearch}>
@@ -419,6 +399,15 @@ function Navbar() {
                 )}
 
                 {user?.is_admin && (
+                  <ModernMenuItem onClick={() => { navigate('/admin/users'); handleClose(); }}>
+                    <ListItemIcon>
+                      <PersonIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="User Management" />
+                  </ModernMenuItem>
+                )}
+
+                {user?.is_admin && (
                   <ModernMenuItem onClick={() => { navigate('/dashboard?tab=admin-ads'); handleClose(); }}>
                     <ListItemIcon>
                       <DashboardIcon />
@@ -493,6 +482,11 @@ function Navbar() {
                       <WalletIcon />
                     </ListItemIcon>
                     <ListItemText primary="Earnings & Withdrawals" />
+                  </ListItem>
+                )}
+                {user?.is_admin && (
+                  <ListItem component={Link} to="/admin/users" onClick={handleDrawerToggle}>
+                    <ListItemText primary="User Management" />
                   </ListItem>
                 )}
                 {user?.is_admin && (
