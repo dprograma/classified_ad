@@ -7,7 +7,7 @@ const useApi = () => {
 
   const api = axios.create({
     baseURL: API_CONFIG.BASE_URL,
-    timeout: 30000, // 30 second timeout to prevent indefinite hanging
+    timeout: 120000, // 120 second timeout to allow for large image uploads
     headers: {
         'Accept': 'application/json',
     }
