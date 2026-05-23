@@ -40,9 +40,9 @@ class PaymentController extends Controller
                 $commissionRate = 0;
 
                 if ($metadata['type'] === 'book') {
-                    $commissionRate = 80; // 80% platform commission
-                    $platformCommission = $amount * 0.80;
-                    $sellerAmount = $amount * 0.20; // 20% goes to seller
+                    $commissionRate = 20; // 20% platform commission
+                    $platformCommission = $amount * 0.20;
+                    $sellerAmount = $amount * 0.80; // 80% goes to seller
                 }
 
                 $payment = Payment::create([
