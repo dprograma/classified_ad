@@ -35,7 +35,7 @@ class SocialLoginController extends Controller
                 // Use Socialite to manage the full OAuth flow (redirect + token exchange)
                 return Socialite::driver('facebook')
                     ->stateless()
-                    ->scopes(['public_profile', 'email'])
+                    ->scopes(['public_profile'])
                     ->redirect();
             } elseif ($provider === 'google') {
                 // Google specific configuration
