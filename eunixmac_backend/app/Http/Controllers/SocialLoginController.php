@@ -32,26 +32,11 @@ class SocialLoginController extends Controller
             session(['oauth_state' => $state]);
 
             if ($provider === 'facebook') {
-                // Facebook specific configuration
-                $clientId = config('services.facebook.client_id');
-                $redirectUri = urlencode(config('services.facebook.redirect'));
-
-                if (!$clientId || !$redirectUri) {
-                    Log::error('Facebook OAuth configuration missing');
-                    return redirect()->away(
-                        config('app.frontend_url') . '/login?error=configuration_error'
-                    );
-                }
-
-                $url = "https://www.facebook.com/v18.0/dialog/oauth?" . http_build_query([
-                    'client_id' => $clientId,
-                    'redirect_uri' => urldecode($redirectUri),
-                    'scope' => 'public_profile', // Only request public_profile until email is approved
-                    'response_type' => 'code',
-                    'state' => $state,
-                ]);
-
-                return redirect($url);
+                // Use Socialite to manage the full OAuth flow (redirect + token exchange)
+                return Socialite::driver('facebook')
+                    ->stateless()
+                    ->scopes(['public_profile', 'email'])
+                    ->redirect();
             } elseif ($provider === 'google') {
                 // Google specific configuration
                 return Socialite::driver($provider)
