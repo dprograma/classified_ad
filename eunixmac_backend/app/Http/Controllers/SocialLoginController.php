@@ -151,6 +151,7 @@ class SocialLoginController extends Controller
                         'profile_picture' => $avatar,
                         'email_verified_at' => now(), // Social logins are pre-verified
                         'referral_code' => $this->generateUniqueReferralCode(),
+                        'phone_number' => '', // Not provided by social login
                     ]);
 
                     // Create default user settings
@@ -199,14 +200,22 @@ class SocialLoginController extends Controller
             );
 
         } catch (\GuzzleHttp\Exception\ClientException $e) {
+            $responseBody = $e->getResponse()->getBody()->getContents();
             Log::error('Social provider API error', [
                 'provider' => $provider,
                 'error' => $e->getMessage(),
-                'response' => $e->getResponse()->getBody()->getContents()
+                'response' => $responseBody,
             ]);
 
+            // Facebook returns "Missing authorization code" when the OAuth code has
+            // already been used or the user retried the callback. Send them back to
+            // login so they can start a fresh flow.
+            $errorParam = str_contains($responseBody, 'authorization code')
+                ? 'session_expired'
+                : 'provider_error';
+
             return redirect()->away(
-                config('app.frontend_url') . '/login?error=provider_error'
+                config('app.frontend_url') . '/login?error=' . $errorParam
             );
 
         } catch (\Exception $e) {
