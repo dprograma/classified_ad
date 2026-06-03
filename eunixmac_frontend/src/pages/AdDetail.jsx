@@ -36,44 +36,28 @@ function AdDetail() {
         setLoading(true);
         setError(null);
 
-        // Check cache first for ad details
         const adCacheKey = `ad_detail_${id}`;
         const cachedAd = sessionStorage.getItem(adCacheKey);
-        const adCacheTimestamp = sessionStorage.getItem(`${adCacheKey}_timestamp`);
-        const now = Date.now();
 
-        // Use cached ad if it's less than 5 minutes old
-        if (cachedAd && adCacheTimestamp && (now - parseInt(adCacheTimestamp)) < 300000) {
-          try {
-            const parsedAd = JSON.parse(cachedAd);
-            setAd(parsedAd);
-          } catch (parseError) {
-            console.warn('Failed to parse cached ad:', parseError);
-          }
-        }
+        // Always fetch fresh data so fields like description are never stale.
+        // Fall back to cache only if the server rate-limits us (429).
+        try {
+          const adData = await callApi('GET', `/ads/${id}`);
+          setAd(adData);
+          // Refresh cache with latest data
+          sessionStorage.setItem(adCacheKey, JSON.stringify(adData));
+          sessionStorage.setItem(`${adCacheKey}_timestamp`, Date.now().toString());
+        } catch (adError) {
+          console.error('Error fetching ad:', adError);
 
-        // If no cached ad or cache is expired, fetch from API
-        if (!cachedAd || !adCacheTimestamp || (now - parseInt(adCacheTimestamp)) >= 300000) {
-          try {
-            const adData = await callApi('GET', `/ads/${id}`);
-            setAd(adData);
-
-            // Cache the ad data
-            sessionStorage.setItem(adCacheKey, JSON.stringify(adData));
-            sessionStorage.setItem(`${adCacheKey}_timestamp`, now.toString());
-          } catch (adError) {
-            console.error('Error fetching ad:', adError);
-
-            if (adError.response?.status === 429 && cachedAd) {
-              try {
-                const parsedAd = JSON.parse(cachedAd);
-                setAd(parsedAd);
-              } catch (parseError) {
-                throw adError;
-              }
-            } else {
+          if (adError.response?.status === 429 && cachedAd) {
+            try {
+              setAd(JSON.parse(cachedAd));
+            } catch (parseError) {
               throw adError;
             }
+          } else {
+            throw adError;
           }
         }
 
