@@ -103,17 +103,25 @@ function Login() {
     const isSocialLogin = params.get('social') === 'true';
 
     const handleSocialLoginCallback = async () => {
+      // Use an AbortController so we can cancel the fetch if the component
+      // unmounts before it completes (race condition with AuthContext).
+      const controller = new AbortController();
+
       try {
-        // Store token temporarily
+        // Persist token — AuthContext will pick this up automatically.
         localStorage.setItem('token', token);
 
-        // Fetch user data using the token
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/user`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-          },
-        });
+        // Fetch user data to populate AuthContext immediately.
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/user`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json',
+            },
+            signal: controller.signal,
+          }
+        );
 
         if (!response.ok) {
           throw new Error('Failed to fetch user data');
@@ -124,18 +132,21 @@ function Login() {
         // Login with user data and token
         login(userData, token);
 
-        // Clean up URL
+        // Clean up URL and navigate
         window.history.replaceState({}, document.title, '/');
-
-        // Navigate to destination
         navigate(from, { replace: true });
       } catch (error) {
+        // Ignore abort errors — they happen when AuthContext navigates away
+        // first (user is already logged in via the token in localStorage).
+        if (error.name === 'AbortError') return;
+
         console.error('Social login callback error:', error);
         localStorage.removeItem('token');
         toast.error('Authentication failed. Please try again.');
-        // Clean up URL
         window.history.replaceState({}, document.title, '/login');
       }
+
+      return () => controller.abort();
     };
 
     if (error) {

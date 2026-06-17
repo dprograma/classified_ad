@@ -17,6 +17,7 @@ class Ad extends Model
         'price',
         'location',
         'status',
+        'approved_at',
         'file_path',
         'preview_image_path',
         'subject_area',
@@ -30,6 +31,7 @@ class Ad extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'approved_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
