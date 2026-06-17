@@ -151,7 +151,7 @@ class SocialLoginController extends Controller
                         'profile_picture' => $avatar,
                         'email_verified_at' => now(), // Social logins are pre-verified
                         'referral_code' => $this->generateUniqueReferralCode(),
-                        'phone_number' => '', // Not provided by social login
+                        'phone_number' => null, // Not provided by social login
                     ]);
 
                     // Create default user settings
