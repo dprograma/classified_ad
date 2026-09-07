@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Stack, CircularProgress, Box, Typography, Divider } from '@mui/material';
-import { Google as GoogleIcon, Facebook as FacebookIcon, Twitter as TwitterIcon } from '@mui/icons-material';
+import { Google as GoogleIcon, Twitter as TwitterIcon } from '@mui/icons-material';
 import { API_CONFIG } from '../config/api';
 import { toast } from 'react-toastify';
 
@@ -48,18 +48,6 @@ const SocialLoginButtons = () => {
                     bgcolor: '#f8f9fa',
                     borderColor: '#d2e3fc',
                     boxShadow: '0 1px 2px 0 rgba(60,64,67,.30), 0 1px 3px 1px rgba(60,64,67,.15)',
-                },
-            },
-        },
-        {
-            provider: 'facebook',
-            icon: <FacebookIcon />,
-            text: 'Continue with Facebook',
-            styles: {
-                bgcolor: '#1877F2',
-                color: '#fff',
-                '&:hover': {
-                    bgcolor: '#166fe5',
                 },
             },
         },
