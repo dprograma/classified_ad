@@ -28,25 +28,6 @@ const TrendingAds = () => {
   }, []);
 
   const fetchTrendingAds = async () => {
-    // Check cache first
-    const cacheKey = 'trending_ads';
-    const cachedAds = sessionStorage.getItem(cacheKey);
-    const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
-    const now = Date.now();
-    
-    // Use cache if it's less than 3 minutes old
-    if (cachedAds && cacheTimestamp && (now - parseInt(cacheTimestamp)) < 180000) {
-      try {
-        const parsedAds = JSON.parse(cachedAds);
-        setAds(parsedAds);
-        setLoading(false);
-        return;
-      } catch (parseError) {
-        console.warn('Failed to parse cached trending ads:', parseError);
-        // Continue to fetch from API
-      }
-    }
-
     try {
       const data = await callApi('GET', '/ads?sort_by=created_at&sort_order=desc&limit=8');
       if (data && data.data && Array.isArray(data.data)) {
@@ -56,7 +37,6 @@ const TrendingAds = () => {
       } else {
         setAds([]);
       }
-      
     } catch (error) {
       console.error('Error fetching trending ads:', error);
       setAds([]);
