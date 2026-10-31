@@ -118,7 +118,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
-    Route::post('/ads', [AdController::class, 'store']);
+    Route::post('/ads', [AdController::class, 'store'])->middleware('throttle:ad-posting');
     Route::put('/ads/{ad}', [AdController::class, 'update']);
     Route::delete('/ads/{ad}', [AdController::class, 'destroy']);
 

@@ -93,6 +93,13 @@ class RouteServiceProvider extends ServiceProvider
                 });
         });
 
+        // Rate limiting for ad posting (5 per hour per user, 10 per hour per IP for guests)
+        RateLimiter::for('ad-posting', function (Request $request) {
+            return $request->user()
+                ? Limit::perHour(5)->by('ad-posting:user:' . $request->user()->id)
+                : Limit::perHour(10)->by('ad-posting:ip:' . $request->ip());
+        });
+
         // Rate limiting for social login
         RateLimiter::for('social-login', function (Request $request) {
             return Limit::perMinute(10)->by($request->ip())

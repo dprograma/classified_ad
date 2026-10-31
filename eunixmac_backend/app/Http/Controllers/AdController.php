@@ -220,6 +220,18 @@ class AdController extends Controller
 
         $validatedData = $request->validate($validationRules);
 
+        // XSS sanitization — strip HTML/JS tags from all text fields
+        $validatedData['title']       = strip_tags(trim($validatedData['title']));
+        $validatedData['description'] = strip_tags(trim($validatedData['description']));
+        $validatedData['location']    = strip_tags(trim($validatedData['location']));
+
+        // Spam check
+        if ($this->isSpam($validatedData['title'], $validatedData['description'])) {
+            return response()->json([
+                'message' => 'Your ad was flagged as spam. Please remove phone numbers, special characters, or promotional keywords from the title and description.',
+            ], 422);
+        }
+
         // Block regular users from posting ads in Books categories
         // Books (past questions, ebooks, publications) are only posted by Admin/Agents
         $category = \App\Models\Category::find($validatedData['category_id']);
@@ -355,18 +367,28 @@ class AdController extends Controller
             'description' => 'required|string',
             'price' => 'required|numeric',
             'location' => 'required|string|max:255',
-            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'custom_fields.*.field_name' => 'required_with:custom_fields|string',
             'custom_fields.*.field_value' => 'required_with:custom_fields|string',
         ]);
 
-        $ad->update($request->only([
-            'category_id',
-            'title',
-            'description',
-            'price',
-            'location',
-        ]));
+        $title       = strip_tags(trim($request->input('title')));
+        $description = strip_tags(trim($request->input('description')));
+        $location    = strip_tags(trim($request->input('location')));
+
+        if ($this->isSpam($title, $description)) {
+            return response()->json([
+                'message' => 'Your ad was flagged as spam. Please remove phone numbers, special characters, or promotional keywords from the title and description.',
+            ], 422);
+        }
+
+        $ad->update([
+            'category_id' => $request->input('category_id'),
+            'title'       => $title,
+            'description' => $description,
+            'price'       => $request->input('price'),
+            'location'    => $location,
+        ]);
 
         // Handle image updates (delete old, add new)
         if ($request->hasFile('images')) {
@@ -593,5 +615,43 @@ class AdController extends Controller
         }
 
         return response()->json(['fields' => $fields]);
+    }
+
+    /**
+     * Detect common ad spam patterns:
+     *  - Nigerian phone numbers embedded in title/description
+     *  - Phone/call emojis paired with phone numbers
+     *  - Admission/UTME promotional keywords
+     */
+    private function isSpam(string $title, string $description): bool
+    {
+        $combined = $title . ' ' . $description;
+        $lower    = mb_strtolower($combined);
+
+        // Nigerian phone number in the title (spammers embed contact numbers in titles)
+        if (preg_match('/(?:0|\+?234)[789]\d{8}/', $title)) {
+            return true;
+        }
+
+        // Phone/call emoji anywhere in the ad text
+        if (preg_match('/[\x{260E}\x{1F4DE}\x{1F4F1}\x{1F4F2}\x{2706}\x{2121}]/u', $combined)) {
+            return true;
+        }
+
+        // Admission/UTME spam keywords
+        $spamPhrases = [
+            'post utme form',
+            'post utme application',
+            'admission form is out',
+            'application form is out',
+            'admission/application form',
+        ];
+        foreach ($spamPhrases as $phrase) {
+            if (str_contains($lower, $phrase)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

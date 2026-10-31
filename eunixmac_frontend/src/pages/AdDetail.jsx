@@ -197,11 +197,20 @@ function AdDetail() {
     return cleaned;
   };
 
-  const getWhatsAppLink = () => {
-    if (!ad?.user?.phone_number) return '#';
+  const handleWhatsAppChat = (e) => {
+    e.preventDefault();
+    if (!ad?.user?.phone_number) return;
     const formattedNumber = formatWhatsAppNumber(ad.user.phone_number);
     const message = encodeURIComponent(`Hi! I'm interested in your ad: "${ad.title}"`);
-    return `https://wa.me/${formattedNumber}?text=${message}`;
+    // Use the native WhatsApp URI scheme on mobile so the OS opens the installed
+    // app directly — avoiding wa.me's web redirect which can show a "download"
+    // page even when WhatsApp (or WhatsApp Business) is already installed.
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.href = `whatsapp://send?phone=${formattedNumber}&text=${message}`;
+    } else {
+      window.open(`https://wa.me/${formattedNumber}?text=${message}`, '_blank');
+    }
   };
 
   const handlePurchaseBook = async () => {
@@ -600,9 +609,7 @@ function AdDetail() {
             <Button
               variant="contained"
               color="success"
-              href={getWhatsAppLink()}
-              target="_blank"
-              rel="noopener noreferrer"
+              onClick={handleWhatsAppChat}
             >
               WhatsApp Seller
             </Button>
