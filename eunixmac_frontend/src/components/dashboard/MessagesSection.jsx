@@ -59,6 +59,18 @@ const MessagesSection = ({ conversations, onRefresh }) => {
     }
   }, [selectedConversation]);
 
+  // Poll for new messages in the open conversation so replies show up
+  // without the user having to reselect the conversation.
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    const intervalId = setInterval(() => {
+      fetchMessages(selectedConversation.ad_id);
+    }, 12000);
+
+    return () => clearInterval(intervalId);
+  }, [selectedConversation]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);

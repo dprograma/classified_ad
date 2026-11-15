@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ad;
 use App\Models\AdCustomField;
 use App\Models\AdImage;
+use App\Rules\NoSpamContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -207,8 +208,8 @@ class AdController extends Controller
     {
         $validationRules = [
             'category_id' => 'required|exists:categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string|min:10',
+            'title' => ['required', 'string', 'max:255', new NoSpamContent()],
+            'description' => ['required', 'string', 'min:10', new NoSpamContent()],
             'price' => 'required|numeric|min:0',
             'location' => 'required|string|max:255',
             'images' => 'nullable|array|max:10',
@@ -247,8 +248,8 @@ class AdController extends Controller
                 'description' => $validatedData['description'],
                 'price' => $validatedData['price'],
                 'location' => $validatedData['location'],
-                'status' => 'active',
-                'approved_at' => now(),
+                'status' => 'pending_approval',
+                'approved_at' => null,
             ]);
 
             // Handle image uploads with preview detection
@@ -318,7 +319,7 @@ class AdController extends Controller
             $ad->load(['user', 'category', 'images', 'customFields']);
             
             return response()->json([
-                'message' => 'Ad posted successfully!',
+                'message' => 'Ad submitted successfully! It will go live once reviewed by our team.',
                 'ad' => $ad
             ], 201);
 
@@ -351,8 +352,8 @@ class AdController extends Controller
         // Handle full ad updates
         $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
+            'title' => ['required', 'string', 'max:255', new NoSpamContent()],
+            'description' => ['required', 'string', new NoSpamContent()],
             'price' => 'required|numeric',
             'location' => 'required|string|max:255',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
