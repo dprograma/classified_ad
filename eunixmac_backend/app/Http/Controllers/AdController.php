@@ -361,13 +361,30 @@ class AdController extends Controller
             'custom_fields.*.field_value' => 'required_with:custom_fields|string',
         ]);
 
-        $ad->update($request->only([
-            'category_id',
-            'title',
-            'description',
-            'price',
-            'location',
-        ]));
+        // Detect whether the actual content is changing, not just a no-op
+        // resubmission of the same values.
+        $newData = $request->only(['category_id', 'title', 'description', 'price', 'location']);
+        $contentChanged = (int) $newData['category_id'] !== (int) $ad->category_id
+            || trim($newData['title']) !== trim($ad->title)
+            || trim($newData['description']) !== trim($ad->description)
+            || (float) $newData['price'] !== (float) $ad->price
+            || trim($newData['location']) !== trim($ad->location)
+            || $request->hasFile('images')
+            || $request->has('custom_fields');
+
+        // An already-approved (or previously rejected) ad whose content
+        // changes must go back through moderation before it is public
+        // again — otherwise a seller could get an ad approved once and
+        // then edit it into spam without any review.
+        $requiresReapproval = in_array($ad->status, ['active', 'rejected'], true);
+
+        $updateData = $newData;
+        if ($contentChanged && $requiresReapproval) {
+            $updateData['status'] = 'pending_approval';
+            $updateData['approved_at'] = null;
+        }
+
+        $ad->update($updateData);
 
         // Handle image updates (delete old, add new)
         if ($request->hasFile('images')) {
@@ -399,7 +416,12 @@ class AdController extends Controller
             }
         }
 
-        return response()->json($ad->load(['images', 'customFields']));
+        return response()->json([
+            'message' => ($contentChanged && $requiresReapproval)
+                ? 'Ad updated successfully! It will need to be re-approved before it goes live again.'
+                : 'Ad updated successfully.',
+            'ad' => $ad->load(['images', 'customFields']),
+        ]);
     }
 
     public function destroy(Ad $ad)
