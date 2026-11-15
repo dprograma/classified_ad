@@ -18,6 +18,7 @@ import {
   FormHelperText
 } from '@mui/material';
 import { CloudUpload, Delete } from '@mui/icons-material';
+import { toast } from 'react-toastify';
 import useApi from '../hooks/useApi';
 import { getStorageUrl } from '../config/api';
 import { getLocationOptions } from '../data/nigeriaLocations';
@@ -232,9 +233,13 @@ function EditAd() {
     });
 
     try {
-      await callApi('POST', `/ads/${id}?_method=PUT`, submitData, {
+      const response = await callApi('POST', `/ads/${id}?_method=PUT`, submitData, {
         'Content-Type': 'multipart/form-data',
       });
+
+      if (response?.message) {
+        toast.success(response.message);
+      }
 
       // Navigate to dashboard after successful update
       navigate('/dashboard');

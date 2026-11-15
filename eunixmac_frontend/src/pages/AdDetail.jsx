@@ -65,6 +65,7 @@ function AdDetail() {
         const token = localStorage.getItem('token');
         if (token) {
           try {
+            const now = Date.now();
             const messagesCacheKey = `ad_messages_${id}`;
             const cachedMessages = sessionStorage.getItem(messagesCacheKey);
             const messagesCacheTimestamp = sessionStorage.getItem(`${messagesCacheKey}_timestamp`);
@@ -115,6 +116,28 @@ function AdDetail() {
     if (id) {
       fetchAdData();
     }
+  }, [id]);
+
+  // Poll for new messages while the ad page is open, so replies show up
+  // without a manual reload. Always hits the server (no stale cache).
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token || !id) return;
+
+    const pollMessages = async () => {
+      try {
+        const messagesData = await callApi('GET', `/ads/${id}/messages`);
+        setMessages(messagesData || []);
+        const messagesCacheKey = `ad_messages_${id}`;
+        sessionStorage.setItem(messagesCacheKey, JSON.stringify(messagesData || []));
+        sessionStorage.setItem(`${messagesCacheKey}_timestamp`, Date.now().toString());
+      } catch (pollError) {
+        console.warn('Could not poll messages:', pollError);
+      }
+    };
+
+    const intervalId = setInterval(pollMessages, 12000);
+    return () => clearInterval(intervalId);
   }, [id]);
 
   // Check if user has purchased this book

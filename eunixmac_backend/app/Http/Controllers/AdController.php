@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Ad;
 use App\Models\AdCustomField;
 use App\Models\AdImage;
+use App\Rules\NoSpamContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -207,8 +208,8 @@ class AdController extends Controller
     {
         $validationRules = [
             'category_id' => 'required|exists:categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string|min:10',
+            'title' => ['required', 'string', 'max:255', new NoSpamContent()],
+            'description' => ['required', 'string', 'min:10', new NoSpamContent()],
             'price' => 'required|numeric|min:0',
             'location' => 'required|string|max:255',
             'images' => 'nullable|array|max:10',
@@ -247,8 +248,8 @@ class AdController extends Controller
                 'description' => $validatedData['description'],
                 'price' => $validatedData['price'],
                 'location' => $validatedData['location'],
-                'status' => 'active',
-                'approved_at' => now(),
+                'status' => 'pending_approval',
+                'approved_at' => null,
             ]);
 
             // Handle image uploads with preview detection
@@ -318,7 +319,7 @@ class AdController extends Controller
             $ad->load(['user', 'category', 'images', 'customFields']);
             
             return response()->json([
-                'message' => 'Ad posted successfully!',
+                'message' => 'Ad submitted successfully! It will go live once reviewed by our team.',
                 'ad' => $ad
             ], 201);
 
@@ -351,8 +352,8 @@ class AdController extends Controller
         // Handle full ad updates
         $request->validate([
             'category_id' => 'required|exists:categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
+            'title' => ['required', 'string', 'max:255', new NoSpamContent()],
+            'description' => ['required', 'string', new NoSpamContent()],
             'price' => 'required|numeric',
             'location' => 'required|string|max:255',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
@@ -360,13 +361,30 @@ class AdController extends Controller
             'custom_fields.*.field_value' => 'required_with:custom_fields|string',
         ]);
 
-        $ad->update($request->only([
-            'category_id',
-            'title',
-            'description',
-            'price',
-            'location',
-        ]));
+        // Detect whether the actual content is changing, not just a no-op
+        // resubmission of the same values.
+        $newData = $request->only(['category_id', 'title', 'description', 'price', 'location']);
+        $contentChanged = (int) $newData['category_id'] !== (int) $ad->category_id
+            || trim($newData['title']) !== trim($ad->title)
+            || trim($newData['description']) !== trim($ad->description)
+            || (float) $newData['price'] !== (float) $ad->price
+            || trim($newData['location']) !== trim($ad->location)
+            || $request->hasFile('images')
+            || $request->has('custom_fields');
+
+        // An already-approved (or previously rejected) ad whose content
+        // changes must go back through moderation before it is public
+        // again — otherwise a seller could get an ad approved once and
+        // then edit it into spam without any review.
+        $requiresReapproval = in_array($ad->status, ['active', 'rejected'], true);
+
+        $updateData = $newData;
+        if ($contentChanged && $requiresReapproval) {
+            $updateData['status'] = 'pending_approval';
+            $updateData['approved_at'] = null;
+        }
+
+        $ad->update($updateData);
 
         // Handle image updates (delete old, add new)
         if ($request->hasFile('images')) {
@@ -398,7 +416,12 @@ class AdController extends Controller
             }
         }
 
-        return response()->json($ad->load(['images', 'customFields']));
+        return response()->json([
+            'message' => ($contentChanged && $requiresReapproval)
+                ? 'Ad updated successfully! It will need to be re-approved before it goes live again.'
+                : 'Ad updated successfully.',
+            'ad' => $ad->load(['images', 'customFields']),
+        ]);
     }
 
     public function destroy(Ad $ad)
