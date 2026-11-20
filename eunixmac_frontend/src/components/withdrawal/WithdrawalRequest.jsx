@@ -24,8 +24,8 @@ import {
   Warning,
   Info
 } from '@mui/icons-material';
-import { getUserBankAccounts } from '../../services/bankAccountService';
-import { getWithdrawalStats, requestWithdrawal } from '../../services/withdrawalService';
+import { getUserBankAccounts, getBanks, verifyBankAccount } from '../../services/bankAccountService';
+import { getWithdrawalStats, requestWithdrawal, requestWithdrawalWithNewBankAccount } from '../../services/withdrawalService';
 import { toast } from 'react-toastify';
 import EnhancedStatCard from '../common/EnhancedStatCard';
 import StatCardsContainer from '../common/StatCardsContainer';
@@ -34,12 +34,22 @@ import { formatCurrency } from '../../utils/formatCurrency';
 const WithdrawalRequest = ({ onSuccess }) => {
   const [stats, setStats] = useState(null);
   const [bankAccounts, setBankAccounts] = useState([]);
+  const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [verifyingAccount, setVerifyingAccount] = useState(false);
+  const [useNewBankAccount, setUseNewBankAccount] = useState(false);
 
   const [formData, setFormData] = useState({
     amount: '',
     bank_account_id: '',
+  });
+
+  const [newBankData, setNewBankData] = useState({
+    bank_code: '',
+    bank_name: '',
+    account_number: '',
+    account_name: '',
   });
 
   useEffect(() => {
@@ -49,26 +59,62 @@ const WithdrawalRequest = ({ onSuccess }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [statsData, accountsData] = await Promise.all([
+      const [statsData, accountsData, banksData] = await Promise.all([
         getWithdrawalStats(),
         getUserBankAccounts(),
+        getBanks(),
       ]);
       setStats(statsData);
+      setBanks(banksData);
 
       // Filter for verified accounts only
       const verifiedAccounts = accountsData.filter((acc) => acc.is_verified);
       setBankAccounts(verifiedAccounts);
 
-      // Auto-select primary account
-      const primaryAccount = verifiedAccounts.find((acc) => acc.is_primary);
-      if (primaryAccount) {
-        setFormData((prev) => ({ ...prev, bank_account_id: primaryAccount.id }));
+      if (verifiedAccounts.length === 0) {
+        // Nothing saved yet - go straight to the inline bank-account form.
+        setUseNewBankAccount(true);
+      } else {
+        // Auto-select primary account
+        const primaryAccount = verifiedAccounts.find((acc) => acc.is_primary);
+        if (primaryAccount) {
+          setFormData((prev) => ({ ...prev, bank_account_id: primaryAccount.id }));
+        }
       }
     } catch (err) {
       toast.error('Failed to load withdrawal data');
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBankChange = (e) => {
+    const selectedBank = banks.find((b) => b.code === e.target.value);
+    setNewBankData({
+      ...newBankData,
+      bank_code: e.target.value,
+      bank_name: selectedBank?.name || '',
+      account_name: '',
+    });
+  };
+
+  const handleVerifyNewAccount = async () => {
+    if (!newBankData.account_number || !newBankData.bank_code) {
+      toast.error('Please select a bank and enter the account number');
+      return;
+    }
+
+    setVerifyingAccount(true);
+
+    try {
+      const result = await verifyBankAccount(newBankData.account_number, newBankData.bank_code);
+      setNewBankData((prev) => ({ ...prev, account_name: result.account_name }));
+      toast.success('Account verified successfully!');
+    } catch (err) {
+      toast.error(err.error || 'Failed to verify account');
+    } finally {
+      setVerifyingAccount(false);
     }
   };
 
@@ -91,8 +137,18 @@ const WithdrawalRequest = ({ onSuccess }) => {
         return;
       }
 
-      await requestWithdrawal(amount, formData.bank_account_id);
-      toast.success('Withdrawal request submitted successfully!');
+      if (useNewBankAccount) {
+        if (!newBankData.account_name) {
+          toast.error('Please verify the bank account before submitting');
+          setSubmitting(false);
+          return;
+        }
+        await requestWithdrawalWithNewBankAccount(amount, newBankData);
+      } else {
+        await requestWithdrawal(amount, formData.bank_account_id);
+      }
+
+      toast.success('Withdrawal request submitted! It will be reviewed by an admin before funds are disbursed.');
       setFormData({ ...formData, amount: '' });
 
       // Reload stats
@@ -121,25 +177,6 @@ const WithdrawalRequest = ({ onSuccess }) => {
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
         <CircularProgress />
       </Box>
-    );
-  }
-
-  if (bankAccounts.length === 0) {
-    return (
-      <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider' }}>
-        <CardContent sx={{ p: 4, textAlign: 'center' }}>
-          <Warning sx={{ fontSize: 64, color: 'warning.main', mb: 2 }} />
-          <Typography variant="h6" gutterBottom>
-            No Bank Account Found
-          </Typography>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            Please add and verify a bank account before requesting a withdrawal.
-          </Typography>
-          <Button variant="contained" href="#" onClick={() => window.location.reload()}>
-            Refresh Page
-          </Button>
-        </CardContent>
-      </Card>
     );
   }
 
@@ -177,24 +214,112 @@ const WithdrawalRequest = ({ onSuccess }) => {
           <Box component="form" onSubmit={handleSubmit}>
             <Grid container spacing={3}>
               {/* Bank Account Selection */}
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Bank Account</InputLabel>
-                  <Select
-                    value={formData.bank_account_id}
-                    label="Bank Account"
-                    onChange={(e) => setFormData({ ...formData, bank_account_id: e.target.value })}
-                    required
-                  >
-                    {bankAccounts.map((account) => (
-                      <MenuItem key={account.id} value={account.id}>
-                        {account.bank_name} - {account.account_number} ({account.account_name})
-                        {account.is_primary ? ' (Primary)' : ''}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+              {bankAccounts.length > 0 && (
+                <Grid item xs={12}>
+                  {!useNewBankAccount ? (
+                    <>
+                      <FormControl fullWidth>
+                        <InputLabel>Bank Account</InputLabel>
+                        <Select
+                          value={formData.bank_account_id}
+                          label="Bank Account"
+                          onChange={(e) => setFormData({ ...formData, bank_account_id: e.target.value })}
+                          required
+                        >
+                          {bankAccounts.map((account) => (
+                            <MenuItem key={account.id} value={account.id}>
+                              {account.bank_name} - {account.account_number} ({account.account_name})
+                              {account.is_primary ? ' (Primary)' : ''}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <Button
+                        size="small"
+                        sx={{ mt: 1 }}
+                        onClick={() => setUseNewBankAccount(true)}
+                      >
+                        Use a different bank account
+                      </Button>
+                    </>
+                  ) : (
+                    <Button size="small" onClick={() => setUseNewBankAccount(false)}>
+                      Use a saved bank account instead
+                    </Button>
+                  )}
+                </Grid>
+              )}
+
+              {useNewBankAccount && (
+                <Grid item xs={12}>
+                  <Paper elevation={0} sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                      Bank Account for Disbursement
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Bank</InputLabel>
+                          <Select
+                            value={newBankData.bank_code}
+                            label="Bank"
+                            onChange={handleBankChange}
+                            required={useNewBankAccount}
+                          >
+                            <MenuItem value="">
+                              <em>Select Bank</em>
+                            </MenuItem>
+                            {banks.map((bank) => (
+                              <MenuItem key={bank.code} value={bank.code}>
+                                {bank.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Account Number"
+                          inputProps={{ maxLength: 10 }}
+                          placeholder="0123456789"
+                          value={newBankData.account_number}
+                          onChange={(e) =>
+                            setNewBankData({ ...newBankData, account_number: e.target.value, account_name: '' })
+                          }
+                          required={useNewBankAccount}
+                        />
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={handleVerifyNewAccount}
+                          disabled={verifyingAccount || !newBankData.bank_code || !newBankData.account_number}
+                          fullWidth
+                          sx={{ mt: 1 }}
+                          startIcon={verifyingAccount ? <CircularProgress size={16} /> : null}
+                        >
+                          {verifyingAccount ? 'Verifying...' : 'Verify Account'}
+                        </Button>
+                      </Grid>
+                      {newBankData.account_name && (
+                        <Grid item xs={12}>
+                          <Alert severity="success" icon={<CheckCircle fontSize="small" />}>
+                            {newBankData.account_name}
+                          </Alert>
+                        </Grid>
+                      )}
+                      {!newBankData.account_name && bankAccounts.length === 0 && (
+                        <Grid item xs={12}>
+                          <Alert severity="warning" icon={<Warning fontSize="small" />}>
+                            Verify this account before submitting — it will be saved for future withdrawals too.
+                          </Alert>
+                        </Grid>
+                      )}
+                    </Grid>
+                  </Paper>
+                </Grid>
+              )}
 
               {/* Amount Input */}
               <Grid item xs={12}>
@@ -264,13 +389,17 @@ const WithdrawalRequest = ({ onSuccess }) => {
                   variant="contained"
                   size="large"
                   fullWidth
-                  disabled={submitting || !formData.amount || !formData.bank_account_id}
+                  disabled={
+                    submitting ||
+                    !formData.amount ||
+                    (useNewBankAccount ? !newBankData.account_name : !formData.bank_account_id)
+                  }
                   sx={{ py: 1.5 }}
                 >
                   {submitting ? (
                     <>
                       <CircularProgress size={20} sx={{ mr: 1 }} color="inherit" />
-                      Processing...
+                      Submitting...
                     </>
                   ) : (
                     'Request Withdrawal'
@@ -286,9 +415,9 @@ const WithdrawalRequest = ({ onSuccess }) => {
               Processing Information
             </Typography>
             <Box component="ul" sx={{ m: 0, pl: 2, fontSize: '0.875rem' }}>
-              <li>Withdrawals are processed automatically via Paystack</li>
+              <li>Withdrawal requests are reviewed by an admin before funds are sent</li>
+              <li>Once approved, transfers go out via Paystack, typically arriving within minutes</li>
               <li>Transfer fee: {formatCurrency(stats?.transfer_fee || 50)} per withdrawal</li>
-              <li>Funds typically arrive within minutes</li>
               <li>Pending withdrawals: {formatCurrency(stats?.pending_withdrawals || 0)}</li>
             </Box>
           </Alert>

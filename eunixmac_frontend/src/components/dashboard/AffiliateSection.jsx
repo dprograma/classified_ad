@@ -195,7 +195,7 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
 
     try {
       await callApi('POST', '/affiliate/withdraw', { amount });
-      toast.success('Withdrawal request submitted successfully');
+      toast.success('Withdrawal request submitted! It will be reviewed by an admin before funds are disbursed.');
       setWithdrawDialogOpen(false);
       setWithdrawAmount('');
       fetchAffiliateDashboard();
@@ -734,14 +734,14 @@ const AffiliateSection = ({ affiliateData: initialAffiliateData, onRefresh }) =>
                       <TableCell>{new Date(withdrawal.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>{withdrawal.reference}</TableCell>
                       <TableCell align="right">₦{parseFloat(withdrawal.amount).toLocaleString()}</TableCell>
-                      <TableCell>{withdrawal.bank_name}</TableCell>
+                      <TableCell>{withdrawal.bank_account?.bank_name || '—'}</TableCell>
                       <TableCell>
                         <Chip
                           label={withdrawal.status}
                           color={
-                            withdrawal.status === 'success' ? 'success' :
+                            withdrawal.status === 'completed' ? 'success' :
                             withdrawal.status === 'processing' ? 'info' :
-                            withdrawal.status === 'failed' ? 'error' :
+                            (withdrawal.status === 'failed' || withdrawal.status === 'rejected') ? 'error' :
                             'warning'
                           }
                           size="small"
