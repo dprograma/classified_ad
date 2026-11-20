@@ -168,6 +168,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/admin/ads/{ad}/status', [AdminController::class, 'updateAdStatus']);
         Route::delete('/admin/ads/{ad}', [AdminController::class, 'deleteAd']);
 
+        // Withdrawal management
+        Route::get('/admin/withdrawals', [AdminController::class, 'getWithdrawals']);
+        Route::get('/admin/withdrawals/{withdrawal}', [AdminController::class, 'getWithdrawal']);
+        Route::put('/admin/withdrawals/{withdrawal}/approve', [AdminController::class, 'approveWithdrawal']);
+        Route::put('/admin/withdrawals/{withdrawal}/reject', [AdminController::class, 'rejectWithdrawal']);
+
         // Agent management
         Route::get('/admin/agents', [AdminController::class, 'getAgents']);
         Route::put('/admin/agents/{user}/approve', [AdminController::class, 'approveAgent']);

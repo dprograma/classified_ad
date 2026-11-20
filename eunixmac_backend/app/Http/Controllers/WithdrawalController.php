@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Withdrawal;
 use App\Models\Payment;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
 
 class WithdrawalController extends Controller
 {
@@ -64,23 +62,64 @@ class WithdrawalController extends Controller
     }
 
     /**
-     * Request a withdrawal
+     * Request a withdrawal. The request is held as 'pending' until an admin
+     * approves it (see AdminController::approveWithdrawal) — nothing is
+     * disbursed here.
      */
     public function store(Request $request)
     {
         $user = $request->user();
 
-        $validator = Validator::make($request->all(), [
+        // A new bank account can be supplied inline (already resolved via
+        // POST /bank-accounts/verify) instead of picking a saved one.
+        $usingNewBankAccount = $request->filled('account_number') || $request->filled('bank_code');
+
+        $rules = [
             'amount' => 'required|numeric|min:' . self::MINIMUM_WITHDRAWAL,
-            'bank_account_id' => 'required|exists:bank_accounts,id',
-        ]);
+        ];
+
+        if ($usingNewBankAccount) {
+            $rules += [
+                'bank_name' => 'required|string|max:255',
+                'bank_code' => 'required|string',
+                'account_number' => 'required|digits:10',
+                'account_name' => 'required|string|max:255',
+            ];
+        } else {
+            $rules += [
+                'bank_account_id' => 'required|exists:bank_accounts,id',
+            ];
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        // Verify bank account belongs to user and is verified
-        $bankAccount = $user->bankAccounts()->findOrFail($request->bank_account_id);
+        if ($usingNewBankAccount) {
+            // Reuse a matching saved account if one already exists, instead
+            // of creating a duplicate.
+            $bankAccount = $user->bankAccounts()
+                ->where('account_number', $request->account_number)
+                ->where('bank_code', $request->bank_code)
+                ->first();
+
+            if (!$bankAccount) {
+                $bankAccount = $user->bankAccounts()->create([
+                    'bank_name' => $request->bank_name,
+                    'bank_code' => $request->bank_code,
+                    'account_number' => $request->account_number,
+                    'account_name' => $request->account_name,
+                    'is_primary' => $user->bankAccounts()->count() === 0,
+                    // Resolved via /bank-accounts/verify before this call.
+                    'is_verified' => true,
+                    'verified_at' => now(),
+                ]);
+            }
+        } else {
+            $bankAccount = $user->bankAccounts()->findOrFail($request->bank_account_id);
+        }
 
         if (!$bankAccount->is_verified) {
             return response()->json([
@@ -97,29 +136,30 @@ class WithdrawalController extends Controller
             ], 400);
         }
 
+        // Don't allow stacking requests while one is already awaiting review
+        $hasActiveWithdrawal = $user->withdrawals()->whereIn('status', ['pending', 'processing'])->exists();
+
+        if ($hasActiveWithdrawal) {
+            return response()->json([
+                'error' => 'You already have a withdrawal request awaiting review. Please wait for it to be resolved.'
+            ], 400);
+        }
+
         // Calculate fees
         $fee = self::TRANSFER_FEE;
         $netAmount = $request->amount - $fee;
 
-        // Create withdrawal request
-        $withdrawal = DB::transaction(function () use ($user, $request, $bankAccount, $fee, $netAmount) {
-            $withdrawal = $user->withdrawals()->create([
-                'bank_account_id' => $bankAccount->id,
-                'amount' => $request->amount,
-                'fee' => $fee,
-                'net_amount' => $netAmount,
-                'status' => 'pending',
-                'reference' => Withdrawal::generateReference(),
-            ]);
-
-            // Automatically process the withdrawal
-            $this->processWithdrawal($withdrawal);
-
-            return $withdrawal;
-        });
+        $withdrawal = $user->withdrawals()->create([
+            'bank_account_id' => $bankAccount->id,
+            'amount' => $request->amount,
+            'fee' => $fee,
+            'net_amount' => $netAmount,
+            'status' => 'pending',
+            'reference' => Withdrawal::generateReference(),
+        ]);
 
         return response()->json([
-            'message' => 'Withdrawal request submitted successfully',
+            'message' => 'Withdrawal request submitted successfully. It will be reviewed by an admin before funds are disbursed.',
             'withdrawal' => $withdrawal->load('bankAccount')
         ], 201);
     }
@@ -147,73 +187,6 @@ class WithdrawalController extends Controller
             'message' => 'Withdrawal cancelled successfully',
             'withdrawal' => $withdrawal
         ]);
-    }
-
-    /**
-     * Process withdrawal via Paystack Transfer
-     */
-    private function processWithdrawal($withdrawal)
-    {
-        try {
-            $withdrawal->update(['status' => 'processing', 'processed_at' => now()]);
-
-            $bankAccount = $withdrawal->bankAccount;
-
-            // Create transfer recipient
-            $recipientResponse = Http::withHeaders([
-                'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
-            ])->post('https://api.paystack.co/transferrecipient', [
-                'type' => 'nuban',
-                'name' => $bankAccount->account_name,
-                'account_number' => $bankAccount->account_number,
-                'bank_code' => $bankAccount->bank_code,
-                'currency' => 'NGN',
-            ]);
-
-            if (!$recipientResponse->successful()) {
-                throw new \Exception('Failed to create transfer recipient');
-            }
-
-            $recipientCode = $recipientResponse->json()['data']['recipient_code'];
-
-            // Initiate transfer
-            $transferResponse = Http::withHeaders([
-                'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
-            ])->post('https://api.paystack.co/transfer', [
-                'source' => 'balance',
-                'amount' => $withdrawal->net_amount * 100, // Convert to kobo
-                'recipient' => $recipientCode,
-                'reason' => 'Withdrawal - ' . $withdrawal->reference,
-                'reference' => $withdrawal->reference,
-            ]);
-
-            if ($transferResponse->successful()) {
-                $transferData = $transferResponse->json()['data'];
-
-                $withdrawal->update([
-                    'paystack_transfer_code' => $transferData['transfer_code'],
-                    'status' => 'completed',
-                    'completed_at' => now(),
-                ]);
-
-                return true;
-            } else {
-                throw new \Exception($transferResponse->json()['message'] ?? 'Transfer failed');
-            }
-
-        } catch (\Exception $e) {
-            $withdrawal->update([
-                'status' => 'failed',
-                'reason' => $e->getMessage(),
-            ]);
-
-            \Log::error('Withdrawal processing failed: ' . $e->getMessage(), [
-                'withdrawal_id' => $withdrawal->id,
-                'reference' => $withdrawal->reference
-            ]);
-
-            return false;
-        }
     }
 
     /**

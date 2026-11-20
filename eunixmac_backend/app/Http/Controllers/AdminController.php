@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\User;
 use App\Models\Ad;
 use App\Models\Payment;
+use App\Models\Withdrawal;
+use App\Services\WithdrawalService;
 
 class AdminController extends Controller
 {
@@ -128,6 +130,68 @@ class AdminController extends Controller
         $ad->approved_at = null;
         $ad->save();
         return response()->json($ad);
+    }
+
+    /**
+     * List withdrawal requests, optionally filtered by status (e.g. 'pending').
+     */
+    public function getWithdrawals(Request $request)
+    {
+        $query = Withdrawal::with(['user:id,name,email', 'bankAccount'])->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        return response()->json($query->paginate($request->get('per_page', 15)));
+    }
+
+    public function getWithdrawal(Withdrawal $withdrawal)
+    {
+        return response()->json($withdrawal->load(['user:id,name,email', 'bankAccount']));
+    }
+
+    /**
+     * Approve a pending withdrawal and disburse it via Paystack Transfer.
+     */
+    public function approveWithdrawal(Request $request, Withdrawal $withdrawal, WithdrawalService $withdrawalService)
+    {
+        if ($withdrawal->status !== 'pending') {
+            return response()->json(['error' => 'Only pending withdrawals can be approved'], 400);
+        }
+
+        $disbursed = $withdrawalService->disburse($withdrawal);
+
+        return response()->json([
+            'message' => $disbursed
+                ? 'Withdrawal approved and disbursed successfully'
+                : 'Withdrawal approved but disbursement failed — see the withdrawal\'s reason for details',
+            'withdrawal' => $withdrawal->fresh(['user:id,name,email', 'bankAccount']),
+        ]);
+    }
+
+    /**
+     * Reject a pending withdrawal without disbursing anything.
+     */
+    public function rejectWithdrawal(Request $request, Withdrawal $withdrawal)
+    {
+        if ($withdrawal->status !== 'pending') {
+            return response()->json(['error' => 'Only pending withdrawals can be rejected'], 400);
+        }
+
+        $request->validate([
+            'reason' => 'nullable|string|max:500',
+        ]);
+
+        $withdrawal->update([
+            'status' => 'rejected',
+            'reason' => $request->reason ?: 'Rejected by admin',
+        ]);
+
+        return response()->json([
+            'message' => 'Withdrawal rejected',
+            'withdrawal' => $withdrawal->load(['user:id,name,email', 'bankAccount']),
+        ]);
     }
 
     public function getDashboardStats()

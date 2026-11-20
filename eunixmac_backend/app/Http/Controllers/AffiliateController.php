@@ -9,7 +9,6 @@ use App\Models\Withdrawal;
 use App\Models\Payment;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AffiliateController extends Controller
@@ -167,7 +166,7 @@ class AffiliateController extends Controller
             ->sum('commission_amount');
 
         $totalWithdrawn = Withdrawal::where('user_id', $user->id)
-            ->where('status', 'success')
+            ->where('status', 'completed')
             ->sum('amount');
 
         $recentCommissions = AffiliateCommission::where('affiliate_id', $user->id)
@@ -188,6 +187,7 @@ class AffiliateController extends Controller
             });
 
         $recentWithdrawals = Withdrawal::where('user_id', $user->id)
+            ->with('bankAccount')
             ->latest()
             ->take(5)
             ->get();
@@ -324,92 +324,42 @@ class AffiliateController extends Controller
             ], 400);
         }
 
-        try {
-            DB::beginTransaction();
+        // Reuse (or create) a BankAccount record from the affiliate's saved
+        // bank details, so this flows through the same admin-approved
+        // disbursement path as other withdrawals — nothing is transferred
+        // here; an admin must approve it first (see
+        // AdminController::approveWithdrawal).
+        $bankAccount = $user->bankAccounts()
+            ->where('account_number', $user->bank_account_number)
+            ->where('bank_code', $user->bank_code)
+            ->first();
 
-            // Create transfer recipient on Paystack
-            $recipientResponse = Http::withHeaders([
-                'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
-                'Content-Type' => 'application/json',
-            ])->post('https://api.paystack.co/transferrecipient', [
-                'type' => 'nuban',
-                'name' => $user->bank_account_name,
-                'account_number' => $user->bank_account_number,
-                'bank_code' => $user->bank_code,
-                'currency' => 'NGN',
-            ]);
-
-            if (!$recipientResponse->successful()) {
-                throw new \Exception('Failed to create transfer recipient: ' . ($recipientResponse->json()['message'] ?? 'Unknown error'));
-            }
-
-            $recipientCode = $recipientResponse->json()['data']['recipient_code'];
-            $reference = Withdrawal::generateReference();
-
-            // Initiate transfer
-            $transferResponse = Http::withHeaders([
-                'Authorization' => 'Bearer ' . env('PAYSTACK_SECRET_KEY'),
-                'Content-Type' => 'application/json',
-            ])->post('https://api.paystack.co/transfer', [
-                'source' => 'balance',
-                'amount' => $request->amount * 100, // Convert to kobo
-                'recipient' => $recipientCode,
-                'reason' => 'Affiliate commission withdrawal',
-                'reference' => $reference,
-            ]);
-
-            if (!$transferResponse->successful()) {
-                throw new \Exception('Failed to initiate transfer: ' . ($transferResponse->json()['message'] ?? 'Unknown error'));
-            }
-
-            $transferData = $transferResponse->json()['data'];
-
-            // Create withdrawal record
-            $withdrawal = Withdrawal::create([
-                'user_id' => $user->id,
-                'amount' => $request->amount,
+        if (!$bankAccount) {
+            $bankAccount = $user->bankAccounts()->create([
                 'bank_name' => $user->bank_name,
-                'bank_account_number' => $user->bank_account_number,
-                'bank_account_name' => $user->bank_account_name,
                 'bank_code' => $user->bank_code,
-                'transfer_code' => $transferData['transfer_code'] ?? null,
-                'reference' => $reference,
-                'status' => 'processing',
+                'account_number' => $user->bank_account_number,
+                'account_name' => $user->bank_account_name,
+                'is_primary' => $user->bankAccounts()->count() === 0,
+                'is_verified' => true,
+                'verified_at' => now(),
             ]);
-
-            // Mark commissions as paid up to the withdrawal amount
-            $remainingAmount = $request->amount;
-            $commissions = AffiliateCommission::where('affiliate_id', $user->id)
-                ->where('status', 'approved')
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            foreach ($commissions as $commission) {
-                if ($remainingAmount <= 0) break;
-
-                $commission->status = 'paid';
-                $commission->paid_at = now();
-                $commission->save();
-
-                $remainingAmount -= $commission->commission_amount;
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Withdrawal request submitted successfully',
-                'withdrawal' => $withdrawal,
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Withdrawal error: ' . $e->getMessage());
-
-            return response()->json([
-                'message' => 'Withdrawal failed. Please try again later.',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], 500);
         }
+
+        $withdrawal = Withdrawal::create([
+            'user_id' => $user->id,
+            'bank_account_id' => $bankAccount->id,
+            'amount' => $request->amount,
+            'fee' => 0,
+            'net_amount' => $request->amount,
+            'status' => 'pending',
+            'reference' => Withdrawal::generateReference(),
+        ]);
+
+        return response()->json([
+            'message' => 'Withdrawal request submitted successfully. It will be reviewed by an admin before funds are disbursed.',
+            'withdrawal' => $withdrawal->load('bankAccount'),
+        ], 201);
     }
 
     /**
@@ -420,6 +370,7 @@ class AffiliateController extends Controller
         $user = $request->user();
 
         $withdrawals = Withdrawal::where('user_id', $user->id)
+            ->with('bankAccount')
             ->latest()
             ->paginate(15);
 
