@@ -215,7 +215,7 @@ function TabPanel({ children, value, index, ...other }) {
 }
 
 const Dashboard = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     return searchParams.get('tab') || 'overview';
   });
@@ -223,7 +223,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { callApi } = useApi();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -309,6 +309,33 @@ const Dashboard = () => {
       setActiveTab(urlTab);
     }
   }, [searchParams, activeTab]);
+
+  // Handle redirect back from an external payment flow (e.g. Paystack
+  // affiliate enrollment), which lands here with ?status=&message=. The
+  // user in AuthContext can be stale in this tab if Paystack's checkout
+  // redirected back in a different tab/window, so refresh it explicitly
+  // rather than assuming it already reflects the payment's effect.
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (!status) return;
+
+    const message = searchParams.get('message');
+
+    if (status === 'success') {
+      toast.success(message || 'Done!');
+      refreshUser();
+      fetchDashboardData();
+    } else if (status === 'error') {
+      toast.error(message || 'Something went wrong. Please try again.');
+    }
+
+    // Strip status/message so a page refresh doesn't replay this toast.
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('status');
+    nextParams.delete('message');
+    setSearchParams(nextParams, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Separate effect for initial load only
   useEffect(() => {
