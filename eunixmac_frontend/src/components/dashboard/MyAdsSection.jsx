@@ -54,6 +54,7 @@ import {
 import { Link } from 'react-router-dom';
 import useApi from '../../hooks/useApi';
 import { getStorageUrl } from '../../config/api';
+import { toast } from 'react-toastify';
 
 const MyAdsSection = ({ ads, onRefresh }) => {
   const [selectedTab, setSelectedTab] = useState(0);
@@ -138,6 +139,33 @@ const MyAdsSection = ({ ads, onRefresh }) => {
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error updating ad status:', error);
+    }
+  };
+
+  const handleShareAd = async (ad) => {
+    if (!ad) return;
+
+    const shareUrl = `${window.location.origin}/ads/${ad.id}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: ad.title, url: shareUrl });
+      } catch (error) {
+        // AbortError just means the user cancelled the share sheet - not a failure.
+        if (error?.name !== 'AbortError') {
+          console.error('Error sharing ad:', error);
+          toast.error('Failed to share ad. Please try again.');
+        }
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copied to clipboard!');
+    } catch (error) {
+      console.error('Error copying share link:', error);
+      toast.error('Could not copy the link. Please copy it manually: ' + shareUrl);
     }
   };
 
@@ -435,15 +463,7 @@ const MyAdsSection = ({ ads, onRefresh }) => {
         </MenuItem>
         
         <MenuItem onClick={() => {
-          if (selectedAd) {
-            navigator.share({
-              title: selectedAd.title,
-              url: `${window.location.origin}/ads/${selectedAd.id}`
-            }).catch(() => {
-              // Fallback for browsers that don't support Web Share API
-              navigator.clipboard.writeText(`${window.location.origin}/ads/${selectedAd.id}`);
-            });
-          }
+          handleShareAd(selectedAd);
           handleMenuClose();
         }}>
           <Share sx={{ mr: 1 }} />
@@ -452,7 +472,7 @@ const MyAdsSection = ({ ads, onRefresh }) => {
         
         <MenuItem onClick={() => {
           setDeleteDialogOpen(true);
-          handleMenuClose();
+          setAnchorEl(null);
         }} sx={{ color: 'error.main' }}>
           <Delete sx={{ mr: 1 }} />
           Delete Ad
@@ -460,7 +480,13 @@ const MyAdsSection = ({ ads, onRefresh }) => {
       </Menu>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSelectedAd(null);
+        }}
+      >
         <DialogTitle>Delete Ad</DialogTitle>
         <DialogContent>
           <Typography>
@@ -468,7 +494,14 @@ const MyAdsSection = ({ ads, onRefresh }) => {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setSelectedAd(null);
+            }}
+          >
+            Cancel
+          </Button>
           <Button onClick={handleDeleteAd} color="error" disabled={loading}>
             Delete
           </Button>

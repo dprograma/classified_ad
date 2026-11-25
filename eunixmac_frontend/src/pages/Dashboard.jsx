@@ -605,9 +605,9 @@ const Dashboard = () => {
       case 'analytics':
         return <AnalyticsSection stats={dashboardData?.analytics || {}} />;
       case 'agent':
-        return <AgentSection books={dashboardData?.books || []} onRefresh={fetchDashboardData} />;
+        return <AgentSection books={dashboardData?.materials || []} onRefresh={fetchDashboardData} />;
       case 'books':
-        return <BooksSection books={dashboardData?.books || []} onRefresh={fetchDashboardData} />;
+        return <BooksSection books={dashboardData?.materials || []} onRefresh={fetchDashboardData} />;
       case 'affiliate':
         return <AffiliateSection affiliateData={dashboardData?.affiliate || {}} onRefresh={fetchDashboardData} />;
       case 'payments':
